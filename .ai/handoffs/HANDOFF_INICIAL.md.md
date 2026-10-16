@@ -140,8 +140,8 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - Quem pagou menos tem **déficit** (deve).
 - O excesso é rateado entre os que têm déficit, **proporcional ao déficit
   de cada um** (não proporcional à cota).
-- Reembolsos são **fatos** (com data, pagador, recebedor) e abatem a
-  dívida entre pares.
+- Reembolsos são **fatos** (com data, pagador, recebedor) e entram no
+  `pago_efetivo` do pagador (soma) e do recebedor (subtrai).
 - A **data de origem** da dívida interna é a **data do pagamento original**
   de quem gerou o excesso.
 - Quando U_total muda (novo boleto pago), os compromissos e excessos são
@@ -369,38 +369,38 @@ Seja `D` o conjunto de despesas com situação `paga`. Para cada
 participante `i`:
 
 ```
-U_total       = Σ_{d ∈ D} valor_d / indice(data_d)          (unidades totais pagas)
-compromisso_i = cota_i × U_total                            (em unidades)
-pago_i        = Σ_{d ∈ D, pagador_d = i} valor_d / indice(data_d)
-reemb_pagos_i     = Σ_{r: pagador_r = i} valor_r / indice(data_r)
-reemb_recebidos_i = Σ_{r: recebedor_r = i} valor_r / indice(data_r)
+U_total        = Σ_{d ∈ D} valor_d / indice(data_d)          (unidades totais pagas)
+compromisso_i  = cota_i × U_total                            (em unidades)
 
-excesso_i = max(0, pago_i + reemb_pagos_i − compromisso_i − reemb_recebidos_i)
-deficit_i = max(0, compromisso_i + reemb_recebidos_i − pago_i − reemb_pagos_i)
+pago_i             = Σ_{d ∈ D, pagador_d = i} valor_d / indice(data_d)
+reemb_pagos_i      = Σ_{r: pagador_r = i} valor_r / indice(data_r)
+reemb_recebidos_i  = Σ_{r: recebedor_r = i} valor_r / indice(data_r)
+
+pago_efetivo_i = pago_i + reemb_pagos_i − reemb_recebidos_i
+
+excesso_i = max(0, pago_efetivo_i − compromisso_i)
+deficit_i = max(0, compromisso_i − pago_efetivo_i)
 ```
 
 **Propriedades:**
 - `Σ excesso_i = Σ deficit_i` (conservação).
 - `Σ (compromisso_i) = U_total`.
 
-**Dívida bruta entre pares:** cada excesso `E_j` de um credor `j` é
-distribuído entre os devedores proporcionais ao déficit. O valor que o
-devedor `i` deve ao credor `j` é:
+**Dívida líquida entre pares:** cada excesso `E_j` de um credor `j` é
+distribuído entre os devedores proporcionalmente ao déficit de cada um.
+O valor que o devedor `i` deve ao credor `j` **já é o líquido**:
 
 ```
-deve(i → j) = deficit_i × E_j / Σ deficit_k
+deve(i → j) = deficit_i × excesso_j / Σ_k excesso_k
 ```
 
-**Dívida líquida entre pares:** subtrair reembolsos já feitos.
-
-```
-liquido(i → j) = deve(i → j) − reembolsos_de_i_para_j + reembolsos_de_j_para_i
-```
+Não há subtração adicional de reembolsos: eles já foram incorporados em
+`pago_efetivo_i`. A fórmula acima é a única operação entre pares.
 
 **Saldo do participante `i` em reais hoje:**
 
 ```
-saldo_reais_i = (Σ_j liquido(i → j)) × indice(hoje)
+saldo_reais_i = (Σ_j deve(i → j) − Σ_k deve(k → i)) × indice(hoje)
 ```
 
 - Positivo = `i` deve (devedor líquido).
@@ -446,6 +446,123 @@ O app deve **avisar o usuário** quando isso acontecer:
 - Cálculo em UTC.
 - "Hoje" e datas exibidas no **fuso do navegador**.
 - Datas persistidas como `date` (sem hora).
+
+### 4.10 Pseudocódigo de referência
+
+O núcleo do cálculo é `src/core/saldo.ts`, com a função
+`calcularSaldo(rateio, corrigir)`. Implementação esperada:
+
+```ts
+import Decimal from 'decimal.js'
+
+interface Participante { userId: string; cota: Decimal }
+interface Despesa {
+  pagadorUserId: string
+  valor: Decimal
+  data: string
+  situacao: 'paga' | 'prevista'
+}
+interface Reembolso {
+  pagadorUserId: string
+  recebedorUserId: string
+  valor: Decimal
+  data: string
+}
+interface Rateio {
+  participantes: Participante[]
+  despesas: Despesa[]
+  reembolsos: Reembolso[]
+}
+
+declare function indiceEmData(data: string): Decimal
+
+function unidades(valor: Decimal, data: string, corrigir: boolean): Decimal {
+  if (!corrigir) return valor
+  return valor.dividedBy(indiceEmData(data))
+}
+
+export function calcularSaldo(rateio: Rateio, corrigir: boolean) {
+  const userIds = rateio.participantes.map(p => p.userId)
+
+  // 1) U_total
+  let uTotal = new Decimal(0)
+  for (const d of rateio.despesas) {
+    if (d.situacao !== 'paga') continue
+    uTotal = uTotal.plus(unidades(d.valor, d.data, corrigir))
+  }
+
+  // 2) Compromisso
+  const compromisso = new Map<string, Decimal>()
+  for (const p of rateio.participantes) {
+    compromisso.set(p.userId, uTotal.times(p.cota))
+  }
+
+  // 3) pago_efetivo
+  const pagoEfetivo = new Map<string, Decimal>(
+    userIds.map(id => [id, new Decimal(0)]),
+  )
+  for (const d of rateio.despesas) {
+    if (d.situacao !== 'paga') continue
+    const u = unidades(d.valor, d.data, corrigir)
+    pagoEfetivo.set(d.pagadorUserId, pagoEfetivo.get(d.pagadorUserId)!.plus(u))
+  }
+  for (const r of rateio.reembolsos) {
+    const u = unidades(r.valor, r.data, corrigir)
+    pagoEfetivo.set(r.pagadorUserId, pagoEfetivo.get(r.pagadorUserId)!.plus(u))
+    pagoEfetivo.set(r.recebedorUserId, pagoEfetivo.get(r.recebedorUserId)!.minus(u))
+  }
+
+  // 4) Excesso e déficit
+  const excesso = new Map<string, Decimal>()
+  const deficit = new Map<string, Decimal>()
+  for (const id of userIds) {
+    const diff = pagoEfetivo.get(id)!.minus(compromisso.get(id)!)
+    excesso.set(id, diff.greaterThan(0) ? diff : new Decimal(0))
+    deficit.set(id, diff.lessThan(0) ? diff.negated() : new Decimal(0))
+  }
+
+  // 5) Distribuição do excesso, proporcional ao déficit
+  const somaExcesso = userIds.reduce(
+    (acc, id) => acc.plus(excesso.get(id)!),
+    new Decimal(0),
+  )
+  const deveDePara: Array<{ de: string; para: string; unidades: Decimal }> = []
+  if (!somaExcesso.isZero()) {
+    for (const devedor of userIds) {
+      const dDef = deficit.get(devedor)!
+      if (dDef.isZero()) continue
+      for (const credor of userIds) {
+        const eCred = excesso.get(credor)!
+        if (eCred.isZero()) continue
+        const valor = dDef.times(eCred).dividedBy(somaExcesso)
+        if (valor.isZero()) continue
+        deveDePara.push({ de: devedor, para: credor, unidades: valor })
+      }
+    }
+  }
+
+  // 6) Saldo líquido por participante
+  const saldoUnidades = new Map<string, Decimal>(
+    userIds.map(id => [id, new Decimal(0)]),
+  )
+  for (const { de, para, unidades: u } of deveDePara) {
+    saldoUnidades.set(de, saldoUnidades.get(de)!.plus(u))
+    saldoUnidades.set(para, saldoUnidades.get(para)!.minus(u))
+  }
+
+  return {
+    uTotal, pagoEfetivo, compromisso, excesso, deficit,
+    saldoUnidades, deveDePara,
+  }
+}
+```
+
+**Propriedades que os testes devem verificar:**
+1. `Σ excesso = Σ déficit` (conservação).
+2. `Σ saldoUnidades = 0`.
+3. Casos do `.ai/casos-de-teste-n-pessoas.json` batem com
+   `saldo_esperado` e `deve_de_para`.
+4. Com cotas 0/1, o resultado bate com os 27 casos do piloto.
 
 ---
 
@@ -560,19 +677,24 @@ prossiga** — investigar a fórmula.
 
 ### 6.3 Casos adicionais (arquivo separado)
 
-Além dos 27 casos do piloto, criar
-`.ai/casos-de-teste-n-pessoas.json` com cenários sintéticos cobrindo:
+Além dos 27 casos do piloto, criar `.ai/casos-de-teste-n-pessoas.json`
+com 10 cenários sintéticos cobrindo:
 
-- 50/50 com uma despesa paga por cada um → saldo zero.
-- 50/50 com despesa paga só por P1 → P2 deve 50%.
-- 80/20 com despesa paga só por P2 → P1 deve 80%.
-- 4 pessoas (20/30/10/40) com despesas pagas por diferentes participantes
-  → Σ saldos = 0.
-- Cota 0 paga despesa → só os outros acumulam dívida (caso Lucas).
-- Cota 100 paga despesa → sem impacto líquido (caso Letícia).
-- Reembolso parcial → saldo residual.
-- Reembolso em data diferente → correção aplicada.
-- Mudança de U_total após reembolso feito → recálculo e aviso.
+- **n01**: 50/50 com uma despesa paga por cada um → saldo zero.
+- **n02**: 50/50 com despesa paga só por P1 → P2 deve 50 a P1.
+- **n03**: 80/20 com despesa paga só por P2 → P1 deve 80 a P2.
+- **n04**: 4 pessoas 20/30/10/40 com despesas pagas por P1, P2 e P4.
+- **n05**: cota 0 paga despesa → só os outros acumulam dívida.
+- **n06**: cota 100 paga despesa → sem impacto líquido.
+- **n07**: reembolso parcial → saldo residual.
+- **n08**: reembolso excessivo inverte a dívida.
+- **n09**: 4 pessoas iguais, P1 e P2 pagam, P3 e P4 devem.
+- **n10**: mudança de U_total após reembolso feito → recálculo.
+
+Todos usam `corrigir_ipca: false` no metadata, para isolar a lógica de
+rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
+`deve_de_para`, além de `calculo` com os intermediários
+(`U_total`, `compromisso`, `pago_efetivo`, `excesso`, `deficit`).
 
 ---
 
@@ -722,6 +844,8 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 - **Rateio do excesso**: sempre proporcional ao **déficit** (o que cada
   um ainda deve), **nunca** proporcional à cota. Testar com cotas
   desiguais.
+- **Reembolsos entram no `pago_efetivo`** (positivo para pagador, negativo
+  para recebedor). **Não** subtrair de novo no cálculo de `deve(i → j)`.
 - **Mudança de U_total**: recalcula compromissos e excessos. Reembolsos
   permanecem. Avisar o usuário.
 
@@ -739,7 +863,8 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
       R$ 707,00 e R$ 708,00.
 - [ ] Telas: lista, detalhe, memória de cálculo, cadastro de despesa,
       cadastro de reembolso, config.
-- [ ] Módulo de cálculo com 27 testes passando + casos n-pessoas passando.
+- [ ] Módulo de cálculo com 27 testes passando + 10 casos n-pessoas
+      passando.
 - [ ] Workflow do IPCA rodando (ou fallback manual documentado).
 - [ ] Workflow de backup rodando.
 - [ ] RLS validada com 2 usuários.

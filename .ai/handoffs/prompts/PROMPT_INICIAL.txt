@@ -1,0 +1,8 @@
+Leia o arquivo HANDOFF_INICIAL.md (.ai\handoffs\HANDOFF_INICIAL.md). Ele contém tudo o que você precisa: contexto, decisões fechadas, modelo de dados,
+regras de cálculo, dados de origem, telas, ordem de execução e os textos completos dos artefatos de spec que devem existir no repositório.
+
+Idioma de trabalho: português do Brasil. Código, comentários, commits e documentação em português.
+
+Siga as INSTRUÇÕES INICIAIS do HANDOFF e comece pela Fase 0. Pare ao final de cada fase para eu revisar o resultado antes de prosseguir.
+
+Não reabra decisões da seção 2 do HANDOFF. Se algo parecer ambíguo, pergunte antes de assumir.

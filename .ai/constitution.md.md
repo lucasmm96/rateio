@@ -69,7 +69,13 @@ Pagamentos e reembolsos são fatos históricos, imutáveis. Cotas são
 parâmetros de cálculo e podem ser reajustadas — o saldo é recomposto. Não
 guardar snapshot de cotas em despesas.
 
-### 13. Terminologia explícita
+### 13. Reembolsos entram no `pago_efetivo`
+Um reembolso move crédito: soma no `pago_efetivo` do pagador e subtrai no
+do recebedor. **Nunca** subtrair reembolsos de novo na hora de calcular
+`deve(i → j)` — eles já estão contabilizados. Essa foi uma fonte de bug
+identificada e corrigida.
+
+### 14. Terminologia explícita
 Termos do domínio (rateio, pagamento, reembolso, cota, compromisso,
 excesso, déficit) devem estar definidos no spec e usados consistentemente
 na UI e no código. Evitar sinônimos.
@@ -83,3 +89,4 @@ na UI e no código. Evitar sinônimos.
 - Tratar o app como específico do apartamento.
 - Ratear excesso proporcional à cota (deve ser proporcional ao déficit).
 - Corrigir valores previstos (só o pago é corrigido).
+- Subtrair reembolsos duas vezes (eles já estão no `pago_efetivo`).

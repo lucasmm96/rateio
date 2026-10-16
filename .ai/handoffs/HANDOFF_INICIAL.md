@@ -3,9 +3,7 @@
 Você é o Claude Code executando este projeto. Este único arquivo contém
 tudo o que você precisa: contexto, decisões fechadas, modelo de dados,
 regras de cálculo, dados de origem, telas, ordem de execução e os textos
-completos dos artefatos de spec que devem existir no repositório
-(`.ai/constitution.md`, `.ai/spec.md`, `.ai/casos-de-teste.json`,
-`.ai/casos-de-teste-n-pessoas.json`, `.ai/tasks.md`).
+completos dos artefatos de spec que devem existir no repositório.
 
 Idioma de trabalho: português do Brasil. Código, comentários, commits e
 documentação em português.
@@ -15,12 +13,18 @@ documentação em português.
 ## INSTRUÇÕES INICIAIS (leia antes de tudo)
 
 1. O repositório já existe, público, vazio (ou quase). Você está na raiz.
-2. Antes de qualquer código, **crie os arquivos de spec dentro da pasta
-   `.ai/`** na raiz, com o conteúdo exato das seções 14 a 17 deste
-   documento e da seção 6.3.
-3. Depois, siga a ordem de execução da seção 9, parando ao final de cada
+2. Antes de qualquer código, **crie a pasta `.ai/` e popule os arquivos
+   de spec base** (`constitution.md`, `spec.md`, `tasks.md`,
+   `casos-de-teste.json`, `casos-de-teste-n-pessoas.json`) com o conteúdo
+   exato das seções 14 a 17 deste documento e da seção 6.3. Estes são
+   seus **artefatos de referência enxutos**.
+3. Em seguida, **inicialize o GitHub Spec Kit** e execute os comandos
+   para gerar os **artefatos de qualidade completos** (`plan.md`,
+   `clarify.md`, `checklist.md`, `analyze.md`), conforme detalhado na
+   seção 9 (Ordem de Execução).
+4. Depois, siga a ordem de execução da seção 9, parando ao final de cada
    fase para mostrar o resultado antes de prosseguir.
-4. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
+5. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
    usuário antes de assumir.
 
 ---
@@ -170,10 +174,15 @@ dado pessoal, credencial ou configuração específica vai no repositório.
   despesas, reembolsos e hoje.
 
 ### Spec-driven
-- Usar **GitHub Spec Kit enxuto**: apenas `constitution.md`, `spec.md`,
-  `tasks.md`. Sem os outros comandos.
+- Usar **GitHub Spec Kit**: os artefatos enxutos (`constitution.md`,
+  `spec.md`, `tasks.md`) são a base. Os comandos do Spec Kit
+  (`/speckit.clarify`, `/speckit.plan`, `/speckit.checklist`,
+  `/speckit.analyze`) geram os artefatos de qualidade adicionais
+  (`plan.md`, `checklist.md`, `clarify.md`, `analyze.md`).
 - Constitution é **reutilizável** para futuros apps derivados de planilhas.
-- Todos os artefatos de spec ficam em **`.ai/`** na raiz do repositório.
+- Todos os artefatos de spec enxutos ficam em **`.ai/`** na raiz do
+  repositório. Os artefatos gerados pelo Spec Kit ficam em **`specs/`**
+  (estrutura padrão do Spec Kit).
 
 ### Direitos
 - Código open source, repositório público, reutilizável.
@@ -755,6 +764,17 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 │   ├── tasks.md
 │   ├── casos-de-teste.json
 │   └── casos-de-teste-n-pessoas.json
+├── .specify/                    # gerado pelo Spec Kit
+├── specs/                       # gerado pelo Spec Kit
+│   └── 001-controle-de-rateios/
+│       ├── spec.md
+│       ├── plan.md
+│       ├── research.md
+│       ├── data-model.md
+│       ├── quickstart.md
+│       ├── contracts/
+│       ├── checklist.md
+│       └── tasks.md
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
@@ -795,28 +815,101 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 └── public/
 ```
 
+Observação: a pasta `.specify/` e a pasta `specs/` são criadas
+automaticamente pelo `specify init`. Os arquivos `.ai/*` são criados por
+você (Claude Code) e servem de **entrada** para os comandos do Spec Kit.
+
 ---
 
 ## 9. ORDEM DE EXECUÇÃO
 
-Siga nesta ordem. Não pule etapas. Rode testes entre elas.
+**Siga rigorosamente esta ordem.** A Fase 0 prepara o terreno. A Fase 1
+usa o GitHub Spec Kit para validar e enriquecer nossos artefatos de
+referência antes de escrevermos qualquer código de produção.
 
-1. **Scaffold** — Vite + React + TS + PWA + Drizzle + Neon Auth + hash
-   router + base path.
-2. **Módulo de cálculo puro (`src/core/`)** — implementar e rodar contra
-   `.ai/casos-de-teste.json`. Todos os 27 devem passar. Validar saldo.
-   Rodar também contra `.ai/casos-de-teste-n-pessoas.json`.
-3. **Schema e migrações Drizzle** — incluir triggers (Σ cota = 1,
-   pagador ∈ membros) e RLS e role do Action de IPCA.
-4. **Autenticação** — Neon Auth, cadastro desativado, login/logout.
-5. **Cliente de dados** — Neon Data API, funções tipadas.
-6. **Telas** — lista, detalhe, memória, cadastro de despesa, cadastro de
-   reembolso, config.
-7. **Workflows do GitHub** — smoke-bcb, ipca, backup.
-8. **Script de migração da planilha** — cria o rateio "Apartamento" com
-   cotas 0/1, insere despesas e reembolsos.
-9. **Deploy** — GitHub Pages via Action, PWA instalável.
-10. **Documentação** — README, .env.example.
+### Fase 0 — Scaffold e Preparação do Projeto
+
+1. **Scaffold do Projeto**: Vite + React + TS + PWA + Drizzle + Neon
+   Auth + hash router + base path (base path para GitHub Pages,
+   `createHashRouter`).
+2. **Criação dos Artefatos de Referência (`.ai/`)**: Copie o conteúdo
+   exato das seções 14 a 17 (e 6.3) deste HANDOFF para os arquivos
+   correspondentes dentro da pasta `.ai/`. Estes arquivos são a fonte da
+   verdade e serão usados como entrada para o Spec Kit.
+
+### Fase 1 — Integração com o GitHub Spec Kit
+
+1. **Instalar o `specify` CLI**:
+   ```bash
+   uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v1.0.6
+   ```
+   (Use a versão mais recente estável disponível no momento da execução;
+   consulte https://github.com/github/spec-kit para a versão atual.)
+
+2. **Inicializar o Spec Kit no Projeto**:
+   ```bash
+   specify init --here --force --integration claude
+   ```
+   - `--here`: Inicializa no diretório atual.
+   - `--force`: Permite a mesclagem com os arquivos existentes
+     (`HANDOFF.md`, `.ai/`, etc.) sem sobrescrever.
+   - `--integration claude`: Configura os prompts para o Claude Code.
+
+3. **Executar os Comandos de Qualidade**: Use os comandos de barra no
+   chat para gerar os artefatos faltantes, usando os arquivos `.ai/`
+   como contexto.
+   - `/speckit.clarify`: Para resolver ambiguidades no `spec.md`.
+   - `/speckit.plan`: Para gerar o `plan.md` com decisões técnicas.
+   - `/speckit.checklist`: Para gerar os critérios de aceite e testes.
+   - `/speckit.analyze`: Para verificar a consistência entre todos os
+     artefatos.
+
+4. **Pare e reporte**: Mostre os artefatos gerados pelo Spec Kit ao
+   usuário antes de prosseguir.
+
+### Fase 2 — Módulo de Cálculo Puro
+
+1. **Implementar `src/core/`**: Criar `decimal.ts`, `indice.ts`,
+   `unidades.ts` e `saldo.ts` conforme a seção 4.10 deste documento.
+2. **Rodar os Testes**: Executar os testes contra os arquivos
+   `.ai/casos-de-teste.json` e `.ai/casos-de-teste-n-pessoas.json`.
+   Todos os 27 + 10 casos devem passar.
+3. **Validar o Saldo**: Confirmar que o saldo em 2026-08-15 está entre
+   R$ 707,00 e R$ 708,00.
+4. **Pare e reporte** o resultado dos testes.
+
+### Fase 3 — Banco de Dados e Autenticação
+
+1. **Schema e Migrações**: Criar `src/db/schema.ts` com Drizzle (tabela
+   `rateios`, `membros`, `despesas`, `reembolsos`, etc.). Gerar as
+   migrações e aplicar as políticas de RLS e triggers.
+2. **Autenticação**: Configurar o Neon Auth, desativar o cadastro
+   aberto e criar as telas de login/logout.
+3. **Pare e reporte**.
+
+### Fase 4 — Cliente de Dados e Telas
+
+1. **Cliente de Dados**: Criar `src/db/client.ts` usando a Neon Data API
+   e funções tipadas.
+2. **Telas**: Implementar as telas de lista, detalhe, memória de
+   cálculo, cadastro de despesa/reembolso e configurações.
+3. **Pare e reporte**.
+
+### Fase 5 — Workflows e Migração
+
+1. **Workflows do GitHub**: Criar `smoke-bcb.yml`, `ipca.yml` e
+   `backup.yml`.
+2. **Script de Migração**: Criar `scripts/migrar-planilha.mjs` para
+   popular o banco com os dados do rateio "Apartamento".
+3. **Pare e reporte**.
+
+### Fase 6 — Deploy e Documentação
+
+1. **Deploy**: Configurar o GitHub Pages via Action e testar a
+   instalação do PWA.
+2. **Documentação**: Escrever o `README.md` com instruções de fork e o
+   `.env.example`.
+3. **Pare e reporte**.
 
 ---
 
@@ -848,6 +941,9 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
   para recebedor). **Não** subtrair de novo no cálculo de `deve(i → j)`.
 - **Mudança de U_total**: recalcula compromissos e excessos. Reembolsos
   permanecem. Avisar o usuário.
+- **Spec Kit e `.ai/`**: o `specify init` cria uma pasta `specs/` com
+  seus próprios arquivos. Não sobrescrever `.ai/`; usar o conteúdo
+  `.ai/` como entrada para os comandos `/speckit.*`.
 
 ---
 
@@ -869,6 +965,8 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 - [ ] Workflow de backup rodando.
 - [ ] RLS validada com 2 usuários.
 - [ ] README com instruções de fork.
+- [ ] **Artefatos do Spec Kit gerados**: `plan.md`, `checklist.md`,
+      `clarify.md` e `analyze.md` presentes na pasta `specs/`.
 - [ ] `.ai/constitution.md`, `.ai/spec.md`, `.ai/tasks.md`,
       `.ai/casos-de-teste.json` e `.ai/casos-de-teste-n-pessoas.json`
       no repositório.
@@ -883,7 +981,8 @@ Reporte:
 2. Quais não foram e por quê.
 3. O saldo calculado em 2026-08-15 e se está dentro do intervalo esperado.
 4. Se o smoke test do BCB passou.
-5. Qualquer decisão de implementação que você teve que tomar por conta
+5. Quais artefatos o Spec Kit gerou e onde estão.
+6. Qualquer decisão de implementação que você teve que tomar por conta
    própria.
 
 ---
@@ -892,33 +991,575 @@ Reporte:
 
 Antes de qualquer código:
 
-1. Crie a pasta `.ai/` na raiz do repositório e, dentro dela, os
-   arquivos `constitution.md`, `spec.md`, `tasks.md`,
-   `casos-de-teste.json` e `casos-de-teste-n-pessoas.json`, usando
-   exatamente o conteúdo das seções 14 a 17 abaixo e da seção 6.3.
-2. Depois comece a Fase 0 do `.ai/tasks.md` (scaffold), parando ao final
-   dela para reportar.
+1. Crie a pasta `.ai/` na raiz do repositório e popule os arquivos
+   `constitution.md`, `spec.md`, `tasks.md`, `casos-de-teste.json` e
+   `casos-de-teste-n-pessoas.json` com o conteúdo exato das seções 14 a
+   17 e 6.3.
+2. Em seguida, execute os passos da **Fase 1 — Integração com o GitHub
+   Spec Kit** descritos na seção 9 para gerar os artefatos de qualidade
+   adicionais. Pare e reporte os artefatos gerados.
+3. Depois, comece a **Fase 2 — Módulo de Cálculo Puro** e pare ao final
+   dela para reportar os resultados dos testes.
 
 ---
 
 ## 14. CONTEÚDO DE `.ai/constitution.md`
 
-(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 1)
+```markdown
+# Constitution — Apps de Controle de Rateios
+
+Princípios reutilizáveis para qualquer app derivado de planilha de controle
+de despesas compartilhadas entre pessoas. O app piloto é o "Controle de
+Rateios" (apartamento Lucas + Letícia). Estes princípios valem para os
+próximos.
+
+## Princípios
+
+### 1. Cálculo em módulo puro, com testes
+Toda regra financeira (correção, saldo, rateio) vive em funções puras,
+sem dependência de UI, banco ou rede. Testadas com dados reais migrados
+como oráculo. Nenhum cálculo financeiro no componente visual nem na query.
+
+### 2. Dinheiro e índices em decimal
+Nunca usar `number` (float binário) para dinheiro ou índices. Usar lib
+decimal (`decimal.js`). Arredondamento explícito e documentado em cada
+operação. Valores gravados com precisão para reproduzir o oráculo.
+
+### 3. Séries e taxas configuráveis, e opcionais
+A fonte da correção (BCB SGS, código da série) é parâmetro, não hardcoded.
+Um fork pode trocar IPCA por IGP-M, INCC, etc. sem editar o núcleo do
+cálculo. Correção é **opcional por rateio** — se desligada, tudo é
+nominal.
+
+### 4. Correção pro-rata diária composta, sobre o que foi pago
+A correção entre duas datas usa a taxa mensal composta diariamente, com
+defasagem de 1 mês embutida (índice do mês M incorpora a taxa do mês M−1).
+Datas antes do início da série são bloqueadas com erro claro. **Só o que
+já foi pago é corrigido** — nunca valores previstos.
+
+### 5. RLS obrigatório; nenhuma credencial no cliente
+Autenticação JWT (Neon Auth) + RLS por membro. Nenhuma connection
+string, service key ou segredo no bundle. O front fala apenas com a Data
+API. Role do Postgres para escrita de taxas é separada e restrita à tabela
+de taxas.
+
+### 6. Schema versionado por Drizzle
+Schema, políticas RLS e triggers vivem em migrações Drizzle versionadas
+no repositório. Migrações rodam localmente/CI com connection string direta
+(apenas em secrets). Nunca aplicar mudança manual em produção sem migração
+correspondente.
+
+### 7. Oráculo de dados reais
+Antes de implementar, migrar os dados reais da planilha para um JSON de
+casos de teste com entrada e saída esperada. A verificação real é bater o
+cálculo; specs em prosa são guia, não prova.
+
+### 8. Open source by default
+Repositório público, código reutilizável, documentação clara para fork.
+Nenhum dado pessoal no repositório. Configuração específica (séries,
+e-mails autorizados, credenciais) fica em variáveis de ambiente/secrets.
+
+### 9. Sem offline não solicitado
+Offline (leitura ou escrita) só entra se for requisito explícito. Por
+padrão, o app exige conexão; cache é apenas o shell do PWA.
+
+### 10. Modelo de dados mínimo
+Só criar tabela/campo quando houver regra que o justifique. Preferir visão
+derivada a coluna gravada quando o dado é calculável.
+
+### 11. Multi-rateio e n participantes por padrão
+O app não é específico de um caso. Toda entidade de negócio (despesa,
+reembolso, saldo) é escopada por `rateio_id`. Um rateio tem **n
+participantes** com cotas, e o cálculo é o mesmo para n=2 ou n=10.
+
+### 12. Cotas são parâmetros, não fatos
+Pagamentos e reembolsos são fatos históricos, imutáveis. Cotas são
+parâmetros de cálculo e podem ser reajustadas — o saldo é recomposto. Não
+guardar snapshot de cotas em despesas.
+
+### 13. Reembolsos entram no `pago_efetivo`
+Um reembolso move crédito: soma no `pago_efetivo` do pagador e subtrai no
+do recebedor. **Nunca** subtrair reembolsos de novo na hora de calcular
+`deve(i → j)` — eles já estão contabilizados. Essa foi uma fonte de bug
+identificada e corrigida.
+
+### 14. Terminologia explícita
+Termos do domínio (rateio, pagamento, reembolso, cota, compromisso,
+excesso, déficit) devem estar definidos no spec e usados consistentemente
+na UI e no código. Evitar sinônimos.
+
+## Anti-princípios (o que evitar)
+- Cálculo financeiro no front sem passar pelo módulo puro.
+- `number` para dinheiro.
+- Hardcoded de código de série, e-mail autorizado ou connection string.
+- Aplicar migração direto em produção sem commit correspondente.
+- "Depois eu testo" — o oráculo é pré-requisito, não etapa final.
+- Tratar o app como específico do apartamento.
+- Ratear excesso proporcional à cota (deve ser proporcional ao déficit).
+- Corrigir valores previstos (só o pago é corrigido).
+- Subtrair reembolsos duas vezes (eles já estão no `pago_efetivo`).
+```
 
 ---
 
 ## 15. CONTEÚDO DE `.ai/spec.md`
 
-(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 2)
+```markdown
+# Spec — App Controle de Rateios (v1)
+
+## 1. Contexto
+PWA pessoal para gerenciar **rateios** — divisões de despesas
+compartilhadas entre participantes — com registro de despesas, cálculo de
+saldos, e reembolsos entre participantes. Correção monetária por série
+configurável (default: IPCA / BCB SGS 433), opcional por rateio.
+Substitui a planilha Controle.xlsx (caso piloto: apartamento Lucas +
+Letícia). O app suporta múltiplos rateios independentes, cada um com seus
+próprios participantes, cotas, despesas, reembolsos e saldo.
+
+Código aberto e reutilizável: qualquer pessoa pode fazer fork e usar para
+cenários parecidos (rateio de despesas com correção por índice).
+
+## 2. Glossário
+
+- **Rateio**: contexto isolado que representa a divisão de uma dívida
+  compartilhada entre n participantes, conforme suas cotas. Cada rateio
+  tem seus próprios participantes, despesas, reembolsos e saldo. Ex.:
+  "Apartamento", "Celular", "Carro".
+- **Pagamento**: ato de pagar uma conta a um terceiro. A conta pode ou não
+  lhe caber — você pode estar adiantando a parte de outra pessoa.
+- **Reembolso**: ato de ressarcir uma pessoa que pagou uma conta que lhe
+  cabia (total ou parcialmente), com o devido ajuste monetário pela série
+  configurada. É a operação que liquida as diferenças apuradas pelo
+  rateio.
+- **Participante**: pessoa com cota em um rateio. Pode ter cota 0.
+- **Cota**: fração do rateio atribuída a um participante. Soma 100% no
+  rateio.
+- **Compromisso**: `total_pago × cota` do participante. Muda quando o
+  total pago muda.
+- **Excesso**: valor que o participante pagou além do compromisso dele.
+  Gera crédito contra os demais.
+- **Déficit**: valor que falta para o participante atingir o compromisso.
+  Gera dívida com os demais.
+- **Credor líquido**: participante com excesso. Tem a receber.
+- **Devedor líquido**: participante com déficit. Tem a pagar.
+- **Pool**: o que ainda falta pagar a terceiros.
+
+## 3. Modelo de dados
+(ver HANDOFF.md seções 3.1 a 3.5)
+
+Tabelas: `users`, `rateios`, `membros`, `despesas`, `reembolsos`,
+`taxas_ipca`, `config`.
+
+Convenções:
+- Cotas em `membros` são `numeric(9,6)` entre 0 e 1, somando exatamente 1
+  por rateio (trigger).
+- `despesas.pagador_user_id` ∈ membros do rateio (trigger).
+- `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros do rateio
+  (trigger) e diferentes entre si (CHECK).
+- Despesas com situação `prevista` não entram no cálculo do saldo.
+
+## 4. Regras de cálculo
+(ver HANDOFF.md seções 4.1 a 4.10)
+
+Resumo da Forma B (compromisso/excesso):
+
+```
+U_total        = Σ valores pagos / indice(data)         (unidades)
+compromisso_i  = cota_i × U_total
+pago_efetivo_i = pago_i + reembolsos_pagos_i − reembolsos_recebidos_i
+excesso_i      = max(0, pago_efetivo_i − compromisso_i)
+deficit_i      = max(0, compromisso_i − pago_efetivo_i)
+deve(i → j)    = deficit_i × excesso_j / Σ_k excesso_k  (já é o líquido)
+saldo_reais_i  = (Σ_j deve(i→j) − Σ_k deve(k→i)) × indice(hoje)
+```
+
+Invariantes:
+- `Σ excesso = Σ déficit`
+- `Σ saldo_unidades = 0`
+
+## 5. Validações
+- Valor de despesa/reembolso > 0.
+- Reembolso: pagador ≠ recebedor.
+- Data de reembolso anterior à data do rateio: permitido (adiantamento).
+- Data de despesa < data base da série: bloqueada com erro claro.
+- Σ cota = 1 por rateio (trigger + app).
+- Pagador de despesa e partes do reembolso ∈ membros do rateio.
+
+## 6. Telas
+(ver HANDOFF.md seção 7)
+
+- Lista de rateios (home).
+- Detalhe do rateio com saldos por participante e extrato cronológico.
+- Memória de cálculo por lançamento.
+- Formulários de despesa e reembolso.
+- Configurações (globais + cotas por rateio).
+- Toast de "saldos recalculados" quando U_total muda.
+
+## 7. Autenticação e acesso
+- Neon Auth (JWT) + RLS.
+- Cadastro aberto desativado; e-mails autorizados.
+- Cada rateio tem sua própria lista de membros.
+
+## 8. Rotina do IPCA (GitHub Action)
+- Agendado (dias 9 a 15) + `workflow_dispatch`.
+- Busca série configurada no BCB; upsert idempotente em `taxas_ipca`.
+- Smoke test prévio obrigatório. Fallback manual.
+
+## 9. Backup
+- Action semanal faz `pg_dump` como artifact.
+
+## 10. Migração da planilha
+(ver HANDOFF.md seção 5)
+
+Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
+
+## 11. Fora de escopo (v1)
+- Offline. Notificações. Upload de arquivo.
+- Override de cota por despesa (usar rateio separado).
+- Plano automático de reembolsos para zerar saldos.
+- Observadores (cota 0 + não pagar já cumpre o papel).
+- FIFO detalhado para n > 2 (só para n = 2).
+
+## 12. Riscos
+- Data API do Neon em Beta.
+- Cold start do compute (~5s).
+- Workflows agendados desativados após 60 dias sem atividade.
+- Restauração do Neon free: 6 horas. Backup próprio é obrigatório.
+- api.bcb.gov.br pode bloquear IPs de datacenter.
+```
 
 ---
 
 ## 16. CONTEÚDO INICIAL DE `.ai/casos-de-teste.json`
 
-(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 3)
+```json
+{
+  "metadata": {
+    "referencia": "2026-08-15",
+    "serie_bcb": 433,
+    "data_base": "2025-12-01",
+    "indice_base": 1000,
+    "metodo_correcao": "pro-rata diaria composta, defasagem 1 mes",
+    "cotas": { "LUCAS": 0, "LETICIA": 1 }
+  },
+  "taxas_ipca": [
+    {"mes": "2025-12-01", "taxa": 0.33},
+    {"mes": "2026-01-01", "taxa": 0.33},
+    {"mes": "2026-02-01", "taxa": 0.70},
+    {"mes": "2026-03-01", "taxa": 0.88},
+    {"mes": "2026-04-01", "taxa": 0.67},
+    {"mes": "2026-05-01", "taxa": 0.58},
+    {"mes": "2026-06-01", "taxa": 0.16},
+    {"mes": "2026-07-01", "taxa": 0.07},
+    {"mes": "2026-08-01", "taxa": -0.32}
+  ],
+  "casos": []
+}
+```
+
+> O array `casos` é preenchido na Fase 2 do `.ai/tasks.md` (T105) com as
+> 27 linhas da planilha, calculadas pela fórmula pro-rata.
 
 ---
 
-## 17. CONTEÚDO DE `.ai/tasks.md`
+## 17. CONTEÚDO INICIAL DE `.ai/casos-de-teste-n-pessoas.json`
+```json
+{
+  "metadata": {
+    "descricao": "Cenarios sinteticos para validar a Forma B com n participantes e cotas desiguais. Corrigir_ipca=false para isolar a logica de rateio.",
+    "referencia": "2026-08-15",
+    "corrigir_ipca": false,
+    "unidades_iguais_a_reais": true
+  },
+  "casos": [
+    {
+      "id": "n01",
+      "descricao": "50/50 com uma despesa paga por cada um - saldo zero",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-01-15", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado": { "P1": 0, "P2": 0 },
+      "deve_de_para": []
+    },
+    {
+      "id": "n02",
+      "descricao": "50/50 com despesa paga so por P1 - P2 deve 50 a P1",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado": { "P1": -50, "P2": 50 },
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "valor": 50 }
+      ]
+    },
+    {
+      "id": "n03",
+      "descricao": "80/20 com despesa paga so por P2 - P1 deve 80 a P2",
+      "participantes": { "P1": 0.8, "P2": 0.2 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado": { "P1": 80, "P2": -80 },
+      "deve_de_para": [
+        { "de": "P1", "para": "P2", "valor": 80 }
+      ]
+    },
+    {
+      "id": "n04",
+      "descricao": "4 pessoas 20/30/10/40 com despesas pagas por P1, P2 e P4",
+      "participantes": { "P1": 0.2, "P2": 0.3, "P3": 0.1, "P4": 0.4 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-02-10", "pagador": "P2", "valor": 200 },
+        { "data": "2026-03-10", "pagador": "P4", "valor": 300 }
+      ],
+      "reembolsos": [],
+      "calculo": {
+        "U_total": 600,
+        "compromissos": { "P1": 120, "P2": 180, "P3": 60, "P4": 240 },
+        "pago_efetivo": { "P1": 100, "P2": 200, "P3": 0, "P4": 300 },
+        "excesso": { "P1": 0, "P2": 20, "P3": 0, "P4": 60 },
+        "deficit": { "P1": 20, "P2": 0, "P3": 60, "P4": 0 }
+      },
+      "saldo_esperado": { "P1": 20, "P2": -20, "P3": 60, "P4": -60 },
+      "deve_de_para": [
+        { "de": "P1", "para": "P2", "valor": 5 },
+        { "de": "P1", "para": "P4", "valor": 15 },
+        { "de": "P3", "para": "P2", "valor": 15 },
+        { "de": "P3", "para": "P4", "valor": 45 }
+      ],
+      "propriedades": ["soma_saldos_zero"]
+    },
+    {
+      "id": "n05",
+      "descricao": "Cota 0 paga despesa - apenas os outros acumulam divida",
+      "participantes": { "P1": 0, "P2": 1 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado": { "P1": -100, "P2": 100 },
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "valor": 100 }
+      ]
+    },
+    {
+      "id": "n06",
+      "descricao": "Cota 100 paga despesa - sem impacto liquido",
+      "participantes": { "P1": 0, "P2": 1 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado": { "P1": 0, "P2": 0 },
+      "deve_de_para": []
+    },
+    {
+      "id": "n07",
+      "descricao": "Reembolso parcial - saldo residual de 20",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [
+        { "data": "2026-02-10", "pagador": "P2", "recebedor": "P1", "valor": 30 }
+      ],
+      "calculo": {
+        "pago_efetivo": { "P1": 70, "P2": 30 },
+        "compromissos": { "P1": 50, "P2": 50 },
+        "excesso": { "P1": 20, "P2": 0 },
+        "deficit": { "P1": 0, "P2": 20 }
+      },
+      "saldo_esperado": { "P1": -20, "P2": 20 },
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "valor": 20 }
+      ]
+    },
+    {
+      "id": "n08",
+      "descricao": "Reembolso excessivo inverte a divida - P1 deve 50 a P2",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [
+        { "data": "2026-02-10", "pagador": "P2", "recebedor": "P1", "valor": 100 }
+      ],
+      "calculo": {
+        "pago_efetivo": { "P1": 0, "P2": 100 },
+        "compromissos": { "P1": 50, "P2": 50 },
+        "excesso": { "P1": 0, "P2": 50 },
+        "deficit": { "P1": 50, "P2": 0 }
+      },
+      "saldo_esperado": { "P1": 50, "P2": -50 },
+      "deve_de_para": [
+        { "de": "P1", "para": "P2", "valor": 50 }
+      ]
+    },
+    {
+      "id": "n09",
+      "descricao": "4 pessoas iguais - P1 e P2 pagam, P3 e P4 devem",
+      "participantes": { "P1": 0.25, "P2": 0.25, "P3": 0.25, "P4": 0.25 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-02-10", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "calculo": {
+        "U_total": 200,
+        "compromissos": { "P1": 50, "P2": 50, "P3": 50, "P4": 50 },
+        "pago_efetivo": { "P1": 100, "P2": 100, "P3": 0, "P4": 0 },
+        "excesso": { "P1": 50, "P2": 50, "P3": 0, "P4": 0 },
+        "deficit": { "P1": 0, "P2": 0, "P3": 50, "P4": 50 }
+      },
+      "saldo_esperado": { "P1": -50, "P2": -50, "P3": 50, "P4": 50 },
+      "deve_de_para": [
+        { "de": "P3", "para": "P1", "valor": 25 },
+        { "de": "P3", "para": "P2", "valor": 25 },
+        { "de": "P4", "para": "P1", "valor": 25 },
+        { "de": "P4", "para": "P2", "valor": 25 }
+      ],
+      "propriedades": ["soma_saldos_zero"]
+    },
+    {
+      "id": "n10",
+      "descricao": "Mudanca de U_total apos reembolso - recalculo",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-03-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [
+        { "data": "2026-02-10", "pagador": "P2", "recebedor": "P1", "valor": 50 }
+      ],
+      "observacao": "Estado inicial (so a 1a despesa + reembolso): P2 quitado, saldos zero. Com a 2a despesa, U_total vira 200, P2 deve mais 50. O reembolso anterior permanece como fato e o saldo e recalculado.",
+      "calculo_final": {
+        "U_total": 200,
+        "pago_efetivo": { "P1": 150, "P2": 50 },
+        "compromissos": { "P1": 100, "P2": 100 },
+        "excesso": { "P1": 50, "P2": 0 },
+        "deficit": { "P1": 0, "P2": 50 }
+      },
+      "saldo_esperado": { "P1": -50, "P2": 50 },
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "valor": 50 }
+      ]
+    }
+  ]
+}
+```
 
-(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 5)
+---
+
+## 18. CONTEÚDO DE `.ai/tasks.md`
+
+```markdown
+# Tasks
+
+## Fase 0 — Preparação
+- [ ] T001 Confirmar repositório público no GitHub (já existe).
+- [ ] T002 Rodar `pnpm create vite` com React + TS na raiz (cuidado com
+      arquivos já existentes: HANDOFF.md e specs devem ser preservados).
+- [ ] T003 Adicionar `vite-plugin-pwa`, `decimal.js`, `drizzle-orm`,
+      `drizzle-kit`, `react-router-dom`, `@neondatabase/neon-js`.
+- [ ] T004 Configurar base path do Vite para GitHub Pages.
+- [ ] T005 Configurar `createHashRouter`.
+- [ ] T006 Criar `.env.example` com as variáveis necessárias.
+
+## Fase 1 — Integração com o GitHub Spec Kit
+- [ ] T101 Instalar `specify-cli` via `uv tool install`.
+- [ ] T102 Rodar `specify init --here --force --integration claude`.
+- [ ] T103 Rodar `/speckit.clarify` sobre o `spec.md`.
+- [ ] T104 Rodar `/speckit.plan` para gerar o `plan.md`.
+- [ ] T105 Rodar `/speckit.checklist` para gerar critérios de aceite.
+- [ ] T106 Rodar `/speckit.analyze` para verificar consistência.
+- [ ] T107 Revisar os artefatos gerados e reportar ao usuário.
+
+## Fase 2 — Módulo de cálculo puro
+- [ ] T201 Criar `src/core/decimal.ts` (config do Decimal: precisão alta,
+      arredondamento explícito na exibição).
+- [ ] T202 Criar `src/core/indice.ts` com `indiceEmData(data)` conforme
+      seções 4.1 e 4.2 do HANDOFF.
+- [ ] T203 Criar `src/core/unidades.ts` (conversão valor ↔ unidades,
+      respeitando `corrigir_ipca`).
+- [ ] T204 Criar `src/core/saldo.ts` com `calcularSaldo(rateio, corrigir)`
+      conforme pseudocódigo da seção 4.10 do HANDOFF.
+- [ ] T205 Preencher `.ai/casos-de-teste.json` com os 27 casos do piloto
+      (linhas 2 a 28 da planilha), calculando índices e valores
+      corrigidos.
+- [ ] T206 Escrever testes contra o JSON. Todos os 27 devem passar.
+- [ ] T207 Validar saldo em 2026-08-15 entre R$ 707,00 e R$ 708,00.
+- [ ] T208 Preencher `.ai/casos-de-teste-n-pessoas.json` com os 10 casos
+      sintéticos (n01 a n10) e seus valores esperados.
+- [ ] T209 Rodar testes contra os casos n-pessoas. Todos devem passar.
+- [ ] T210 Verificar invariantes em todos os casos: Σ excesso = Σ déficit
+      e Σ saldoUnidades = 0.
+
+## Fase 3 — Banco e RLS
+- [ ] T301 Criar `src/db/schema.ts` com Drizzle (tabela `rateios`; sem
+      credor/devedor fixos; `membros` com cota; `reembolsos` com pagador
+      e recebedor).
+- [ ] T302 Gerar migração inicial com `drizzle-kit generate`.
+- [ ] T303 Escrever migração de RLS (SQL puro).
+- [ ] T304 Escrever triggers: Σ cota = 1; pagador ∈ membros do rateio;
+      partes do reembolso ∈ membros do rateio.
+- [ ] T305 Criar role restrita para o Action de IPCA.
+- [ ] T306 Aplicar migrações em ambiente de dev.
+- [ ] T307 Testar RLS com 2 usuários distintos.
+
+## Fase 4 — Autenticação
+- [ ] T401 Configurar Neon Auth. Desativar cadastro aberto.
+- [ ] T402 Criar tela de login/logout.
+- [ ] T403 Hook `useSession` e `useUser`.
+
+## Fase 5 — Cliente de dados
+- [ ] T501 Criar `src/db/client.ts` usando Neon Data API.
+- [ ] T502 Funções tipadas: listar rateios, criar despesa, criar
+      reembolso, atualizar cotas.
+
+## Fase 6 — Telas
+- [ ] T601 Tela "lista de rateios".
+- [ ] T602 Tela "detalhe do rateio" com extrato e saldos por participante.
+- [ ] T603 Tela "memória de cálculo".
+- [ ] T604 Formulário de despesa.
+- [ ] T605 Formulário de reembolso.
+- [ ] T606 Tela de configurações (globais + cotas por rateio).
+- [ ] T607 Toast de "saldos recalculados" quando U_total muda.
+
+## Fase 7 — Workflows GitHub
+- [ ] T701 `smoke-bcb.yml` — testa acesso ao BCB.
+- [ ] T702 `ipca.yml` — busca série, faz upsert.
+- [ ] T703 `backup.yml` — pg_dump semanal.
+- [ ] T704 Documentar no README que workflows são desativados após 60
+      dias sem atividade.
+
+## Fase 8 — Migração da planilha
+- [ ] T801 `scripts/migrar-planilha.mjs` (cria o rateio "Apartamento"
+      com cotas 0/1, insere despesas e reembolsos).
+- [ ] T802 Rodar contra banco de dev.
+- [ ] T803 Conferir valores com extrato bancário.
+
+## Fase 9 — Deploy
+- [ ] T901 Configurar GitHub Pages via Action.
+- [ ] T902 Testar PWA instalável no celular.
+- [ ] T903 Verificar service worker e base path.
+
+## Fase 10 — Documentação
+- [ ] U001 `README.md` com instruções de fork.
+- [ ] U002 `.env.example`.
+- [ ] U003 Confirmar que `.ai/constitution.md`, `.ai/spec.md`,
+      `.ai/tasks.md`, `.ai/casos-de-teste.json` e
+      `.ai/casos-de-teste-n-pessoas.json` estão no repo.
+- [ ] U004 Confirmar que os artefatos do Spec Kit (`plan.md`,
+      `checklist.md`, `clarify.md`, `analyze.md`) estão em `specs/`.
+```
+
+---
+
+# Fim do documento

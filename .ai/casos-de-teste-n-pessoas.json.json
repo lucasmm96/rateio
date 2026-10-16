@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "descricao": "Cenarios sinteticos para validar a Forma B com n participantes e cotas desiguais.",
+    "referencia": "2026-08-15",
+    "serie_bcb": 433,
+    "data_base": "2025-12-01",
+    "indice_base": 1000,
+    "metodo_correcao": "pro-rata diaria composta, defasagem 1 mes"
+  },
+  "taxas_ipca": [
+    {"mes": "2025-12-01", "taxa": 0.33},
+    {"mes": "2026-01-01", "taxa": 0.33},
+    {"mes": "2026-02-01", "taxa": 0.70},
+    {"mes": "2026-03-01", "taxa": 0.88},
+    {"mes": "2026-04-01", "taxa": 0.67},
+    {"mes": "2026-05-01", "taxa": 0.58},
+    {"mes": "2026-06-01", "taxa": 0.16},
+    {"mes": "2026-07-01", "taxa": 0.07},
+    {"mes": "2026-08-01", "taxa": -0.32}
+  ],
+  "casos": [
+    {
+      "id": "n01",
+      "descricao": "50/50 com uma despesa paga por cada um - saldo zero",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-01-15", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado_unidades": { "P1": 0, "P2": 0 }
+    },
+    {
+      "id": "n02",
+      "descricao": "50/50 com despesa paga so por P1 - P2 deve 50%",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "unidades": 50 }
+      ]
+    },
+    {
+      "id": "n03",
+      "descricao": "80/20 com despesa paga so por P2 - P1 deve 80%",
+      "participantes": { "P1": 0.8, "P2": 0.2 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "deve_de_para": [
+        { "de": "P1", "para": "P2", "unidades": 80 }
+      ]
+    },
+    {
+      "id": "n04",
+      "descricao": "4 pessoas 20/30/10/40 com despesas pagas por diferentes participantes",
+      "participantes": { "P1": 0.2, "P2": 0.3, "P3": 0.1, "P4": 0.4 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 },
+        { "data": "2026-02-10", "pagador": "P2", "valor": 200 },
+        { "data": "2026-03-10", "pagador": "P4", "valor": 300 }
+      ],
+      "reembolsos": [],
+      "propriedades": ["soma_saldos_zero"]
+    },
+    {
+      "id": "n05",
+      "descricao": "Cota 0 paga despesa - apenas os outros acumulam divida",
+      "participantes": { "P1": 0, "P2": 1 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "deve_de_para": [
+        { "de": "P2", "para": "P1", "unidades": 100 }
+      ]
+    },
+    {
+      "id": "n06",
+      "descricao": "Cota 100 paga despesa - sem impacto liquido",
+      "participantes": { "P1": 0, "P2": 1 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P2", "valor": 100 }
+      ],
+      "reembolsos": [],
+      "saldo_esperado_unidades": { "P1": 0, "P2": 0 }
+    },
+    {
+      "id": "n07",
+      "descricao": "Reembolso parcial - saldo residual",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [
+        { "data": "2026-02-10", "pagador": "P2", "recebedor": "P1", "valor": 30 }
+      ],
+      "saldo_esperado_unidades": { "P1": -20, "P2": 20 }
+    },
+    {
+      "id": "n08",
+      "descricao": "Reembolso em data diferente - correcao aplicada",
+      "participantes": { "P1": 0.5, "P2": 0.5 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 100 }
+      ],
+      "reembolsos": [
+        { "data": "2026-06-10", "pagador": "P2", "recebedor": "P1", "valor": 50 }
+      ],
+      "observacao": "O reembolso de 50 em junho deve ser corrigido para a data de origem (jan) para abater corretamente. O saldo residual reflete a diferenca de correcao."
+    },
+    {
+      "id": "n09",
+      "descricao": "Mudanca de U_total apos reembolso feito - recalculo e aviso",
+      "participantes": { "P1": 0.25, "P2": 0.25, "P3": 0.25, "P4": 0.25 },
+      "despesas": [
+        { "data": "2026-01-10", "pagador": "P1", "valor": 35 },
+        { "data": "2026-02-10", "pagador": "P2", "valor": 10 }
+      ],
+      "reembolsos": [
+        { "data": "2026-02-15", "pagador": "P2", "recebedor": "P1", "valor": 3.33 }
+      ],
+      "observacao": "Novo boleto pago depois muda U_total; o saldo interno e recalculado. O reembolso permanece como fato. Testar que o aviso e disparado e que os saldos batem."
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-# HANDOFF — App "Controle de Repasses"
+# HANDOFF — App "Controle de Reembolsos"
 
 Você é o Claude Code executando este projeto. Este único arquivo contém
 tudo o que você precisa: contexto, decisões fechadas, modelo de dados,
@@ -15,14 +15,9 @@ documentação em português.
 ## INSTRUÇÕES INICIAIS (leia antes de tudo)
 
 1. O repositório já existe, público, vazio (ou quase). Você está na raiz.
-2. Antes de qualquer código, **crie os quatro arquivos de spec dentro
-   da pasta `.ai/`** na raiz, com o conteúdo exato das seções 14 a 17
-   deste documento:
-   - `.ai/constitution.md`
-   - `.ai/spec.md`
-   - `.ai/casos-de-teste.json` (esqueleto da seção 16; você completa os
-     27 casos na Fase 1 do `.ai/tasks.md`)
-   - `.ai/tasks.md`
+2. Antes de qualquer código, **crie os arquivos de spec dentro da pasta
+   `.ai/`** na raiz, com o conteúdo exato das seções 14 a 17 deste
+   documento (mais o arquivo `casos-de-teste-n-pessoas.json` da seção 6.3).
 3. Depois, siga a ordem de execução da seção 9, parando ao final de cada
    fase para mostrar o resultado antes de prosseguir.
 4. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
@@ -34,18 +29,45 @@ documentação em português.
 
 Transformar a planilha `Controle.xlsx` de um casal (Lucas e Letícia) em um
 PWA web instalável no celular, para registrar despesas compartilhadas e
-repasses entre duas pessoas, com correção monetária por IPCA (série SGS
-433 do BCB, configurável).
+reembolsos entre participantes, com correção monetária por IPCA (série
+SGS 433 do BCB, configurável e **opcional por dívida**).
 
 O app **não é específico de apartamento**. É um app genérico de "contas a
-repassar" com correção por índice. O caso do apartamento é a primeira
+reembolsar" com correção por índice. O caso do apartamento é a primeira
 dívida cadastrada. O usuário pode criar quantas dívidas independentes
-quiser (ex.: "Apartamento", "Celular no cartão", "Empréstimo X"), cada
-uma com credor, devedor, despesas, repasses e saldo próprios.
+quiser (ex.: "Apartamento", "Celular", "Carro"), cada uma com seus
+próprios participantes, cotas, despesas, reembolsos e saldo.
+
+Cada dívida pode ter **n participantes** (n ≥ 2), com **cotas** que somam
+100%. O modelo é o **Forma B** (compromisso/excesso): cada participante
+tem um compromisso com a dívida (`total pago × sua cota`); pagamentos a
+terceiros abatem esse compromisso; quem paga mais que o compromisso vira
+credor dos demais; quem paga menos fica devendo.
 
 O repositório é **público** e o código é **open source reutilizável**.
 Qualquer pessoa pode fazer fork e usar para cenários parecidos. Nenhum
 dado pessoal, credencial ou configuração específica vai no repositório.
+
+### Terminologia (aplicada em todo o app)
+
+- **Pagamento**: ato de pagar uma conta a um terceiro. A conta pode ou não
+  lhe caber — você pode estar adiantando a parte de outra pessoa.
+- **Reembolso**: ato de ressarcir uma pessoa que pagou uma conta que lhe
+  cabia (total ou parcialmente), com o devido ajuste monetário pela série
+  configurada.
+- **Dívida**: contexto isolado com participantes, cotas, despesas,
+  reembolsos e saldo próprios. Ex.: "Apartamento".
+- **Participante**: pessoa com cota na dívida. Pode ter cota 0 (não
+  carrega dívida, mas pode pagar).
+- **Cota**: fração da dívida atribuída a um participante. Soma 100% na
+  dívida.
+- **Compromisso**: `total_pago × cota` do participante. Muda quando o
+  total pago muda.
+- **Excesso**: valor que o participante pagou além do compromisso dele.
+- **Déficit**: valor que falta para o participante atingir o compromisso.
+- **Credor líquido**: participante com excesso. Tem a receber.
+- **Devedor líquido**: participante com déficit. Tem a pagar.
+- **Pool**: o que ainda falta pagar a terceiros.
 
 ---
 
@@ -102,8 +124,46 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - **Nenhuma** na v1.
 
 ### Usuários
-- 2 na v1: Lucas e Letícia.
+- 2 na v1 (Lucas e Letícia), mas o modelo suporta **n participantes**.
 - Membros são **por dívida** (tabela `membros`).
+
+### Modelo de saldo — Forma B (compromisso/excesso)
+
+- Cada dívida tem um **total pago** (U_total) = soma das despesas com
+  situação `paga` (em unidades de índice).
+- Cada participante tem um **compromisso** = `U_total × cota`.
+- Quem pagou mais que o compromisso tem **excesso** (crédito).
+- Quem pagou menos tem **déficit** (deve).
+- O excesso é rateado entre os que têm déficit, **proporcional ao déficit
+  de cada um** (não proporcional à cota).
+- Reembolsos são **fatos** (com data, pagador, recebedor) e abatem a
+  dívida entre pares.
+- A **data de origem** da dívida interna é a **data do pagamento original**
+  de quem gerou o excesso.
+- Quando U_total muda (novo boleto pago), os compromissos e excessos são
+  recalculados. Reembolsos já feitos permanecem como fatos. O app avisa
+  o usuário quando uma mudança de U_total altera os saldos internos.
+
+### Cotas e participantes
+
+- Cotas **podem ser reajustadas** a qualquer momento. Reajuste recompõe o
+  cálculo. Não há snapshot histórico (cota é parâmetro, não fato).
+- **Cota 0 é permitida** (participante que não carrega dívida, mas pode
+  pagar — caso Lucas no piloto).
+- **Observadores não existem** na v1. Cota 0 + não pagar já cumpre o
+  papel.
+- **Override por despesa não existe** na v1. Necessidades de rateio
+  diferente → dívida separada.
+- **Plano automático de reembolsos não existe** na v1. Reembolsos são
+  criados manualmente pelo usuário.
+
+### Correção IPCA
+
+- **Opcional por dívida.** Flag `corrigir_ipca` na criação da dívida.
+- Se ligado, aplica IPCA. Se desligado, valores nominais.
+- Quando ligado, a correção é feita em **unidades de índice** (valor ÷
+  índice da data), o que resolve o problema de datas diferentes entre
+  despesas, reembolsos e hoje.
 
 ### Spec-driven
 - Usar **GitHub Spec Kit enxuto**: apenas `constitution.md`, `spec.md`,
@@ -124,20 +184,22 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 
 ### 3.1 Conceitos
 
-- **Dívida**: contexto isolado com credor, devedor, despesas, repasses e
-  saldo próprios. Ex.: "Apartamento".
-- **Credor**: quem desembolsou e tem a receber.
-- **Devedor**: quem deve e fará os repasses.
-- **Despesa**: valor pago a um terceiro. Tem um pagador (credor ou
-  devedor da dívida). Pode estar `paga` ou `prevista`.
-- **Repasse**: transferência do devedor para o credor. Sempre **sobre o
-  total da dívida**, nunca vinculado a item.
+- **Dívida**: contexto isolado com participantes, cotas, despesas,
+  reembolsos e saldo próprios.
+- **Participante**: pessoa com cota na dívida. Pode ter cota 0.
+- **Despesa**: valor pago a um terceiro. Tem pagador (qualquer
+  participante da dívida) e situação (`paga` ou `prevista`).
+- **Reembolso**: transferência de um participante a outro, com pagador e
+  recebedor explícitos.
 - **Taxa IPCA**: global, uma linha por mês.
 
-### 3.2 Regra de saldo (Leitura A)
+### 3.2 Regras estruturais
 
-Somente despesas pagas pelo **credor** geram dívida. Despesas pagas pelo
-devedor são apenas registro histórico. Repasses do devedor abatem.
+- Cotas da dívida somam exatamente **1** (100%).
+- Cada despesa tem `pagador_user_id` ∈ membros da dívida.
+- Cada reembolso tem `pagador_user_id` e `recebedor_user_id` ∈ membros,
+  e são diferentes entre si.
+- Apenas despesas com situação `paga` entram no cálculo do saldo.
 
 ### 3.3 SQL (referência para o Drizzle)
 
@@ -151,19 +213,20 @@ create table users (
 create table dividas (
   id uuid primary key default gen_random_uuid(),
   nome text not null,
-  credor_user_id uuid not null references users(id),
-  devedor_user_id uuid not null references users(id),
+  corrigir_ipca boolean not null default true,
   criado_em timestamptz not null default now(),
-  arquivada_em timestamptz,
-  constraint credor_dif_devedor check (credor_user_id <> devedor_user_id)
+  arquivada_em timestamptz
 );
 
 create table membros (
   divida_id uuid not null references dividas(id) on delete cascade,
   user_id uuid not null references users(id),
-  papel text not null check (papel in ('credor','devedor','observador')),
+  cota numeric(9,6) not null default 0
+    check (cota >= 0 and cota <= 1),
+  criado_em timestamptz not null default now(),
   primary key (divida_id, user_id)
 );
+-- Trigger garante Σ cota = 1 por dívida.
 
 create table despesas (
   id uuid primary key default gen_random_uuid(),
@@ -178,13 +241,16 @@ create table despesas (
   criado_em timestamptz not null default now()
 );
 
-create table repasses (
+create table reembolsos (
   id uuid primary key default gen_random_uuid(),
   divida_id uuid not null references dividas(id) on delete cascade,
   data date not null,
+  pagador_user_id uuid not null references users(id),
+  recebedor_user_id uuid not null references users(id),
   valor numeric(14,2) not null check (valor > 0),
   observacao text,
-  criado_em timestamptz not null default now()
+  criado_em timestamptz not null default now(),
+  check (pagador_user_id <> recebedor_user_id)
 );
 
 create table taxas_ipca (
@@ -200,24 +266,22 @@ create table config (
 
 ### 3.4 RLS
 
-- `dividas`, `despesas`, `repasses`: filtradas por
+- `dividas`, `despesas`, `reembolsos`: filtradas por
   `divida_id in (select divida_id from membros where user_id = auth.uid())`.
 - `membros`: leitura restrita a quem já é membro da mesma dívida; escrita
   restrita aos já membros.
-- `taxas_ipca`: leitura para qualquer autenticado; escrita apenas pela role
-  do Action (role dedicada criada via migração).
+- `taxas_ipca`: leitura para qualquer autenticado; escrita apenas pela
+  role do Action (role dedicada criada via migração).
 - `config`: leitura autenticada; escrita apenas pelo service role.
 - `users`: cada usuário só vê a própria linha.
 
-### 3.5 Constraints e regras estruturais
+### 3.5 Validações por trigger (não expressáveis como CHECK simples)
 
-- `credor_user_id != devedor_user_id`.
-- `pagador_user_id` de uma despesa deve pertencer a `{credor, devedor}` da
-  dívida (validar na aplicação e, se possível, via trigger).
-- Credor e devedor são **imutáveis após o primeiro lançamento** (despesa ou
-  repasse). Antes disso, editáveis. Validar na aplicação.
-- Ao criar uma dívida, inserir automaticamente dois registros em `membros`:
-  o credor com papel `credor` e o devedor com papel `devedor`.
+1. `Σ cota = 1` por dívida.
+2. `despesas.pagador_user_id` ∈ membros da dívida.
+3. `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros da dívida.
+4. Cotas e conjunto de participantes **não são imutáveis** (podem ser
+   reajustados). Reajuste recompõe o cálculo; nada é congelado.
 
 ---
 
@@ -273,31 +337,99 @@ indice(d) = indice(01/M) * (1 + taxa(M)/100) ^ ((d - 1) / dias_em_M)
 - Para datas anteriores a 2025-12-01 (data base): **erro** de cadastro
   (`data fora da série do índice`).
 
-### 4.3 Correção de valor entre duas datas
+### 4.3 Unidades de índice (base do cálculo)
+
+Para trabalhar com datas diferentes sem complicação, todo valor é
+convertido em **unidades de índice**:
 
 ```
-valor_corrigido = valor_original * indice(data_destino) / indice(data_origem)
+unidades(valor, data) = valor / indice(data)
 ```
 
-### 4.4 Saldo devedor de uma dívida
+Unidades são atemporais. Para exibir em reais hoje:
 
 ```
-unidades_devedoras = soma(valor / indice(data) para despesas com
-                          pagador = credor e situacao = 'paga')
-unidades_abatidas  = soma(valor / indice(data) para repasses)
-saldo_reais        = (unidades_devedoras - unidades_abatidas) * indice(hoje)
+reais_hoje = unidades × indice(hoje)
 ```
 
-- `hoje` = data atual **no fuso do navegador do usuário**.
-- Saldo pode ser negativo (devedor pagou mais que devia). Exibir normal.
-- Despesas `prevista` **não** entram no saldo. Só contam quando `paga`.
+Essa é a base de todo o cálculo. Datas diferentes (pagamento, reembolso,
+hoje) são automaticamente reconciliadas porque tudo é normalizado pelo
+índice da data.
 
-### 4.5 Visão derivada de quitação (FIFO)
+**Quando `corrigir_ipca = false`:** índice é sempre 1, então
+`unidades = valor nominal`.
 
-Para apresentação no extrato: cada repasse "abate" as despesas mais antigas
-em aberto, em ordem cronológica. Não altera o saldo real.
+### 4.4 Saldo por participante — Forma B (compromisso/excesso)
 
-### 4.6 Precisão numérica
+Seja `D` o conjunto de despesas com situação `paga`. Para cada
+participante `i`:
+
+```
+U_total       = Σ_{d ∈ D} valor_d / indice(data_d)          (unidades totais pagas)
+compromisso_i = cota_i × U_total                            (em unidades)
+pago_i        = Σ_{d ∈ D, pagador_d = i} valor_d / indice(data_d)
+reemb_pagos_i     = Σ_{r: pagador_r = i} valor_r / indice(data_r)
+reemb_recebidos_i = Σ_{r: recebedor_r = i} valor_r / indice(data_r)
+
+excesso_i = max(0, pago_i + reemb_pagos_i − compromisso_i − reemb_recebidos_i)
+deficit_i = max(0, compromisso_i + reemb_recebidos_i − pago_i − reemb_pagos_i)
+```
+
+**Propriedades:**
+- `Σ excesso_i = Σ deficit_i` (conservação).
+- `Σ (compromisso_i) = U_total`.
+
+**Dívida bruta entre pares:** cada excesso `E_j` de um credor `j` é
+distribuído entre os devedores proporcionais ao déficit. O valor que o
+devedor `i` deve ao credor `j` é:
+
+```
+deve(i → j) = deficit_i × E_j / Σ deficit_k
+```
+
+**Dívida líquida entre pares:** subtrair reembolsos já feitos.
+
+```
+liquido(i → j) = deve(i → j) − reembolsos_de_i_para_j + reembolsos_de_j_para_i
+```
+
+**Saldo do participante `i` em reais hoje:**
+
+```
+saldo_reais_i = (Σ_j liquido(i → j)) × indice(hoje)
+```
+
+- Positivo = `i` deve (devedor líquido).
+- Negativo = `i` tem a receber (credor líquido).
+
+### 4.5 Data de origem da dívida interna (para correção)
+
+Quando `i` deve a `j`, a **data de origem** é a data do **pagamento
+original** que gerou o excesso de `j`. Isso é irrelevante para o cálculo
+(que já trabalha em unidades), mas é exibido na UI quando o usuário quer
+entender a correção.
+
+Se a dívida inverteu (porque U_total mudou), a data de origem continua
+sendo a do pagamento original que gerou o crédito.
+
+### 4.6 Visão derivada de quitação (FIFO) — apenas n=2
+
+Quando a dívida tem exatamente 2 participantes, mostrar uma visão
+derivada de "cada reembolso abate as despesas mais antigas em aberto",
+em ordem cronológica. Não altera o saldo real. Só apresentação.
+
+Em dívidas com n > 2, não mostrar essa visão.
+
+### 4.7 Aviso de recálculo
+
+Quando `U_total` muda (despesa nova paga, ou situação muda de `prevista`
+para `paga`), os compromissos e excessos mudam. Reembolsos já feitos
+permanecem como fatos, mas o líquido entre pares pode mudar.
+
+O app deve **avisar o usuário** quando isso acontecer:
+"O total da dívida mudou. Os saldos internos foram recalculados."
+
+### 4.8 Precisão numérica
 
 - **Nunca** usar `number` do JS para dinheiro ou índices. Usar
   `decimal.js`.
@@ -305,7 +437,7 @@ em aberto, em ordem cronológica. Não altera o saldo real.
 - Dinheiro arredondado para 2 casas **apenas na exibição**. Persistir com
   a precisão original.
 
-### 4.7 Fuso horário
+### 4.9 Fuso horário
 
 - Cálculo em UTC.
 - "Hoje" e datas exibidas no **fuso do navegador**.
@@ -318,12 +450,14 @@ em aberto, em ordem cronológica. Não altera o saldo real.
 ### 5.1 Dívida a ser criada na migração
 
 - Nome: **Apartamento**
-- Credor: Lucas
-- Devedor: Letícia
+- Participantes e cotas:
+  - **Lucas**: cota **0**
+  - **Letícia**: cota **1**
+- `corrigir_ipca`: **true**
 
 ### 5.2 Despesas da planilha (27 linhas)
 
-Formato: `data | descricao | pagador | valor | situacao | data_repasse`
+Formato: `data | descricao | pagador | valor | situacao | data_reembolso`
 
 ```
 2025-12-26 | Sinal compra                 | LETICIA |  500.00 | paga | 2025-12-26
@@ -356,20 +490,24 @@ Formato: `data | descricao | pagador | valor | situacao | data_repasse`
 ```
 
 Observações:
-- Linha 6 (Taxa de Fidelização Caixa): data real de repasse confirmada pelo
-  Lucas = **2026-03-31** (mesmo dia do pagamento, correção = 1).
-- Linhas com pagador = LETICIA e sem repasse são registros históricos, **sem
-  impacto** no saldo (Leitura A).
+- Linha 6 (Taxa de Fidelização Caixa): data real de reembolso confirmada
+  pelo Lucas = **2026-03-31** (mesmo dia do pagamento, correção = 1).
+- Linhas com pagador = LETICIA e sem reembolso são registros históricos,
+  **sem impacto** no saldo (cota de Letícia é 100; ela paga a própria
+  parte).
 - ITBI entra como **prevista**; não gera dívida até ser paga.
 
-### 5.3 Repasses a criar na migração
+### 5.3 Reembolsos a criar na migração
 
-Para cada linha com pagador = LUCAS e com data de repasse preenchida,
-criar um repasse em `repasses` com a mesma data e o valor corrigido
-calculado (arredondado a 2 casas). Registrar em `observacao`:
-"migrado da planilha; conferir contra extrato".
+Para cada linha com pagador = LUCAS e com data de reembolso preenchida,
+criar um reembolso em `reembolsos` com:
+- `pagador_user_id` = Letícia
+- `recebedor_user_id` = Lucas
+- `data` = data de reembolso da planilha
+- `valor` = valor corrigido calculado (arredondado a 2 casas)
+- `observacao` = "migrado da planilha; conferir contra extrato"
 
-Para as linhas 13 e 14 (em aberto), não criar repasse.
+Para as linhas 13 e 14 (em aberto), não criar reembolso.
 
 ---
 
@@ -378,23 +516,24 @@ Para as linhas 13 e 14 (em aberto), não criar repasse.
 Arquivo `.ai/casos-de-teste.json`. Gerado por você (Claude Code) a partir
 dos dados da seção 5 e das regras da seção 4. Deve conter:
 
-- `metadata`: data de referência = **2026-08-15**, método, série default.
+- `metadata`: data de referência = **2026-08-15**, método, série default,
+  e cotas da dívida (`{ "LUCAS": 0, "LETICIA": 1 }`).
 - `casos`: 27 entradas (uma por linha da planilha), cada uma com:
   - `id`: número da linha na planilha (2 a 28).
   - `data_pagamento`, `descricao`, `pagador`, `valor_original`,
-    `situacao`, `data_repasse`, `valor_repasse`.
+    `situacao`, `data_reembolso`, `valor_reembolso`.
   - `indice_pagamento`: calculado pela fórmula pro-rata.
-  - `indice_repasse`: calculado pela fórmula pro-rata (ou `null`).
+  - `indice_reembolso`: calculado pela fórmula pro-rata (ou `null`).
   - `indice_referencia`: índice em 2026-08-15.
-  - `valor_corrigido_na_data_repasse`: se houver repasse.
-  - `valor_corrigido_na_referencia`: se não houver repasse (dívida em
+  - `valor_corrigido_na_data_reembolso`: se houver reembolso.
+  - `valor_corrigido_na_referencia`: se não houver reembolso (dívida em
     aberto).
   - `impacto_divida_reais`: quanto essa linha contribui para o saldo hoje.
   - `observacao`: texto livre.
 
 ### 6.1 Validações esperadas
 
-- Linhas com repasse no mesmo dia do pagamento: `valor_corrigido =
+- Linhas com reembolso no mesmo dia do pagamento: `valor_corrigido =
   valor_original`. Isso vale para as linhas 2 a 12.
 - Linha 13 (Juros Obra Caixa 03, 2026-07-25, em aberto): corrigido em
   2026-08-15 pela pro-rata. Valor **> R$ 542,15** e próximo de
@@ -408,11 +547,28 @@ dos dados da seção 5 e das regras da seção 4. Deve conter:
 ### 6.2 Saldo esperado em 2026-08-15
 
 - Itens em aberto: linhas 13 e 14.
-- Saldo devedor esperado: **entre R$ 707,00 e R$ 708,00**.
+- Saldo devedor de Letícia para com Lucas esperado: **entre R$ 707,00 e
+  R$ 708,00**.
 
 O módulo de cálculo puro deve ser implementado **primeiro**, rodado sobre
 os 27 casos e verificado contra as expectativas acima. Se não bater, **não
 prossiga** — investigar a fórmula.
+
+### 6.3 Casos adicionais (arquivo separado)
+
+Além dos 27 casos do piloto, criar
+`.ai/casos-de-teste-n-pessoas.json` com cenários sintéticos cobrindo:
+
+- 50/50 com uma despesa paga por cada um → saldo zero.
+- 50/50 com despesa paga só por P1 → P2 deve 50%.
+- 80/20 com despesa paga só por P2 → P1 deve 80%.
+- 4 pessoas (20/30/10/40) com despesas pagas por diferentes participantes
+  → Σ saldos = 0.
+- Cota 0 paga despesa → só os outros acumulam dívida (caso Lucas).
+- Cota 100 paga despesa → sem impacto líquido (caso Letícia).
+- Reembolso parcial → saldo residual.
+- Reembolso em data diferente → correção aplicada.
+- Mudança de U_total após reembolso feito → recálculo e aviso.
 
 ---
 
@@ -420,35 +576,42 @@ prossiga** — investigar a fórmula.
 
 ### 7.1 Lista de dívidas (home)
 - Lista todas as dívidas em que o usuário logado é membro.
-- Cada item: nome, credor, devedor, saldo atual, data de referência,
-  número de itens em aberto.
+- Cada item: nome, participantes, **seu saldo** em cada (positivo = você
+  deve; negativo = você tem a receber), data de referência, número de
+  itens em aberto.
 - Botão "nova dívida".
 
 ### 7.2 Detalhe da dívida
-- Saldo em destaque no topo.
-- Extrato cronológico (despesas e repasses misturados, mais recente
+- Saldo em destaque no topo (por participante).
+- Painel de **saldos por participante**: quem tem a receber, quem deve.
+- Extrato cronológico (despesas e reembolsos misturados, mais recente
   primeiro).
-- Cada linha do extrato: data, descrição, valor original, valor corrigido,
-  saldo acumulado após.
-- Botões "nova despesa", "novo repasse".
+- Cada linha do extrato: data, descrição, valor original, valor corrigido.
+- Botões "nova despesa", "novo reembolso".
 
 ### 7.3 Memória de cálculo
 - Ao clicar em uma linha do extrato: modal ou tela com
-  - índices usados (pagamento, repasse, referência);
+  - índices usados (pagamento, reembolso, referência);
   - fórmula aplicada;
   - valor original, valor corrigido;
   - composição do saldo após essa linha.
 
 ### 7.4 Nova/editar despesa
-- Campos: data, descrição, pagador (select credor/devedor), valor,
-  situação (`paga`/`prevista`), boleto_url, comprovante_url.
+- Campos: data, descrição, **pagador** (select entre participantes),
+  valor, situação (`paga`/`prevista`), boleto_url, comprovante_url.
 
-### 7.5 Novo/editar repasse
-- Campos: data, valor, observação.
+### 7.5 Novo/editar reembolso
+- Campos: data, **pagador** (select), **recebedor** (select), valor,
+  observação.
 
 ### 7.6 Configurações
 - Globais: série BCB, data base, índice base.
-- Por dívida: editar membros (adicionar observador, remover).
+- Por dívida: editar membros e cotas. Edição de cotas recompõe o cálculo;
+  o app avisa quando isso altera saldos internos.
+
+### 7.7 Aviso de recálculo
+- Sempre que `U_total` mudar (despesa nova paga), mostrar um toast:
+  "O total da dívida mudou. Os saldos internos foram recalculados."
 
 ---
 
@@ -464,7 +627,8 @@ prossiga** — investigar a fórmula.
 │   ├── constitution.md
 │   ├── spec.md
 │   ├── tasks.md
-│   └── casos-de-teste.json
+│   ├── casos-de-teste.json
+│   └── casos-de-teste-n-pessoas.json
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
@@ -487,7 +651,7 @@ prossiga** — investigar a fórmula.
 │   ├── pwa.ts
 │   ├── core/
 │   │   ├── indice.ts
-│   │   ├── correcao.ts
+│   │   ├── unidades.ts
 │   │   ├── saldo.ts
 │   │   ├── decimal.ts
 │   │   └── __tests__/
@@ -498,7 +662,7 @@ prossiga** — investigar a fórmula.
 │   ├── features/
 │   │   ├── dividas/
 │   │   ├── despesas/
-│   │   ├── repasses/
+│   │   ├── reembolsos/
 │   │   └── config/
 │   ├── components/
 │   └── routes/
@@ -515,13 +679,16 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
    router + base path.
 2. **Módulo de cálculo puro (`src/core/`)** — implementar e rodar contra
    `.ai/casos-de-teste.json`. Todos os 27 devem passar. Validar saldo.
-3. **Schema e migrações Drizzle** — incluir RLS e role do Action de IPCA.
+   Rodar também contra `.ai/casos-de-teste-n-pessoas.json`.
+3. **Schema e migrações Drizzle** — incluir triggers (Σ cota = 1,
+   pagador ∈ membros) e RLS e role do Action de IPCA.
 4. **Autenticação** — Neon Auth, cadastro desativado, login/logout.
 5. **Cliente de dados** — Neon Data API, funções tipadas.
-6. **Telas** — lista, detalhe, memória, cadastro, config.
+6. **Telas** — lista, detalhe, memória, cadastro de despesa, cadastro de
+   reembolso, config.
 7. **Workflows do GitHub** — smoke-bcb, ipca, backup.
-8. **Script de migração da planilha** — cria a dívida "Apartamento",
-   insere despesas e repasses.
+8. **Script de migração da planilha** — cria a dívida "Apartamento" com
+   cotas 0/1, insere despesas e reembolsos.
 9. **Deploy** — GitHub Pages via Action, PWA instalável.
 10. **Documentação** — README, .env.example.
 
@@ -537,6 +704,8 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
   valor persistido.
 - **Pro-rata composto**: expoente é `(dia - 1) / dias_no_mes`.
 - **Último mês sem taxa seguinte**: não interpolar; usar índice do dia 1.
+- **Trabalhar em unidades**, não em reais, para evitar erro de correção em
+  datas diferentes.
 - **RLS testada** com dois usuários diferentes.
 - **Workflows agendados**: GitHub desativa workflows em repos públicos
   após 60 dias sem atividade. Documentar no README.
@@ -546,6 +715,11 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 - **JSON de casos fora do `src/`**: importar `.ai/casos-de-teste.json`
   pode esbarrar em restrição do Vite. Se acontecer, copiar para
   `src/core/__fixtures__/` no build ou usar `resolve.alias`.
+- **Rateio do excesso**: sempre proporcional ao **déficit** (o que cada
+  um ainda deve), **nunca** proporcional à cota. Testar com cotas
+  desiguais.
+- **Mudança de U_total**: recalcula compromissos e excessos. Reembolsos
+  permanecem. Avisar o usuário.
 
 ---
 
@@ -556,16 +730,19 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 - [ ] PWA instalável no celular.
 - [ ] Login com Neon Auth funcionando.
 - [ ] 2 usuários cadastrados (Lucas, Letícia).
-- [ ] Dívida "Apartamento" migrada com os 27 lançamentos.
-- [ ] Saldo devedor em 2026-08-15 entre R$ 707,00 e R$ 708,00.
-- [ ] Telas: lista, detalhe, memória de cálculo, cadastro, config.
-- [ ] Módulo de cálculo com 27 testes passando.
+- [ ] Dívida "Apartamento" migrada com os 27 lançamentos (cotas 0/1).
+- [ ] Saldo devedor de Letícia para com Lucas em 2026-08-15 entre
+      R$ 707,00 e R$ 708,00.
+- [ ] Telas: lista, detalhe, memória de cálculo, cadastro de despesa,
+      cadastro de reembolso, config.
+- [ ] Módulo de cálculo com 27 testes passando + casos n-pessoas passando.
 - [ ] Workflow do IPCA rodando (ou fallback manual documentado).
 - [ ] Workflow de backup rodando.
 - [ ] RLS validada com 2 usuários.
 - [ ] README com instruções de fork.
-- [ ] `.ai/constitution.md`, `.ai/spec.md`, `.ai/tasks.md` e
-      `.ai/casos-de-teste.json` no repositório.
+- [ ] `.ai/constitution.md`, `.ai/spec.md`, `.ai/tasks.md`,
+      `.ai/casos-de-teste.json` e `.ai/casos-de-teste-n-pessoas.json`
+      no repositório.
 
 ---
 
@@ -587,9 +764,9 @@ Reporte:
 Antes de qualquer código:
 
 1. Crie a pasta `.ai/` na raiz do repositório e, dentro dela, os
-   arquivos `constitution.md`, `spec.md`, `tasks.md` e
-   `casos-de-teste.json`, usando exatamente o conteúdo das seções 14 a
-   17 abaixo.
+   arquivos `constitution.md`, `spec.md`, `tasks.md`,
+   `casos-de-teste.json` e `casos-de-teste-n-pessoas.json`, usando
+   exatamente o conteúdo das seções 14 a 17 abaixo e da seção 6.3.
 2. Depois comece a Fase 0 do `.ai/tasks.md` (scaffold), parando ao final
    dela para reportar.
 
@@ -597,262 +774,22 @@ Antes de qualquer código:
 
 ## 14. CONTEÚDO DE `.ai/constitution.md`
 
-```markdown
-# Constitution — Apps de Controle de Repasses
-
-Princípios reutilizáveis para qualquer app derivado de planilha de controle
-de repasses entre pessoas. O app piloto é o "Controle de Repasses"
-(apartamento Lucas + Letícia). Estes princípios valem para os próximos.
-
-## Princípios
-
-### 1. Cálculo em módulo puro, com testes
-Toda regra financeira (correção, saldo, juros) vive em funções puras, sem
-dependência de UI, banco ou rede. Testadas com dados reais migrados como
-oráculo. Nenhum cálculo financeiro no componente visual nem na query.
-
-### 2. Dinheiro e índices em decimal
-Nunca usar `number` (float binário) para dinheiro ou índices. Usar lib
-decimal (`decimal.js`). Arredondamento explícito e documentado em cada
-operação. Valores gravados com precisão para reproduzir o oráculo.
-
-### 3. Séries e taxas configuráveis
-A fonte da correção (BCB SGS, código da série) é parâmetro, não hardcoded.
-Um fork pode trocar IPCA por IGP-M, INCC, etc. sem editar o núcleo do
-cálculo.
-
-### 4. Correção pro-rata diária composta
-A correção entre duas datas usa a taxa mensal composta diariamente, com
-defasagem de 1 mês embutida (índice do mês M incorpora a taxa do mês M−1).
-Datas antes do início da série são bloqueadas com erro claro.
-
-### 5. RLS obrigatório; nenhuma credencial no cliente
-Autenticação JWT (Neon Auth) + RLS por grupo/membro. Nenhuma connection
-string, service key ou segredo no bundle. O front fala apenas com a Data
-API. Role do Postgres para escrita de taxas é separada e restrita à tabela
-de taxas.
-
-### 6. Schema versionado por Drizzle
-Schema e políticas RLS vivem em migrações Drizzle versionadas no
-repositório. Migrações rodam localmente/CI com connection string direta
-(apenas em secrets). Nunca aplicar mudança manual em produção sem migração
-correspondente.
-
-### 7. Oráculo de dados reais
-Antes de implementar, migrar os dados reais da planilha para um JSON de
-casos de teste com entrada e saída esperada. A verificação real é bater o
-cálculo; specs em prosa são guia, não prova.
-
-### 8. Open source by default
-Repositório público, código reutilizável, documentação clara para fork.
-Nenhum dado pessoal no repositório. Configuração específica (séries,
-e-mails autorizados, credenciais) fica em variáveis de ambiente/secrets.
-
-### 9. Sem offline não solicitado
-Offline (leitura ou escrita) só entra se for requisito explícito. Por
-padrão, o app exige conexão; cache é apenas o shell do PWA.
-
-### 10. Modelo de dados mínimo
-Só criar tabela/campo quando houver regra que o justifique. Repasse parcial
-vinculado a item, cota variável, notificações e upload de arquivo só entram
-se pedidos. Preferir visão derivada a coluna gravada quando o dado é
-calculável.
-
-### 11. Migração com o dono do processo
-Antes de codar, o dono do processo revisa e aprova: regras de cálculo,
-casos de teste, schema e convenções. Nada de "assumir" regra financeira.
-
-### 12. Multi-dívida por padrão
-O app não é específico de um caso. Toda entidade de negócio (despesa,
-repasse, saldo) é escopada por `divida_id`. Nada global exceto a série de
-índices e as configurações de base. Um fork pode usar para qualquer
-cenário de rateio com correção.
-
-## Anti-princípios (o que evitar)
-- Cálculo financeiro no front sem passar pelo módulo puro.
-- `number` para dinheiro.
-- Hardcoded de código de série, e-mail autorizado ou connection string.
-- Aplicar migração direto em produção sem commit correspondente.
-- "Depois eu testo" — o oráculo é pré-requisito, não etapa final.
-- Tratar o app como específico do apartamento.
-```
+(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 1)
 
 ---
 
 ## 15. CONTEÚDO DE `.ai/spec.md`
 
-```markdown
-# Spec — App Controle de Repasses (v1)
-
-## 1. Contexto
-PWA pessoal para registrar despesas e repasses entre duas pessoas,
-ajustados por uma série de correção configurável (default: IPCA / BCB SGS
-433). Substitui a planilha Controle.xlsx (caso piloto: apartamento Lucas +
-Letícia). O app suporta múltiplas dívidas independentes, cada uma com seu
-próprio credor, devedor, despesas, repasses e saldo.
-
-Código aberto e reutilizável: qualquer pessoa pode fazer fork e usar para
-cenários parecidos (rateio de despesas com correção por índice).
-
-## 2. Glossário
-- **Dívida**: contexto isolado com credor, devedor, despesas, repasses e
-  saldo próprios. Ex.: "Apartamento", "Celular no cartão".
-- **Credor**: quem desembolsou e tem a receber.
-- **Devedor**: quem deve e fará os repasses.
-- **Despesa**: valor pago a um terceiro (Caixa, vendedor, ITBI...).
-- **Repasse**: transferência do devedor para o credor. Sempre sobre o
-  total da dívida, nunca vinculado a item.
-- **Índice**: número acumulado da série (base configurável, default 1000
-  em 2025-12-01).
-- **Leitura A**: apenas despesas pagas pelo credor geram dívida. Despesas
-  pagas pelo devedor são apenas registro.
-
-## 3. Modelo de dados
-(ver HANDOFF.md seções 3.1 a 3.5)
-
-## 4. Regras de cálculo
-(ver HANDOFF.md seções 4.1 a 4.7)
-
-## 5. Validações
-- Valor de despesa/repasse > 0.
-- Data de repasse anterior à data da dívida: permitido (adiantamento).
-- Data de despesa < data base da série: bloqueada com erro claro.
-- Editar credor/devedor após primeiro lançamento: bloqueado.
-
-## 6. Telas
-(ver HANDOFF.md seção 7)
-
-## 7. Autenticação e acesso
-- Neon Auth (JWT) + RLS.
-- Cadastro aberto desativado; e-mails autorizados.
-- Cada dívida tem sua própria lista de membros.
-
-## 8. Rotina do IPCA (GitHub Action)
-- Agendado (dias 9 a 15) + `workflow_dispatch`.
-- Busca série configurada no BCB; upsert idempotente em `taxas_ipca`.
-- Smoke test prévio obrigatório. Fallback manual.
-
-## 9. Backup
-- Action semanal faz `pg_dump` como artifact.
-
-## 10. Migração da planilha
-(ver HANDOFF.md seção 5)
-
-## 11. Fora de escopo (v1)
-- Offline. Notificações. Upload de arquivo. Repasse parcial vinculado a
-  item. Mais de um credor/devedor por dívida. Pagador terceiro. Edição de
-  credor/devedor após primeiro lançamento.
-
-## 12. Riscos
-- Data API do Neon em Beta.
-- Cold start do compute (~5s).
-- Workflows agendados desativados após 60 dias sem atividade.
-- Restauração do Neon free: 6 horas. Backup próprio é obrigatório.
-- api.bcb.gov.br pode bloquear IPs de datacenter.
-```
+(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 2)
 
 ---
 
 ## 16. CONTEÚDO INICIAL DE `.ai/casos-de-teste.json`
 
-Deixe assim por enquanto. Na Fase 1 do `.ai/tasks.md`, você preenche o
-array `casos` com as 27 entradas.
-
-```json
-{
-  "metadata": {
-    "referencia": "2026-08-15",
-    "serie_bcb": 433,
-    "data_base": "2025-12-01",
-    "indice_base": 1000,
-    "metodo_correcao": "pro-rata diaria composta, defasagem 1 mes"
-  },
-  "taxas_ipca": [
-    {"mes": "2025-12-01", "taxa": 0.33},
-    {"mes": "2026-01-01", "taxa": 0.33},
-    {"mes": "2026-02-01", "taxa": 0.70},
-    {"mes": "2026-03-01", "taxa": 0.88},
-    {"mes": "2026-04-01", "taxa": 0.67},
-    {"mes": "2026-05-01", "taxa": 0.58},
-    {"mes": "2026-06-01", "taxa": 0.16},
-    {"mes": "2026-07-01", "taxa": 0.07},
-    {"mes": "2026-08-01", "taxa": -0.32}
-  ],
-  "casos": []
-}
-```
+(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 3)
 
 ---
 
 ## 17. CONTEÚDO DE `.ai/tasks.md`
 
-```markdown
-# Tasks
-
-## Fase 0 — Preparação
-- [ ] T001 Confirmar repositório público no GitHub (já existe).
-- [ ] T002 Rodar `pnpm create vite` com React + TS na raiz (cuidado com
-      arquivos já existentes: HANDOFF.md e specs devem ser preservados).
-- [ ] T003 Adicionar `vite-plugin-pwa`, `decimal.js`, `drizzle-orm`,
-      `drizzle-kit`, `react-router-dom`, `@neondatabase/neon-js`.
-- [ ] T004 Configurar base path do Vite para GitHub Pages.
-- [ ] T005 Configurar `createHashRouter`.
-- [ ] T006 Criar `.env.example` com as variáveis necessárias.
-
-## Fase 1 — Módulo de cálculo puro
-- [ ] T101 Criar `src/core/decimal.ts`.
-- [ ] T102 Criar `src/core/indice.ts` com `indiceEmData`.
-- [ ] T103 Criar `src/core/correcao.ts`.
-- [ ] T104 Criar `src/core/saldo.ts`.
-- [ ] T105 Preencher `.ai/casos-de-teste.json` com os 27 casos.
-- [ ] T106 Escrever testes contra o JSON. Todos os 27 devem passar.
-- [ ] T107 Validar saldo em 2026-08-15 entre R$ 707,00 e R$ 708,00.
-
-## Fase 2 — Banco e RLS
-- [ ] T201 Criar `src/db/schema.ts` com Drizzle.
-- [ ] T202 Gerar migração inicial com `drizzle-kit generate`.
-- [ ] T203 Escrever migração de RLS (SQL puro).
-- [ ] T204 Criar role restrita para o Action de IPCA.
-- [ ] T205 Aplicar migrações em ambiente de dev.
-- [ ] T206 Testar RLS com 2 usuários distintos.
-
-## Fase 3 — Autenticação
-- [ ] T301 Configurar Neon Auth. Desativar cadastro aberto.
-- [ ] T302 Criar tela de login/logout.
-- [ ] T303 Hook `useSession` e `useUser`.
-
-## Fase 4 — Cliente de dados
-- [ ] T401 Criar `src/db/client.ts` usando Neon Data API.
-- [ ] T402 Funções tipadas: listar dívidas, criar despesa, criar repasse.
-
-## Fase 5 — Telas
-- [ ] T501 Tela "lista de dívidas".
-- [ ] T502 Tela "detalhe da dívida" com extrato.
-- [ ] T503 Tela "memória de cálculo".
-- [ ] T504 Formulário de despesa.
-- [ ] T505 Formulário de repasse.
-- [ ] T506 Tela de configurações.
-
-## Fase 6 — Workflows GitHub
-- [ ] T601 `smoke-bcb.yml` — testa acesso ao BCB.
-- [ ] T602 `ipca.yml` — busca série, faz upsert.
-- [ ] T603 `backup.yml` — pg_dump semanal.
-- [ ] T604 Documentar no README que workflows são desativados após 60
-      dias sem atividade.
-
-## Fase 7 — Migração da planilha
-- [ ] T701 `scripts/migrar-planilha.mjs`.
-- [ ] T702 Rodar contra banco de dev.
-- [ ] T703 Conferir valores com extrato bancário.
-
-## Fase 8 — Deploy
-- [ ] T801 Configurar GitHub Pages via Action.
-- [ ] T802 Testar PWA instalável no celular.
-- [ ] T803 Verificar service worker e base path.
-
-## Fase 9 — Documentação
-- [ ] T901 `README.md` com instruções de fork.
-- [ ] T902 `.env.example`.
-- [ ] T903 Confirmar que `.ai/constitution.md`, `.ai/spec.md`,
-      `.ai/tasks.md` e `.ai/casos-de-teste.json` estão no repo.
-```
+(vide arquivo separado — copiar exatamente o conteúdo do Arquivo 5)

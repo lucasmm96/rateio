@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "referencia": "2026-08-15",
+    "serie_bcb": 433,
+    "data_base": "2025-12-01",
+    "indice_base": 1000,
+    "metodo_correcao": "pro-rata diaria composta, defasagem 1 mes",
+    "cotas": { "LUCAS": 0, "LETICIA": 1 }
+  },
+  "taxas_ipca": [
+    {"mes": "2025-12-01", "taxa": 0.33},
+    {"mes": "2026-01-01", "taxa": 0.33},
+    {"mes": "2026-02-01", "taxa": 0.70},
+    {"mes": "2026-03-01", "taxa": 0.88},
+    {"mes": "2026-04-01", "taxa": 0.67},
+    {"mes": "2026-05-01", "taxa": 0.58},
+    {"mes": "2026-06-01", "taxa": 0.16},
+    {"mes": "2026-07-01", "taxa": 0.07},
+    {"mes": "2026-08-01", "taxa": -0.32}
+  ],
+  "casos": []
+}

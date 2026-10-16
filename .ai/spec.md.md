@@ -1,28 +1,32 @@
-# Spec — App Controle de Reembolsos (v1)
+# Spec — App Controle de Rateios (v1)
 
 ## 1. Contexto
-PWA pessoal para registrar despesas compartilhadas e reembolsos entre
-participantes, ajustados por uma série de correção configurável
-(default: IPCA / BCB SGS 433) e opcional por dívida. Substitui a planilha
-Controle.xlsx (caso piloto: apartamento Lucas + Letícia). O app suporta
-múltiplas dívidas independentes, cada uma com seus próprios participantes,
-cotas, despesas, reembolsos e saldo.
+PWA pessoal para gerenciar **rateios** — divisões de despesas
+compartilhadas entre participantes — com registro de despesas, cálculo de
+saldos, e reembolsos entre participantes. Correção monetária por série
+configurável (default: IPCA / BCB SGS 433), opcional por rateio.
+Substitui a planilha Controle.xlsx (caso piloto: apartamento Lucas +
+Letícia). O app suporta múltiplos rateios independentes, cada um com seus
+próprios participantes, cotas, despesas, reembolsos e saldo.
 
 Código aberto e reutilizável: qualquer pessoa pode fazer fork e usar para
 cenários parecidos (rateio de despesas com correção por índice).
 
 ## 2. Glossário
 
+- **Rateio**: contexto isolado que representa a divisão de uma dívida
+  compartilhada entre n participantes, conforme suas cotas. Cada rateio
+  tem seus próprios participantes, despesas, reembolsos e saldo. Ex.:
+  "Apartamento", "Celular", "Carro".
 - **Pagamento**: ato de pagar uma conta a um terceiro. A conta pode ou não
   lhe caber — você pode estar adiantando a parte de outra pessoa.
 - **Reembolso**: ato de ressarcir uma pessoa que pagou uma conta que lhe
   cabia (total ou parcialmente), com o devido ajuste monetário pela série
-  configurada.
-- **Dívida**: contexto isolado com participantes, cotas, despesas,
-  reembolsos e saldo próprios. Ex.: "Apartamento", "Celular".
-- **Participante**: pessoa com cota na dívida. Pode ter cota 0.
-- **Cota**: fração da dívida atribuída a um participante. Soma 100% na
-  dívida.
+  configurada. É a operação que liquida as diferenças apuradas pelo
+  rateio.
+- **Participante**: pessoa com cota em um rateio. Pode ter cota 0.
+- **Cota**: fração do rateio atribuída a um participante. Soma 100% no
+  rateio.
 - **Compromisso**: `total_pago × cota` do participante. Muda quando o
   total pago muda.
 - **Excesso**: valor que o participante pagou além do compromisso dele.
@@ -52,10 +56,10 @@ Resumo da Forma B:
 ## 5. Validações
 - Valor de despesa/reembolso > 0.
 - Reembolso: pagador ≠ recebedor.
-- Data de reembolso anterior à data da dívida: permitido (adiantamento).
+- Data de reembolso anterior à data do rateio: permitido (adiantamento).
 - Data de despesa < data base da série: bloqueada com erro claro.
-- Σ cota = 1 por dívida (trigger + app).
-- Pagador de despesa e partes do reembolso ∈ membros da dívida.
+- Σ cota = 1 por rateio (trigger + app).
+- Pagador de despesa e partes do reembolso ∈ membros do rateio.
 
 ## 6. Telas
 (ver HANDOFF.md seção 7)
@@ -63,7 +67,7 @@ Resumo da Forma B:
 ## 7. Autenticação e acesso
 - Neon Auth (JWT) + RLS.
 - Cadastro aberto desativado; e-mails autorizados.
-- Cada dívida tem sua própria lista de membros.
+- Cada rateio tem sua própria lista de membros.
 
 ## 8. Rotina do IPCA (GitHub Action)
 - Agendado (dias 9 a 15) + `workflow_dispatch`.
@@ -78,7 +82,7 @@ Resumo da Forma B:
 
 ## 11. Fora de escopo (v1)
 - Offline. Notificações. Upload de arquivo.
-- Override de cota por despesa (usar dívida separada).
+- Override de cota por despesa (usar rateio separado).
 - Plano automático de reembolsos para zerar saldos.
 - Observadores (cota 0 + não pagar já cumpre o papel).
 - FIFO detalhado para n > 2 (só para n = 2).

@@ -18,15 +18,14 @@
 - [ ] T105 Preencher `.ai/casos-de-teste.json` com os 27 casos.
 - [ ] T106 Escrever testes contra o JSON. Todos os 27 devem passar.
 - [ ] T107 Validar saldo em 2026-08-15 entre R$ 707,00 e R$ 708,00.
-- [ ] T108 Criar `.ai/casos-de-teste-n-pessoas.json` com cenários
-      sintéticos (50/50, 80/20, 4 pessoas com cotas desiguais, cota 0,
-      cota 100, reembolso parcial, reembolso em data diferente, mudança
-      de U_total).
+- [ ] T108 Preencher `.ai/casos-de-teste-n-pessoas.json` com os valores
+      esperados calculados.
 - [ ] T109 Rodar testes contra os casos n-pessoas. Σ saldos = 0 em todos.
 
 ## Fase 2 — Banco e RLS
-- [ ] T201 Criar `src/db/schema.ts` com Drizzle (sem credor/devedor fixos;
-      `membros` com cota; `reembolsos` com pagador e recebedor).
+- [ ] T201 Criar `src/db/schema.ts` com Drizzle (tabela `rateios`; sem
+      credor/devedor fixos; `membros` com cota; `reembolsos` com pagador
+      e recebedor).
 - [ ] T202 Gerar migração inicial com `drizzle-kit generate`.
 - [ ] T203 Escrever migração de RLS (SQL puro).
 - [ ] T204 Escrever triggers: Σ cota = 1; pagador ∈ membros.
@@ -41,16 +40,16 @@
 
 ## Fase 4 — Cliente de dados
 - [ ] T401 Criar `src/db/client.ts` usando Neon Data API.
-- [ ] T402 Funções tipadas: listar dívidas, criar despesa, criar
+- [ ] T402 Funções tipadas: listar rateios, criar despesa, criar
       reembolso, atualizar cotas.
 
 ## Fase 5 — Telas
-- [ ] T501 Tela "lista de dívidas".
-- [ ] T502 Tela "detalhe da dívida" com extrato e saldos por participante.
+- [ ] T501 Tela "lista de rateios".
+- [ ] T502 Tela "detalhe do rateio" com extrato e saldos por participante.
 - [ ] T503 Tela "memória de cálculo".
 - [ ] T504 Formulário de despesa.
 - [ ] T505 Formulário de reembolso.
-- [ ] T506 Tela de configurações (globais + cotas por dívida).
+- [ ] T506 Tela de configurações (globais + cotas por rateio).
 - [ ] T507 Toast de "saldos recalculados" quando U_total muda.
 
 ## Fase 6 — Workflows GitHub
@@ -61,8 +60,8 @@
       dias sem atividade.
 
 ## Fase 7 — Migração da planilha
-- [ ] T701 `scripts/migrar-planilha.mjs` (cria dívida "Apartamento" com
-      cotas 0/1, insere despesas e reembolsos).
+- [ ] T701 `scripts/migrar-planilha.mjs` (cria o rateio "Apartamento"
+      com cotas 0/1, insere despesas e reembolsos).
 - [ ] T702 Rodar contra banco de dev.
 - [ ] T703 Conferir valores com extrato bancário.
 

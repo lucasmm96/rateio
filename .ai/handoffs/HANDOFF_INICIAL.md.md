@@ -1,11 +1,11 @@
-# HANDOFF — App "Controle de Reembolsos"
+# HANDOFF — App "Controle de Rateios"
 
 Você é o Claude Code executando este projeto. Este único arquivo contém
 tudo o que você precisa: contexto, decisões fechadas, modelo de dados,
 regras de cálculo, dados de origem, telas, ordem de execução e os textos
-completos dos quatro artefatos de spec que devem existir no repositório
+completos dos artefatos de spec que devem existir no repositório
 (`.ai/constitution.md`, `.ai/spec.md`, `.ai/casos-de-teste.json`,
-`.ai/tasks.md`).
+`.ai/casos-de-teste-n-pessoas.json`, `.ai/tasks.md`).
 
 Idioma de trabalho: português do Brasil. Código, comentários, commits e
 documentação em português.
@@ -17,7 +17,7 @@ documentação em português.
 1. O repositório já existe, público, vazio (ou quase). Você está na raiz.
 2. Antes de qualquer código, **crie os arquivos de spec dentro da pasta
    `.ai/`** na raiz, com o conteúdo exato das seções 14 a 17 deste
-   documento (mais o arquivo `casos-de-teste-n-pessoas.json` da seção 6.3).
+   documento e da seção 6.3.
 3. Depois, siga a ordem de execução da seção 9, parando ao final de cada
    fase para mostrar o resultado antes de prosseguir.
 4. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
@@ -28,19 +28,20 @@ documentação em português.
 ## 1. VISÃO GERAL
 
 Transformar a planilha `Controle.xlsx` de um casal (Lucas e Letícia) em um
-PWA web instalável no celular, para registrar despesas compartilhadas e
-reembolsos entre participantes, com correção monetária por IPCA (série
-SGS 433 do BCB, configurável e **opcional por dívida**).
+PWA web instalável no celular, para gerenciar **rateios** — divisões de
+despesas compartilhadas entre participantes — com registro de despesas,
+cálculo de saldos, reembolsos entre participantes, e correção monetária
+por IPCA (série SGS 433 do BCB, configurável e **opcional por rateio**).
 
-O app **não é específico de apartamento**. É um app genérico de "contas a
-reembolsar" com correção por índice. O caso do apartamento é a primeira
-dívida cadastrada. O usuário pode criar quantas dívidas independentes
-quiser (ex.: "Apartamento", "Celular", "Carro"), cada uma com seus
+O app **não é específico de apartamento**. É um app genérico de "controle
+de rateios" com correção por índice. O caso do apartamento é o primeiro
+rateio cadastrado. O usuário pode criar quantos rateios independentes
+quiser (ex.: "Apartamento", "Celular", "Carro"), cada um com seus
 próprios participantes, cotas, despesas, reembolsos e saldo.
 
-Cada dívida pode ter **n participantes** (n ≥ 2), com **cotas** que somam
+Cada rateio pode ter **n participantes** (n ≥ 2), com **cotas** que somam
 100%. O modelo é o **Forma B** (compromisso/excesso): cada participante
-tem um compromisso com a dívida (`total pago × sua cota`); pagamentos a
+tem um compromisso com o rateio (`total pago × sua cota`); pagamentos a
 terceiros abatem esse compromisso; quem paga mais que o compromisso vira
 credor dos demais; quem paga menos fica devendo.
 
@@ -50,17 +51,20 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 
 ### Terminologia (aplicada em todo o app)
 
+- **Rateio**: contexto isolado que representa a divisão de uma dívida
+  compartilhada entre n participantes, conforme suas cotas. Cada rateio
+  tem seus próprios participantes, despesas, reembolsos e saldo. Ex.:
+  "Apartamento".
 - **Pagamento**: ato de pagar uma conta a um terceiro. A conta pode ou não
   lhe caber — você pode estar adiantando a parte de outra pessoa.
 - **Reembolso**: ato de ressarcir uma pessoa que pagou uma conta que lhe
   cabia (total ou parcialmente), com o devido ajuste monetário pela série
-  configurada.
-- **Dívida**: contexto isolado com participantes, cotas, despesas,
-  reembolsos e saldo próprios. Ex.: "Apartamento".
-- **Participante**: pessoa com cota na dívida. Pode ter cota 0 (não
+  configurada. É a operação que liquida as diferenças apuradas pelo
+  rateio.
+- **Participante**: pessoa com cota no rateio. Pode ter cota 0 (não
   carrega dívida, mas pode pagar).
-- **Cota**: fração da dívida atribuída a um participante. Soma 100% na
-  dívida.
+- **Cota**: fração do rateio atribuída a um participante. Soma 100% no
+  rateio.
 - **Compromisso**: `total_pago × cota` do participante. Muda quando o
   total pago muda.
 - **Excesso**: valor que o participante pagou além do compromisso dele.
@@ -83,7 +87,7 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - **GitHub Pages** (repositório público, plano free).
 - Base path do Vite e escopo do service worker configurados para a
   subpasta do repo (`/nome-do-repo/`).
-- Rotas via **hash routing** (`#/dividas`, etc.) para evitar 404 do Pages.
+- Rotas via **hash routing** (`#/rateios`, etc.) para evitar 404 do Pages.
 - Nenhum segredo no bundle.
 
 ### Banco
@@ -125,11 +129,11 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 
 ### Usuários
 - 2 na v1 (Lucas e Letícia), mas o modelo suporta **n participantes**.
-- Membros são **por dívida** (tabela `membros`).
+- Membros são **por rateio** (tabela `membros`).
 
 ### Modelo de saldo — Forma B (compromisso/excesso)
 
-- Cada dívida tem um **total pago** (U_total) = soma das despesas com
+- Cada rateio tem um **total pago** (U_total) = soma das despesas com
   situação `paga` (em unidades de índice).
 - Cada participante tem um **compromisso** = `U_total × cota`.
 - Quem pagou mais que o compromisso tem **excesso** (crédito).
@@ -153,13 +157,13 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - **Observadores não existem** na v1. Cota 0 + não pagar já cumpre o
   papel.
 - **Override por despesa não existe** na v1. Necessidades de rateio
-  diferente → dívida separada.
+  diferente → rateio separado.
 - **Plano automático de reembolsos não existe** na v1. Reembolsos são
   criados manualmente pelo usuário.
 
 ### Correção IPCA
 
-- **Opcional por dívida.** Flag `corrigir_ipca` na criação da dívida.
+- **Opcional por rateio.** Flag `corrigir_ipca` na criação do rateio.
 - Se ligado, aplica IPCA. Se desligado, valores nominais.
 - Quando ligado, a correção é feita em **unidades de índice** (valor ÷
   índice da data), o que resolve o problema de datas diferentes entre
@@ -184,19 +188,19 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 
 ### 3.1 Conceitos
 
-- **Dívida**: contexto isolado com participantes, cotas, despesas,
+- **Rateio**: contexto isolado com participantes, cotas, despesas,
   reembolsos e saldo próprios.
-- **Participante**: pessoa com cota na dívida. Pode ter cota 0.
+- **Participante**: pessoa com cota no rateio. Pode ter cota 0.
 - **Despesa**: valor pago a um terceiro. Tem pagador (qualquer
-  participante da dívida) e situação (`paga` ou `prevista`).
+  participante do rateio) e situação (`paga` ou `prevista`).
 - **Reembolso**: transferência de um participante a outro, com pagador e
   recebedor explícitos.
 - **Taxa IPCA**: global, uma linha por mês.
 
 ### 3.2 Regras estruturais
 
-- Cotas da dívida somam exatamente **1** (100%).
-- Cada despesa tem `pagador_user_id` ∈ membros da dívida.
+- Cotas do rateio somam exatamente **1** (100%).
+- Cada despesa tem `pagador_user_id` ∈ membros do rateio.
 - Cada reembolso tem `pagador_user_id` e `recebedor_user_id` ∈ membros,
   e são diferentes entre si.
 - Apenas despesas com situação `paga` entram no cálculo do saldo.
@@ -210,27 +214,27 @@ create table users (
   criado_em timestamptz not null default now()
 );
 
-create table dividas (
+create table rateios (
   id uuid primary key default gen_random_uuid(),
   nome text not null,
   corrigir_ipca boolean not null default true,
   criado_em timestamptz not null default now(),
-  arquivada_em timestamptz
+  arquivado_em timestamptz
 );
 
 create table membros (
-  divida_id uuid not null references dividas(id) on delete cascade,
+  rateio_id uuid not null references rateios(id) on delete cascade,
   user_id uuid not null references users(id),
   cota numeric(9,6) not null default 0
     check (cota >= 0 and cota <= 1),
   criado_em timestamptz not null default now(),
-  primary key (divida_id, user_id)
+  primary key (rateio_id, user_id)
 );
--- Trigger garante Σ cota = 1 por dívida.
+-- Trigger garante Σ cota = 1 por rateio.
 
 create table despesas (
   id uuid primary key default gen_random_uuid(),
-  divida_id uuid not null references dividas(id) on delete cascade,
+  rateio_id uuid not null references rateios(id) on delete cascade,
   data date not null,
   descricao text not null,
   pagador_user_id uuid not null references users(id),
@@ -243,7 +247,7 @@ create table despesas (
 
 create table reembolsos (
   id uuid primary key default gen_random_uuid(),
-  divida_id uuid not null references dividas(id) on delete cascade,
+  rateio_id uuid not null references rateios(id) on delete cascade,
   data date not null,
   pagador_user_id uuid not null references users(id),
   recebedor_user_id uuid not null references users(id),
@@ -266,9 +270,9 @@ create table config (
 
 ### 3.4 RLS
 
-- `dividas`, `despesas`, `reembolsos`: filtradas por
-  `divida_id in (select divida_id from membros where user_id = auth.uid())`.
-- `membros`: leitura restrita a quem já é membro da mesma dívida; escrita
+- `rateios`, `despesas`, `reembolsos`: filtradas por
+  `rateio_id in (select rateio_id from membros where user_id = auth.uid())`.
+- `membros`: leitura restrita a quem já é membro do mesmo rateio; escrita
   restrita aos já membros.
 - `taxas_ipca`: leitura para qualquer autenticado; escrita apenas pela
   role do Action (role dedicada criada via migração).
@@ -277,9 +281,9 @@ create table config (
 
 ### 3.5 Validações por trigger (não expressáveis como CHECK simples)
 
-1. `Σ cota = 1` por dívida.
-2. `despesas.pagador_user_id` ∈ membros da dívida.
-3. `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros da dívida.
+1. `Σ cota = 1` por rateio.
+2. `despesas.pagador_user_id` ∈ membros do rateio.
+3. `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros do rateio.
 4. Cotas e conjunto de participantes **não são imutáveis** (podem ser
    reajustados). Reajuste recompõe o cálculo; nada é congelado.
 
@@ -414,11 +418,11 @@ sendo a do pagamento original que gerou o crédito.
 
 ### 4.6 Visão derivada de quitação (FIFO) — apenas n=2
 
-Quando a dívida tem exatamente 2 participantes, mostrar uma visão
+Quando o rateio tem exatamente 2 participantes, mostrar uma visão
 derivada de "cada reembolso abate as despesas mais antigas em aberto",
 em ordem cronológica. Não altera o saldo real. Só apresentação.
 
-Em dívidas com n > 2, não mostrar essa visão.
+Em rateios com n > 2, não mostrar essa visão.
 
 ### 4.7 Aviso de recálculo
 
@@ -427,7 +431,7 @@ para `paga`), os compromissos e excessos mudam. Reembolsos já feitos
 permanecem como fatos, mas o líquido entre pares pode mudar.
 
 O app deve **avisar o usuário** quando isso acontecer:
-"O total da dívida mudou. Os saldos internos foram recalculados."
+"O total do rateio mudou. Os saldos internos foram recalculados."
 
 ### 4.8 Precisão numérica
 
@@ -447,7 +451,7 @@ O app deve **avisar o usuário** quando isso acontecer:
 
 ## 5. DADOS DE ORIGEM (planilha Controle.xlsx)
 
-### 5.1 Dívida a ser criada na migração
+### 5.1 Rateio a ser criado na migração
 
 - Nome: **Apartamento**
 - Participantes e cotas:
@@ -517,7 +521,7 @@ Arquivo `.ai/casos-de-teste.json`. Gerado por você (Claude Code) a partir
 dos dados da seção 5 e das regras da seção 4. Deve conter:
 
 - `metadata`: data de referência = **2026-08-15**, método, série default,
-  e cotas da dívida (`{ "LUCAS": 0, "LETICIA": 1 }`).
+  e cotas do rateio (`{ "LUCAS": 0, "LETICIA": 1 }`).
 - `casos`: 27 entradas (uma por linha da planilha), cada uma com:
   - `id`: número da linha na planilha (2 a 28).
   - `data_pagamento`, `descricao`, `pagador`, `valor_original`,
@@ -528,7 +532,7 @@ dos dados da seção 5 e das regras da seção 4. Deve conter:
   - `valor_corrigido_na_data_reembolso`: se houver reembolso.
   - `valor_corrigido_na_referencia`: se não houver reembolso (dívida em
     aberto).
-  - `impacto_divida_reais`: quanto essa linha contribui para o saldo hoje.
+  - `impacto_rateio_reais`: quanto essa linha contribui para o saldo hoje.
   - `observacao`: texto livre.
 
 ### 6.1 Validações esperadas
@@ -542,7 +546,7 @@ dos dados da seção 5 e das regras da seção 4. Deve conter:
   referência estão ambas em agosto de 2026 e não há taxa de setembro, o
   índice é o mesmo → corrigido = R$ 165,57.
 - Linhas 15 em diante (ITBI): `prevista`, não geram dívida.
-  `impacto_divida_reais = 0` e `valor_corrigido_na_referencia = null`.
+  `impacto_rateio_reais = 0` e `valor_corrigido_na_referencia = null`.
 
 ### 6.2 Saldo esperado em 2026-08-15
 
@@ -574,14 +578,14 @@ Além dos 27 casos do piloto, criar
 
 ## 7. TELAS
 
-### 7.1 Lista de dívidas (home)
-- Lista todas as dívidas em que o usuário logado é membro.
+### 7.1 Lista de rateios (home)
+- Lista todos os rateios em que o usuário logado é membro.
 - Cada item: nome, participantes, **seu saldo** em cada (positivo = você
   deve; negativo = você tem a receber), data de referência, número de
   itens em aberto.
-- Botão "nova dívida".
+- Botão "novo rateio".
 
-### 7.2 Detalhe da dívida
+### 7.2 Detalhe do rateio
 - Saldo em destaque no topo (por participante).
 - Painel de **saldos por participante**: quem tem a receber, quem deve.
 - Extrato cronológico (despesas e reembolsos misturados, mais recente
@@ -606,12 +610,12 @@ Além dos 27 casos do piloto, criar
 
 ### 7.6 Configurações
 - Globais: série BCB, data base, índice base.
-- Por dívida: editar membros e cotas. Edição de cotas recompõe o cálculo;
+- Por rateio: editar membros e cotas. Edição de cotas recompõe o cálculo;
   o app avisa quando isso altera saldos internos.
 
 ### 7.7 Aviso de recálculo
 - Sempre que `U_total` mudar (despesa nova paga), mostrar um toast:
-  "O total da dívida mudou. Os saldos internos foram recalculados."
+  "O total do rateio mudou. Os saldos internos foram recalculados."
 
 ---
 
@@ -660,7 +664,7 @@ Além dos 27 casos do piloto, criar
 │   │   ├── auth.ts
 │   │   └── schema.ts
 │   ├── features/
-│   │   ├── dividas/
+│   │   ├── rateios/
 │   │   ├── despesas/
 │   │   ├── reembolsos/
 │   │   └── config/
@@ -687,7 +691,7 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 6. **Telas** — lista, detalhe, memória, cadastro de despesa, cadastro de
    reembolso, config.
 7. **Workflows do GitHub** — smoke-bcb, ipca, backup.
-8. **Script de migração da planilha** — cria a dívida "Apartamento" com
+8. **Script de migração da planilha** — cria o rateio "Apartamento" com
    cotas 0/1, insere despesas e reembolsos.
 9. **Deploy** — GitHub Pages via Action, PWA instalável.
 10. **Documentação** — README, .env.example.
@@ -730,7 +734,7 @@ Siga nesta ordem. Não pule etapas. Rode testes entre elas.
 - [ ] PWA instalável no celular.
 - [ ] Login com Neon Auth funcionando.
 - [ ] 2 usuários cadastrados (Lucas, Letícia).
-- [ ] Dívida "Apartamento" migrada com os 27 lançamentos (cotas 0/1).
+- [ ] Rateio "Apartamento" migrado com os 27 lançamentos (cotas 0/1).
 - [ ] Saldo devedor de Letícia para com Lucas em 2026-08-15 entre
       R$ 707,00 e R$ 708,00.
 - [ ] Telas: lista, detalhe, memória de cálculo, cadastro de despesa,

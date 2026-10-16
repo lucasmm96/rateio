@@ -1,8 +1,8 @@
-# Constitution — Apps de Controle de Reembolsos
+# Constitution — Apps de Controle de Rateios
 
 Princípios reutilizáveis para qualquer app derivado de planilha de controle
 de despesas compartilhadas entre pessoas. O app piloto é o "Controle de
-Reembolsos" (apartamento Lucas + Letícia). Estes princípios valem para os
+Rateios" (apartamento Lucas + Letícia). Estes princípios valem para os
 próximos.
 
 ## Princípios
@@ -20,7 +20,7 @@ operação. Valores gravados com precisão para reproduzir o oráculo.
 ### 3. Séries e taxas configuráveis, e opcionais
 A fonte da correção (BCB SGS, código da série) é parâmetro, não hardcoded.
 Um fork pode trocar IPCA por IGP-M, INCC, etc. sem editar o núcleo do
-cálculo. Correção é **opcional por dívida** — se desligada, tudo é
+cálculo. Correção é **opcional por rateio** — se desligada, tudo é
 nominal.
 
 ### 4. Correção pro-rata diária composta, sobre o que foi pago
@@ -59,9 +59,9 @@ padrão, o app exige conexão; cache é apenas o shell do PWA.
 Só criar tabela/campo quando houver regra que o justifique. Preferir visão
 derivada a coluna gravada quando o dado é calculável.
 
-### 11. Multi-dívida e n participantes por padrão
+### 11. Multi-rateio e n participantes por padrão
 O app não é específico de um caso. Toda entidade de negócio (despesa,
-reembolso, saldo) é escopada por `divida_id`. Uma dívida tem **n
+reembolso, saldo) é escopada por `rateio_id`. Um rateio tem **n
 participantes** com cotas, e o cálculo é o mesmo para n=2 ou n=10.
 
 ### 12. Cotas são parâmetros, não fatos
@@ -70,9 +70,9 @@ parâmetros de cálculo e podem ser reajustadas — o saldo é recomposto. Não
 guardar snapshot de cotas em despesas.
 
 ### 13. Terminologia explícita
-Termos do domínio (pagamento, reembolso, cota, compromisso, excesso,
-déficit) devem estar definidos no spec e usados consistentemente na UI e
-no código. Evitar sinônimos.
+Termos do domínio (rateio, pagamento, reembolso, cota, compromisso,
+excesso, déficit) devem estar definidos no spec e usados consistentemente
+na UI e no código. Evitar sinônimos.
 
 ## Anti-princípios (o que evitar)
 - Cálculo financeiro no front sem passar pelo módulo puro.

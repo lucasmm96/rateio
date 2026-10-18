@@ -135,6 +135,16 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - 2 na v1 (Lucas e Letícia), mas o modelo suporta **n participantes**.
 - Membros são **por rateio** (tabela `membros`).
 
+### Busca de usuários por email
+
+- Ao criar/editar um rateio, o usuário adiciona participantes por email.
+- O front usa a RPC `buscar_usuario_por_email(email)` para verificar se o
+  email existe e obter o `id` do usuário.
+- Se o email não existir, mostra erro "Usuário não encontrado. Peça para se
+  cadastrar primeiro."
+- A RPC é `SECURITY DEFINER` e retorna apenas `id` e `email`.
+- A RLS de `users` permanece restrita à própria linha (não relaxar).
+
 ### Modelo de saldo — Forma B (compromisso/excesso)
 
 - Cada rateio tem um **total pago** (U_total) = soma das despesas com
@@ -227,6 +237,7 @@ create table rateios (
   id uuid primary key default gen_random_uuid(),
   nome text not null,
   corrigir_ipca boolean not null default true,
+  criado_por_user_id uuid not null references users(id),
   criado_em timestamptz not null default now(),
   arquivado_em timestamptz
 );
@@ -248,7 +259,6 @@ create table despesas (
   descricao text not null,
   pagador_user_id uuid not null references users(id),
   valor numeric(14,2) not null check (valor > 0),
-  situacao text not null check (situacao in ('paga','prevista')),
   boleto_url text,
   comprovante_url text,
   criado_em timestamptz not null default now()
@@ -286,7 +296,13 @@ create table config (
 - `taxas_ipca`: leitura para qualquer autenticado; escrita apenas pela
   role do Action (role dedicada criada via migração).
 - `config`: leitura autenticada; escrita apenas pelo service role.
-- `users`: cada usuário só vê a própria linha.
+- `users`: cada usuário só vê a própria linha. Para busca por email, usar
+  a função RPC `buscar_usuario_por_email(text)` (SECURITY DEFINER), que
+  retorna apenas `id` e `email`.
+- `rateios` INSERT: permitido a qualquer usuário autenticado (o criador é
+  registrado em `criado_por_user_id`).
+- `membros` INSERT: permitido se `auth.uid() = rateios.criado_por_user_id`
+  (criador adiciona membros) OU se `auth.uid()` já é membro do rateio.
 
 ### 3.5 Validações por trigger (não expressáveis como CHECK simples)
 
@@ -295,6 +311,75 @@ create table config (
 3. `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros do rateio.
 4. Cotas e conjunto de participantes **não são imutáveis** (podem ser
    reajustados). Reajuste recompõe o cálculo; nada é congelado.
+5. A inserção de membros ao criar um rateio deve ser feita via RPC
+   `criar_rateio` (transação única), para evitar estado intermediário com
+   soma de cotas ≠ 1.
+
+### 3.6 Funções RPC (`buscar_usuario_por_email` e `criar_rateio`)
+
+Como a RLS de `users` restringe cada usuário à própria linha, a busca por
+email precisa de uma função `SECURITY DEFINER` que retorna apenas `id` e
+`email` (não expõe outros dados). A criação de um rateio (rateio + membros)
+é feita em uma única transação, também via RPC, para evitar estado
+intermediário com soma de cotas ≠ 1.
+
+```sql
+create or replace function public.buscar_usuario_por_email(p_email text)
+returns table (id uuid, email text)
+language sql
+security definer
+set search_path = public
+as $$
+  select u.id, u.email
+  from users u
+  where lower(u.email) = lower(trim(p_email))
+  limit 1;
+$$;
+
+revoke all on function public.buscar_usuario_por_email(text) from public;
+grant execute on function public.buscar_usuario_por_email(text) to authenticated;
+
+create or replace function public.criar_rateio(
+  p_nome text,
+  p_corrigir_ipca boolean,
+  p_participantes jsonb  -- array de { user_id, cota }
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_rateio_id uuid;
+  v_criador uuid := auth.uid();
+  v_soma_cota numeric := 0;
+begin
+  if v_criador is null then
+    raise exception 'não autenticado';
+  end if;
+
+  select coalesce(sum((p->>'cota')::numeric), 0) into v_soma_cota
+  from jsonb_array_elements(p_participantes) p;
+
+  if abs(v_soma_cota - 1) > 0.000001 then
+    raise exception 'soma das cotas deve ser 1 (recebido: %)', v_soma_cota;
+  end if;
+
+  insert into rateios (nome, corrigir_ipca, criado_por_user_id)
+  values (p_nome, p_corrigir_ipca, v_criador)
+  returning id into v_rateio_id;
+
+  insert into membros (rateio_id, user_id, cota)
+  select v_rateio_id, (p->>'user_id')::uuid, (p->>'cota')::numeric
+  from jsonb_array_elements(p_participantes) p;
+
+  return v_rateio_id;
+end;
+$$;
+
+revoke all on function public.criar_rateio(text, boolean, jsonb) from public;
+grant execute on function public.criar_rateio(text, boolean, jsonb) to authenticated;
+```
 
 ---
 
@@ -373,6 +458,11 @@ hoje) são automaticamente reconciliadas porque tudo é normalizado pelo
 `unidades = valor nominal`.
 
 ### 4.4 Saldo por participante — Forma B (compromisso/excesso)
+
+> **Derivação de `situacao`**: como o campo `situacao` foi removido do
+> banco, o conjunto `D` de despesas pagas é derivado em runtime:
+> `D = { d ∈ despesas : d.data <= hoje }`. Despesas com `d.data > hoje`
+> são consideradas previstas e não entram no cálculo.
 
 Seja `D` o conjunto de despesas com situação `paga`. Para cada
 participante `i`:
@@ -663,6 +753,10 @@ dos dados da seção 5 e das regras da seção 4. Deve conter:
 
 ### 6.1 Validações esperadas
 
+> A coluna `situacao` não existe no banco; a classificação de paga/prevista
+> é derivada em runtime: `data <= data_referencia` → paga;
+> `data > data_referencia` → prevista.
+
 - Linhas com reembolso no mesmo dia do pagamento: `valor_corrigido =
   valor_original`. Isso vale para as linhas 2 a 12.
 - Linha 13 (Juros Obra Caixa 03, 2026-07-25, em aberto): corrigido em
@@ -733,7 +827,10 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 
 ### 7.4 Nova/editar despesa
 - Campos: data, descrição, **pagador** (select entre participantes),
-  valor, situação (`paga`/`prevista`), boleto_url, comprovante_url.
+  valor, boleto_url, comprovante_url.
+- A situação (`paga`/`prevista`) é **derivada da data**: `data <= hoje`
+  → paga; `data > hoje` → prevista. A UI mostra um badge dinâmico ao
+  lado do campo data indicando o estado.
 
 ### 7.5 Novo/editar reembolso
 - Campos: data, **pagador** (select), **recebedor** (select), valor,
@@ -944,6 +1041,15 @@ referência antes de escrevermos qualquer código de produção.
 - **Spec Kit e `.ai/`**: o `specify init` cria uma pasta `specs/` com
   seus próprios arquivos. Não sobrescrever `.ai/`; usar o conteúdo
   `.ai/` como entrada para os comandos `/speckit.*`.
+- **Busca de usuário por email**: a RLS de `users` bloqueia leitura de
+  outras linhas. Usar a RPC `buscar_usuario_por_email` (SECURITY DEFINER).
+  Não relaxar a RLS de `users`.
+- **Criação de rateio**: usar a RPC `criar_rateio` para inserir rateio +
+  membros em uma única transação. Insert direto de membros pelo front falha
+  na RLS porque o usuário ainda não é membro.
+- **Busca por email permite enumeração**: um usuário autenticado pode
+  descobrir se um email tem conta. Para o caso de uso (casal/família) é
+  aceitável. Se virar problema, adicionar rate limiting ou exigir convite.
 
 ---
 
@@ -970,6 +1076,12 @@ referência antes de escrevermos qualquer código de produção.
 - [ ] `.ai/constitution.md`, `.ai/spec.md`, `.ai/tasks.md`,
       `.ai/casos-de-teste.json` e `.ai/casos-de-teste-n-pessoas.json`
       no repositório.
+- [ ] RPC `buscar_usuario_por_email` criada e testada.
+- [ ] RPC `criar_rateio` criada e testada (transação atômica).
+- [ ] Adicionar participante por email funciona no formulário de novo
+      rateio.
+- [ ] Adicionar participante por email em rateio existente funciona (via
+      config).
 
 ---
 
@@ -1088,6 +1200,13 @@ Termos do domínio (rateio, pagamento, reembolso, cota, compromisso,
 excesso, déficit) devem estar definidos no spec e usados consistentemente
 na UI e no código. Evitar sinônimos.
 
+### 15. Adição de participantes por email via RPC
+
+Adicionar participantes a um rateio é feito por email. A busca por email
+usa uma função RPC `SECURITY DEFINER` que retorna apenas `id` e `email`. A
+RLS de `users` continua restrita à própria linha; não relaxar. A criação
+do rateio (rateio + membros) é feita em uma única transação via RPC.
+
 ## Anti-princípios (o que evitar)
 - Cálculo financeiro no front sem passar pelo módulo puro.
 - `number` para dinheiro.
@@ -1184,6 +1303,10 @@ Invariantes:
 - Data de despesa < data base da série: bloqueada com erro claro.
 - Σ cota = 1 por rateio (trigger + app).
 - Pagador de despesa e partes do reembolso ∈ membros do rateio.
+- Busca de usuário por email via RPC `buscar_usuario_por_email` (retorna
+  id + email, ou vazio).
+- Criação de rateio via RPC `criar_rateio` transacional (valida soma de
+  cotas = 1 no servidor).
 
 ## 6. Telas
 (ver HANDOFF.md seção 7)
@@ -1512,6 +1635,14 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 - [ ] T305 Criar role restrita para o Action de IPCA.
 - [ ] T306 Aplicar migrações em ambiente de dev.
 - [ ] T307 Testar RLS com 2 usuários distintos.
+- [ ] T308 Criar RPC `buscar_usuario_por_email` (SECURITY DEFINER,
+      retorna id + email).
+- [ ] T309 Criar RPC `criar_rateio` (SECURITY DEFINER, insere rateio +
+      membros em transação).
+- [ ] T310 Adicionar coluna `criado_por_user_id` em `rateios`.
+- [ ] T311 Testar RLS: usuário A cria rateio com usuário B; B vê o
+      rateio; C não vê.
+- [ ] T312 Testar RPC de busca por email (existente e inexistente).
 
 ## Fase 4 — Autenticação
 - [ ] T401 Configurar Neon Auth. Desativar cadastro aberto.

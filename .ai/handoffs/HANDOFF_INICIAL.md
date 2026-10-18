@@ -18,13 +18,16 @@ documentação em português.
    `casos-de-teste.json`, `casos-de-teste-n-pessoas.json`) com o conteúdo
    exato das seções 14 a 17 deste documento e da seção 6.3. Estes são
    seus **artefatos de referência enxutos**.
-3. Em seguida, **inicialize o GitHub Spec Kit** e execute os comandos
+3. Confirme que o design system está em `.ai/design/DESIGN.md` e os
+   mockups (referência visual) estão em `.ai/design/screens/`. Se os
+   mockups não estiverem no repo, pare e pergunte ao usuário.
+4. Em seguida, **inicialize o GitHub Spec Kit** e execute os comandos
    para gerar os **artefatos de qualidade completos** (`plan.md`,
    `clarify.md`, `checklist.md`, `analyze.md`), conforme detalhado na
    seção 9 (Ordem de Execução).
-4. Depois, siga a ordem de execução da seção 9, parando ao final de cada
+5. Depois, siga a ordem de execução da seção 9, parando ao final de cada
    fase para mostrar o resultado antes de prosseguir.
-5. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
+6. Não reabra decisões da seção 2. Se algo parecer ambíguo, pergunte ao
    usuário antes de assumir.
 
 ---
@@ -194,6 +197,27 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - Todos os artefatos de spec enxutos ficam em **`.ai/`** na raiz do
   repositório. Os artefatos gerados pelo Spec Kit ficam em **`specs/`**
   (estrutura padrão do Spec Kit).
+
+### Design system
+
+- O design system canônico está em **`.ai/design/DESIGN.md`**. Ele é a
+  fonte da verdade para tokens de cor, tipografia, espaçamento, raios de
+  borda, elevação e padrões de componentes.
+- Os 20 mockups HTML (10 telas × 2 temas) estão em
+  **`.ai/design/screens/`** e servem apenas como **referência visual**.
+- **Tokens obrigatoriamente mapeados no `tailwind.config.ts`** na Fase 0:
+  todas as cores do `DESIGN.md` (primary, surface, on-surface, error,
+  warning, etc.) devem existir como tokens do Tailwind, tanto no modo
+  claro quanto no escuro. Os componentes usam `bg-background`,
+  `text-on-surface`, `bg-primary`, `dark:text-primary` etc. — nunca
+  cores hardcoded.
+- **Dark mode via `darkMode: "class"`** no Tailwind, controlado por
+  `document.documentElement.classList.toggle("dark", ...)`.
+- **Mockups não são código de produção.** O dev implementa em React
+  seguindo o `DESIGN.md`, não copiando o HTML do Stitch. Elementos
+  específicos do Stitch nos mockups (ex.: `style="opacity: 0"` de
+  animação, `data-stitch-anim-opacity`, `max-w-[390px] mx-auto border-x`)
+  **não devem** ser reproduzidos.
 
 ### Direitos
 - Código open source, repositório público, reutilizável.
@@ -870,7 +894,30 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 │   ├── spec.md
 │   ├── tasks.md
 │   ├── casos-de-teste.json
-│   └── casos-de-teste-n-pessoas.json
+│   ├── casos-de-teste-n-pessoas.json
+│   └── design/
+│       ├── DESIGN.md              # design system canônico
+│       └── screens/               # mockups de referência (20 HTML)
+│           ├── login_light.html
+│           ├── login_dark.html
+│           ├── cadastro_light.html
+│           ├── cadastro_dark.html
+│           ├── home_rateios_light.html
+│           ├── home_rateios_dark.html
+│           ├── detalhe_do_rateio_light.html
+│           ├── detalhe_do_rateio_dark.html
+│           ├── memoria_de_calculo_light.html
+│           ├── memoria_de_calculo_dark.html
+│           ├── nova_despesa_light.html
+│           ├── nova_despesa_dark.html
+│           ├── novo_reembolso_light.html
+│           ├── novo_reembolso_dark.html
+│           ├── novo_rateio_light.html
+│           ├── novo_rateio_dark.html
+│           ├── configuracoes_do_rateio_light.html
+│           ├── configuracoes_do_rateio_dark.html
+│           ├── configuracoes_globais_light.html
+│           └── configuracoes_globais_dark.html
 ├── .specify/                    # gerado pelo Spec Kit
 ├── specs/                       # gerado pelo Spec Kit
 │   └── 001-controle-de-rateios/
@@ -885,6 +932,8 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.json
+├── tailwind.config.ts          # ← incluir na Fase 0 (antes era omitido)
+├── postcss.config.js           # ← incluir na Fase 0
 ├── drizzle.config.ts
 ├── .github/
 │   └── workflows/
@@ -902,6 +951,8 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 │   ├── main.tsx
 │   ├── App.tsx
 │   ├── pwa.ts
+│   ├── styles/
+│   │   └── globals.css         # ← incluir (importa o Tailwind)
 │   ├── core/
 │   │   ├── indice.ts
 │   │   ├── unidades.ts
@@ -918,6 +969,7 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 │   │   ├── reembolsos/
 │   │   └── config/
 │   ├── components/
+│   │   └── ui/                 # ← componentes base (Button, Input, Card, Badge…)
 │   └── routes/
 └── public/
 ```
@@ -943,6 +995,21 @@ referência antes de escrevermos qualquer código de produção.
    exato das seções 14 a 17 (e 6.3) deste HANDOFF para os arquivos
    correspondentes dentro da pasta `.ai/`. Estes arquivos são a fonte da
    verdade e serão usados como entrada para o Spec Kit.
+3. **Configurar Tailwind com os tokens do `DESIGN.md`** em
+   `tailwind.config.ts`: adicionar `darkMode: "class"`, definir todos os
+   tokens de cor do `DESIGN.md` (light e dark), tipografia, border-radius,
+   spacing, e a família `Inter`. Configurar `postcss.config.js`.
+4. **Importar Inter e Material Symbols** via Google Fonts no
+   `index.html` ou via `@fontsource/inter` (preferir fontsource, para
+   evitar dependência de rede em runtime).
+5. **Criar `src/styles/globals.css`** importando as diretivas do
+   Tailwind (`@tailwind base; @tailwind components; @tailwind utilities;`)
+   e aplicando as bases do `DESIGN.md` (background, color, font-family).
+6. **Criar componentes base em `src/components/ui/`** conforme
+   `DESIGN.md`: `Button` (primary, secondary, outline, ghost), `Input`,
+   `Card`, `Badge` (a-receber, deve, prevista), `Switch`, `Avatar`,
+   `BottomNav`, `Header`, `FAB`. Estes componentes usam os tokens e
+   suportam dark mode nativamente.
 
 ### Fase 1 — Integração com o GitHub Spec Kit
 
@@ -1060,6 +1127,22 @@ referência antes de escrevermos qualquer código de produção.
 - **Busca por email permite enumeração**: um usuário autenticado pode
   descobrir se um email tem conta. Para o caso de uso (casal/família) é
   aceitável. Se virar problema, adicionar rate limiting ou exigir convite.
+- **Mockups ≠ código de produção**: os HTML em `.ai/design/screens/` são
+  referência visual. O dev implementa em React seguindo o `DESIGN.md`.
+  NÃO copiar `style="opacity: 0"`, `data-stitch-anim-opacity`,
+  `max-w-[390px] mx-auto border-x`, nem cores hardcoded (`bg-[#0F172A]`)
+  dos mockups.
+- **Tokens, não cores hardcoded**: no código de produção, todas as cores
+  vêm dos tokens do Tailwind (`bg-primary`, `text-on-surface`,
+  `dark:bg-background`, etc.). Nunca `bg-[#00A868]` no componente —
+  sempre `bg-primary`.
+- **Dark mode via `class`**: a alternância de tema é feita pelo `class` no
+  `<html>`. O componente `ThemeProvider` (contexto React) deve persistir a
+  escolha em `localStorage` (chave `theme`) com três estados: `light`,
+  `dark`, `system`. O `system` observa `prefers-color-scheme`.
+- **Inter via fontsource**: instalar `@fontsource/inter` e importar no
+  `main.tsx` (`import "@fontsource/inter/400.css"`, `/500.css`, `/600.css`,
+  `/700.css`). Evita depender da rede do Google em runtime.
 
 ---
 
@@ -1092,6 +1175,18 @@ referência antes de escrevermos qualquer código de produção.
       rateio.
 - [ ] Adicionar participante por email em rateio existente funciona (via
       config).
+- [ ] Design system em `.ai/design/DESIGN.md` no repo.
+- [ ] 20 mockups em `.ai/design/screens/` no repo (10 telas × 2 temas).
+- [ ] `tailwind.config.ts` com todos os tokens do `DESIGN.md` (light e
+      dark).
+- [ ] Componentes base em `src/components/ui/` implementados
+      (Button, Input, Card, Badge, Switch, Avatar, Header, BottomNav,
+      FAB).
+- [ ] Inter e Material Symbols carregados no app.
+- [ ] Dark mode funcional com toggle em Configurações (Claro / Escuro /
+      Automático).
+- [ ] Todas as 10 telas implementadas em React, seguindo o `DESIGN.md` e
+      os mockups como referência.
 
 ---
 
@@ -1216,6 +1311,14 @@ Adicionar participantes a um rateio é feito por email. A busca por email
 usa uma função RPC `SECURITY DEFINER` que retorna apenas `id` e `email`. A
 RLS de `users` continua restrita à própria linha; não relaxar. A criação
 do rateio (rateio + membros) é feita em uma única transação via RPC.
+
+### 16. Design system como fonte da verdade visual
+
+Todas as cores, tipografia, espaçamento, raios e sombras vêm do
+`DESIGN.md` e devem existir como **tokens do Tailwind**. Componentes não
+usam cores hardcoded. Dark mode é suportado desde o dia 1 via
+`darkMode: "class"`. Mockups visuais (HTML do Stitch) são **referência
+para o design**, não código a copiar.
 
 ## Anti-princípios (o que evitar)
 - Cálculo financeiro no front sem passar pelo módulo puro.
@@ -1361,6 +1464,14 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 - Workflows agendados desativados após 60 dias sem atividade.
 - Restauração do Neon free: 6 horas. Backup próprio é obrigatório.
 - api.bcb.gov.br pode bloquear IPs de datacenter.
+
+## 13. Design system
+
+- Fonte da verdade: `.ai/design/DESIGN.md`.
+- Referência visual: `.ai/design/screens/` (20 mockups).
+- Tokens mapeados em `tailwind.config.ts`.
+- Dark mode: `darkMode: "class"` + `ThemeProvider` (light/dark/system).
+- Componentes base em `src/components/ui/`.
 ```
 
 ---
@@ -1606,6 +1717,20 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 - [ ] T004 Configurar base path do Vite para GitHub Pages.
 - [ ] T005 Configurar `createHashRouter`.
 - [ ] T006 Criar `.env.example` com as variáveis necessárias.
+- [ ] T007 Configurar `tailwind.config.ts` com tokens do `DESIGN.md`
+      (cores light + dark, `darkMode: "class"`, tipografia, radius,
+      spacing).
+- [ ] T008 Configurar `postcss.config.js`.
+- [ ] T009 Criar `src/styles/globals.css` com `@tailwind base/components/
+      utilities` + bases do `DESIGN.md`.
+- [ ] T010 Instalar `@fontsource/inter` e importar pesos 400/500/600/700
+      no `main.tsx`.
+- [ ] T011 Adicionar Material Symbols via CSS no `index.html` (link
+      Google Fonts) ou `@fontsource/material-symbols-outlined`.
+- [ ] T012 Criar `src/components/ui/` com Button, Input, Card, Badge,
+      Switch, Avatar, Header, BottomNav, FAB.
+- [ ] T013 Criar `ThemeProvider` (React context) com persistência em
+      `localStorage` e observação de `prefers-color-scheme`.
 
 ## Fase 1 — Integração com o GitHub Spec Kit
 - [ ] T101 Instalar `specify-cli` via `uv tool install`.

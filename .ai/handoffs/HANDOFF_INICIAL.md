@@ -148,7 +148,8 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 ### Modelo de saldo — Forma B (compromisso/excesso)
 
 - Cada rateio tem um **total pago** (U_total) = soma das despesas com
-  situação `paga` (em unidades de índice).
+  `data <= hoje` (em unidades de índice). A classificação paga/prevista é
+  derivada da data em runtime; não existe como coluna no banco.
 - Cada participante tem um **compromisso** = `U_total × cota`.
 - Quem pagou mais que o compromisso tem **excesso** (crédito).
 - Quem pagou menos tem **déficit** (deve).
@@ -211,7 +212,8 @@ dado pessoal, credencial ou configuração específica vai no repositório.
   reembolsos e saldo próprios.
 - **Participante**: pessoa com cota no rateio. Pode ter cota 0.
 - **Despesa**: valor pago a um terceiro. Tem pagador (qualquer
-  participante do rateio) e situação (`paga` ou `prevista`).
+  participante do rateio) e data. A situação (paga/prevista) é derivada
+  em runtime: `data <= hoje` → paga; `data > hoje` → prevista.
 - **Reembolso**: transferência de um participante a outro, com pagador e
   recebedor explícitos.
 - **Taxa IPCA**: global, uma linha por mês.
@@ -222,7 +224,8 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - Cada despesa tem `pagador_user_id` ∈ membros do rateio.
 - Cada reembolso tem `pagador_user_id` e `recebedor_user_id` ∈ membros,
   e são diferentes entre si.
-- Apenas despesas com situação `paga` entram no cálculo do saldo.
+- Apenas despesas com `data <= hoje` entram no cálculo do saldo
+  (classificadas como "pagas" em runtime).
 
 ### 3.3 SQL (referência para o Drizzle)
 
@@ -464,7 +467,7 @@ hoje) são automaticamente reconciliadas porque tudo é normalizado pelo
 > `D = { d ∈ despesas : d.data <= hoje }`. Despesas com `d.data > hoje`
 > são consideradas previstas e não entram no cálculo.
 
-Seja `D` o conjunto de despesas com situação `paga`. Para cada
+Seja `D` o conjunto de despesas com `data <= hoje` (pagas em runtime). Para cada
 participante `i`:
 
 ```
@@ -525,9 +528,10 @@ Em rateios com n > 2, não mostrar essa visão.
 
 ### 4.7 Aviso de recálculo
 
-Quando `U_total` muda (despesa nova paga, ou situação muda de `prevista`
-para `paga`), os compromissos e excessos mudam. Reembolsos já feitos
-permanecem como fatos, mas o líquido entre pares pode mudar.
+Quando `U_total` muda (despesa nova inserida, ou a data de uma despesa
+cruza `hoje` fazendo-a passar de prevista para paga), os compromissos e
+excessos mudam. Reembolsos já feitos permanecem como fatos, mas o líquido
+entre pares pode mudar.
 
 O app deve **avisar o usuário** quando isso acontecer:
 "O total do rateio mudou. Os saldos internos foram recalculados."
@@ -558,8 +562,7 @@ interface Participante { userId: string; cota: Decimal }
 interface Despesa {
   pagadorUserId: string
   valor: Decimal
-  data: string
-  situacao: 'paga' | 'prevista'
+  data: string  // YYYY-MM-DD; paga se data <= hoje, prevista se data > hoje
 }
 interface Reembolso {
   pagadorUserId: string
@@ -580,13 +583,14 @@ function unidades(valor: Decimal, data: string, corrigir: boolean): Decimal {
   return valor.dividedBy(indiceEmData(data))
 }
 
-export function calcularSaldo(rateio: Rateio, corrigir: boolean) {
+export function calcularSaldo(rateio: Rateio, corrigir: boolean, hoje: string) {
   const userIds = rateio.participantes.map(p => p.userId)
+  const ehPaga = (d: Despesa) => d.data <= hoje
 
   // 1) U_total
   let uTotal = new Decimal(0)
   for (const d of rateio.despesas) {
-    if (d.situacao !== 'paga') continue
+    if (!ehPaga(d)) continue
     uTotal = uTotal.plus(unidades(d.valor, d.data, corrigir))
   }
 
@@ -601,7 +605,7 @@ export function calcularSaldo(rateio: Rateio, corrigir: boolean) {
     userIds.map(id => [id, new Decimal(0)]),
   )
   for (const d of rateio.despesas) {
-    if (d.situacao !== 'paga') continue
+    if (!ehPaga(d)) continue
     const u = unidades(d.valor, d.data, corrigir)
     pagoEfetivo.set(d.pagadorUserId, pagoEfetivo.get(d.pagadorUserId)!.plus(u))
   }
@@ -677,7 +681,12 @@ export function calcularSaldo(rateio: Rateio, corrigir: boolean) {
 
 ### 5.2 Despesas da planilha (27 linhas)
 
-Formato: `data | descricao | pagador | valor | situacao | data_reembolso`
+Formato: `data | descricao | pagador | valor | situacao_planilha | data_reembolso`
+
+> `situacao_planilha` reflete o estado na planilha original (paga/prevista)
+> e é usado apenas para validar a migração. No banco, não existe coluna
+> `situacao`; a classificação é derivada de `data <= hoje`.
+
 
 ```
 2025-12-26 | Sinal compra                 | LETICIA |  500.00 | paga | 2025-12-26
@@ -741,7 +750,8 @@ dos dados da seção 5 e das regras da seção 4. Deve conter:
 - `casos`: 27 entradas (uma por linha da planilha), cada uma com:
   - `id`: número da linha na planilha (2 a 28).
   - `data_pagamento`, `descricao`, `pagador`, `valor_original`,
-    `situacao`, `data_reembolso`, `valor_reembolso`.
+    `situacao_derivada` (paga/prevista, derivado de `data <= data_referencia`),
+    `data_reembolso`, `valor_reembolso`.
   - `indice_pagamento`: calculado pela fórmula pro-rata.
   - `indice_reembolso`: calculado pela fórmula pro-rata (ou `null`).
   - `indice_referencia`: índice em 2026-08-15.
@@ -1275,7 +1285,9 @@ Convenções:
 - `despesas.pagador_user_id` ∈ membros do rateio (trigger).
 - `reembolsos.pagador_user_id` e `recebedor_user_id` ∈ membros do rateio
   (trigger) e diferentes entre si (CHECK).
-- Despesas com situação `prevista` não entram no cálculo do saldo.
+- Despesas com `data > hoje` são consideradas previstas e não entram no
+  cálculo do saldo. A classificação é derivada em runtime; não existe
+  coluna `situacao` no banco.
 
 ## 4. Regras de cálculo
 (ver HANDOFF.md seções 4.1 a 4.10)

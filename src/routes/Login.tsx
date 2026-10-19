@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
-import { signIn } from '../db/auth'
+import { signIn, signInWithGoogle } from '../db/auth'
+import { GoogleButton } from '../components/ui/GoogleButton'
 
 export function Component() {
   const navigate = useNavigate()
@@ -112,7 +113,10 @@ export function Component() {
               ou
             </span>
           </div>
-          <p className="text-body-md text-on-surface text-center">
+
+          <GoogleButton onClick={signInWithGoogle} label="Entrar com Google" />
+
+          <p className="text-body-md text-on-surface text-center mt-space-md">
             Não tem conta?{' '}
             <Link to="/cadastro" className="text-headline-sm text-primary font-bold hover:underline ml-1">
               Criar conta

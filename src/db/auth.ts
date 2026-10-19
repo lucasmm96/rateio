@@ -15,6 +15,13 @@ export async function signUp(email: string, password: string, name: string) {
   return neon.auth.signUp.email({ email, password, name })
 }
 
+export async function signInWithGoogle() {
+  return neon.auth.signIn.social({
+    provider: 'google',
+    callbackURL: import.meta.env.BASE_URL,
+  })
+}
+
 export async function signOut() {
   return neon.auth.signOut()
 }

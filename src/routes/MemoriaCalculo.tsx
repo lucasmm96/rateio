@@ -30,9 +30,9 @@ export function Component() {
   const { data: rateio, loading: lRateio } = useAsync(() => buscarRateio(id!), [id])
   const { data: despesas, loading: lDesp } = useAsync(() => listarDespesas(id!), [id])
   const { data: reembolsos, loading: lReem } = useAsync(() => listarReembolsos(id!), [id])
-  const { data: taxas } = useAsync(listarTaxasIpca)
+  const { data: taxas, loading: lTaxas } = useAsync(listarTaxasIpca)
 
-  const loading = lRateio || lDesp || lReem
+  const loading = lRateio || lDesp || lReem || lTaxas
   const membros = rateio?.membros ?? []
 
   const taxasCore: TaxaIPCA[] = (taxas ?? []).map(t => ({

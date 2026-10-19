@@ -33,9 +33,9 @@ export function Component() {
   const { data: rateio, loading: lRateio } = useAsync(() => buscarRateio(id!), [id])
   const { data: despesas, loading: lDesp } = useAsync(() => listarDespesas(id!), [id])
   const { data: reembolsos, loading: lReem } = useAsync(() => listarReembolsos(id!), [id])
-  const { data: taxas } = useAsync(listarTaxasIpca)
+  const { data: taxas, loading: lTaxas } = useAsync(listarTaxasIpca)
 
-  const loading = lRateio || lDesp || lReem
+  const loading = lRateio || lDesp || lReem || lTaxas
   const membros = rateio?.membros ?? []
   const hoje = new Date().toISOString().slice(0, 10)
 
@@ -119,6 +119,9 @@ export function Component() {
             {membros.map(m => {
               const saldo = saldoEmReais(resultado, m.user_id, hoje, rateio!.corrigir_ipca, taxasCore)
               const saldoN = Number(saldo.toFixed(2))
+              // Convention in saldo.ts: negative = creditor (a receber), positive = debtor (deve)
+              const isAReceber = saldoN < -0.01
+              const isDeve = saldoN > 0.01
               const deveParaOutros = resultado.deveDePara.filter(
                 dp => dp.de === m.user_id && !dp.unidades.isZero(),
               )
@@ -143,17 +146,17 @@ export function Component() {
                       <p
                         className={[
                           'text-body-lg font-bold',
-                          saldoN > 0.01
+                          isAReceber
                             ? 'text-primary'
-                            : saldoN < -0.01
+                            : isDeve
                               ? 'text-error'
                               : 'text-on-surface-variant',
                         ].join(' ')}
                       >
                         {fmtReais(Math.abs(saldoN))}
                       </p>
-                      <Badge variant={saldoN > 0.01 ? 'a-receber' : saldoN < -0.01 ? 'deve' : 'default'}>
-                        {saldoN > 0.01 ? 'a receber' : saldoN < -0.01 ? 'deve' : 'quitado'}
+                      <Badge variant={isAReceber ? 'a-receber' : isDeve ? 'deve' : 'default'}>
+                        {isAReceber ? 'a receber' : isDeve ? 'deve' : 'quitado'}
                       </Badge>
                     </div>
                   </div>
@@ -182,7 +185,7 @@ export function Component() {
                     </div>
                   )}
 
-                  {m.user_id === user?.id && saldoN < -0.01 && (
+                  {m.user_id === user?.id && isDeve && (
                     <button
                       onClick={() => navigate(`/rateios/${id}/novo-reembolso`)}
                       className="mt-3 w-full py-2 rounded-lg text-label-lg text-on-primary-container bg-primary-container hover:opacity-90 transition-opacity"

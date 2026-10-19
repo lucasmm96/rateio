@@ -1,5 +1,16 @@
+import { useEffect } from 'react'
 import { createHashRouter, RouterProvider, Navigate, Link } from 'react-router-dom'
 import { useUser } from './db/auth'
+import { useTheme } from './components/ThemeProvider'
+
+function UserThemeSync() {
+  const { user } = useUser()
+  const { syncUser } = useTheme()
+  useEffect(() => {
+    syncUser(user?.id ?? null)
+  }, [user?.id])
+  return null
+}
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useUser()
@@ -142,5 +153,10 @@ const router = createHashRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <UserThemeSync />
+      <RouterProvider router={router} />
+    </>
+  )
 }

@@ -106,6 +106,14 @@ export async function arquivarRateio(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+export async function editarRateio(
+  id: string,
+  updates: { nome?: string; corrigir_ipca?: boolean },
+): Promise<void> {
+  const { error } = await neon.from('rateios').update(updates).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 // ---------------------------------------------------------------------------
 // Membros
 // ---------------------------------------------------------------------------

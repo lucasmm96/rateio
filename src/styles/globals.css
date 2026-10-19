@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Tokens de cor — modo claro (padrão) ── */
+:root {
+  --color-primary: #00A868;
+  --color-primary-hover: #00875A;
+  --color-primary-container: #E6F7F0;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #00875A;
+
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-on-surface: #0F172A;
+  --color-on-surface-variant: #64748B;
+  --color-outline: #E2E8F0;
+
+  --color-error: #DC2626;
+  --color-error-container: rgba(220, 38, 38, 0.10);
+  --color-warning: #D97706;
+  --color-warning-container: rgba(217, 119, 6, 0.10);
+  --color-success: #00A868;
+}
+
+/* ── Tokens de cor — modo escuro ── */
+.dark {
+  --color-primary: #34D399;
+  --color-primary-hover: #6EE7B7;
+  --color-primary-container: #064E3B;
+  --color-on-primary: #0F172A;
+  --color-on-primary-container: #34D399;
+
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-on-surface: #F1F5F9;
+  --color-on-surface-variant: #94A3B8;
+  --color-outline: #334155;
+
+  --color-error: #F87171;
+  --color-error-container: rgba(248, 113, 113, 0.15);
+  --color-warning: #FBBF24;
+  --color-warning-container: rgba(251, 191, 36, 0.15);
+  --color-success: #34D399;
+}
+
+/* ── Base global ── */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply font-sans bg-background text-on-surface;
+    min-height: 100dvh;
+  }
+
+  /* Numerais tabulares para valores monetários */
+  .tabular-nums {
+    font-feature-settings: "tnum" 1, "cv05" 1;
+  }
+}

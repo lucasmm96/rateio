@@ -1,0 +1,28 @@
+name: Smoke Test BCB
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Roda todo dia 9 às 08:00 UTC (antes do ipca.yml)
+    - cron: '0 8 9 * *'
+
+jobs:
+  smoke:
+    name: Testar API do BCB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar série 433 (IPCA)
+        run: |
+          URL="https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/3?formato=json"
+          echo "→ GET $URL"
+          RESP=$(curl -sf --max-time 30 "$URL")
+          if [ $? -ne 0 ]; then
+            echo "❌ Falha ao conectar em api.bcb.gov.br"
+            echo "   Use o fallback manual em Configurações até o serviço voltar."
+            exit 1
+          fi
+          echo "✅ API respondeu:"
+          echo "$RESP" | head -c 500
+          COUNT=$(echo "$RESP" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?")
+          echo ""
+          echo "   ($COUNT registros retornados)"

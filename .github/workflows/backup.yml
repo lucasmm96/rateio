@@ -1,0 +1,38 @@
+name: Backup Semanal
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Todo domingo às 02:00 UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  backup:
+    name: pg_dump → artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente PostgreSQL
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Criar dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)
+          FILENAME="backup_${TIMESTAMP}.dump"
+          echo "→ Gerando $FILENAME..."
+          pg_dump "$DATABASE_URL" \
+            --format=custom \
+            --no-acl \
+            --no-owner \
+            --file="$FILENAME"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+          ls -lh "$FILENAME"
+
+      - name: Publicar como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_id }}
+          path: ${{ env.FILENAME }}
+          retention-days: 90
+          if-no-files-found: error

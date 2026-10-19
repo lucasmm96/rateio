@@ -1,0 +1,44 @@
+name: Atualizar IPCA
+
+on:
+  workflow_dispatch:
+    inputs:
+      serie:
+        description: 'Código da série BCB (padrão: 433 = IPCA mensal)'
+        required: false
+        default: '433'
+  schedule:
+    # Dias 9 a 15 de cada mês às 09:00 UTC
+    # (BCB publica o IPCA entre os dias 9 e 15)
+    - cron: '0 9 9 * *'
+    - cron: '0 9 10 * *'
+    - cron: '0 9 11 * *'
+    - cron: '0 9 12 * *'
+    - cron: '0 9 13 * *'
+    - cron: '0 9 14 * *'
+    - cron: '0 9 15 * *'
+
+jobs:
+  atualizar-ipca:
+    name: Buscar série BCB e fazer upsert
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Executar seed-taxas.mjs
+        env:
+          IPCA_WRITER_DATABASE_URL: ${{ secrets.IPCA_WRITER_DATABASE_URL }}
+          BCB_SERIE: ${{ inputs.serie || '433' }}
+        run: pnpm exec node scripts/seed-taxas.mjs

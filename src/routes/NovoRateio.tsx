@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -11,7 +12,7 @@ import { useUser } from '../db/auth'
 interface Participante {
   user_id: string
   email: string
-  cota: string // percentual como string ex: "50"
+  cota: string
 }
 
 function distribuirCotas(qtd: number): string[] {
@@ -97,117 +98,120 @@ export function Component() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
-      <Header title="Novo Rateio" back />
+    <FormShell>
+      <div className="bg-background">
+        <Header title="Novo Rateio" back />
 
-      <main className="px-margin py-4 pb-32 space-y-6">
-        {/* Nome */}
-        <Input
-          label="Nome do rateio"
-          placeholder="ex: Apartamento 2024"
-          value={nome}
-          onChange={e => setNome(e.target.value)}
-          autoFocus
-        />
+        <main className="px-margin py-4 pb-32 md:pb-6 space-y-6">
+          {/* Nome */}
+          <Input
+            label="Nome do rateio"
+            placeholder="ex: Apartamento 2024"
+            value={nome}
+            onChange={e => setNome(e.target.value)}
+            autoFocus
+          />
 
-        {/* Correção IPCA */}
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-body-md text-on-surface font-medium">Correção pelo IPCA</p>
-              <p className="text-body-sm text-on-surface-variant">
-                Despesas passadas são corrigidas pela inflação
-              </p>
+          {/* Correção IPCA */}
+          <Card>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-body-md text-on-surface font-medium">Correção pelo IPCA</p>
+                <p className="text-body-sm text-on-surface-variant">
+                  Despesas passadas são corrigidas pela inflação
+                </p>
+              </div>
+              <Switch checked={corrigirIpca} onChange={setCorrigirIpca} />
             </div>
-            <Switch checked={corrigirIpca} onChange={setCorrigirIpca} />
-          </div>
-        </Card>
+          </Card>
 
-        {/* Buscar participante */}
-        <div className="space-y-2">
-          <p className="text-label-lg text-on-surface">Participantes</p>
-          <div className="flex gap-2">
-            <Input
-              placeholder="E-mail do participante"
-              type="email"
-              value={emailBusca}
-              onChange={e => { setEmailBusca(e.target.value); setErroBusca('') }}
-              onKeyDown={e => e.key === 'Enter' && buscarParticipante()}
-              error={erroBusca}
-              className="flex-1"
-            />
-            <Button
-              variant="secondary"
-              onClick={buscarParticipante}
-              loading={buscando}
-              disabled={!emailBusca.trim() || buscando}
-              className="shrink-0"
-            >
-              Buscar
-            </Button>
-          </div>
-        </div>
-
-        {/* Lista de participantes */}
-        {participantes.length > 0 && (
+          {/* Buscar participante */}
           <div className="space-y-2">
-            {participantes.map(p => (
-              <Card key={p.user_id} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
-                  {p.email.split('@')[0].slice(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-md text-on-surface truncate">{p.email}</p>
-                  {p.user_id === user?.id && (
-                    <p className="text-body-sm text-on-surface-variant">você</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={p.cota}
-                    onChange={e => atualizarCota(p.user_id, e.target.value)}
-                    suffix="%"
-                    className="w-16 text-right"
-                  />
-                  {p.user_id !== user?.id && (
-                    <button
-                      onClick={() => removerParticipante(p.user_id)}
-                      className="p-1.5 rounded-full text-on-surface-variant hover:bg-surface hover:text-error transition-colors"
-                      aria-label="Remover participante"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                  )}
-                </div>
-              </Card>
-            ))}
-
-            <div className={['flex justify-end text-body-sm font-medium', cotasValidas ? 'text-primary' : 'text-error'].join(' ')}>
-              Total: {somaCotas.toFixed(1)}%
-              {!cotasValidas && ' (deve ser 100%)'}
+            <p className="text-label-lg text-on-surface">Participantes</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="E-mail do participante"
+                type="email"
+                value={emailBusca}
+                onChange={e => { setEmailBusca(e.target.value); setErroBusca('') }}
+                onKeyDown={e => e.key === 'Enter' && buscarParticipante()}
+                error={erroBusca}
+                className="flex-1"
+              />
+              <Button
+                variant="secondary"
+                onClick={buscarParticipante}
+                loading={buscando}
+                disabled={!emailBusca.trim() || buscando}
+                className="shrink-0"
+              >
+                Buscar
+              </Button>
             </div>
           </div>
-        )}
 
-        {erroForm && (
-          <p className="text-body-sm text-error">{erroForm}</p>
-        )}
-      </main>
+          {/* Lista de participantes */}
+          {participantes.length > 0 && (
+            <div className="space-y-2">
+              {participantes.map(p => (
+                <Card key={p.user_id} className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
+                    {p.email.split('@')[0].slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-body-md text-on-surface truncate">{p.email}</p>
+                    {p.user_id === user?.id && (
+                      <p className="text-body-sm text-on-surface-variant">você</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={p.cota}
+                      onChange={e => atualizarCota(p.user_id, e.target.value)}
+                      suffix="%"
+                      className="w-16 text-right"
+                    />
+                    {p.user_id !== user?.id && (
+                      <button
+                        onClick={() => removerParticipante(p.user_id)}
+                        className="p-1.5 rounded-full text-on-surface-variant hover:bg-surface hover:text-error transition-colors"
+                        aria-label="Remover participante"
+                      >
+                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
+                      </button>
+                    )}
+                  </div>
+                </Card>
+              ))}
 
-      <div className="fixed bottom-0 inset-x-0 px-margin pb-6 pt-3 bg-background/90 backdrop-blur-sm border-t border-outline">
-        <Button
-          onClick={salvar}
-          loading={salvando}
-          disabled={salvando || !nome.trim() || participantes.length === 0 || !cotasValidas}
-          className="w-full"
-        >
-          Criar rateio
-        </Button>
+              <div className={['flex justify-end text-body-sm font-medium', cotasValidas ? 'text-primary' : 'text-error'].join(' ')}>
+                Total: {somaCotas.toFixed(1)}%
+                {!cotasValidas && ' (deve ser 100%)'}
+              </div>
+            </div>
+          )}
+
+          {erroForm && (
+            <p className="text-body-sm text-error">{erroForm}</p>
+          )}
+        </main>
+
+        {/* Footer — fixed on mobile, static inside modal on md+ */}
+        <div className="fixed md:static bottom-0 inset-x-0 md:inset-auto px-margin md:px-4 pb-6 md:pb-4 pt-3 bg-background/90 md:bg-background backdrop-blur-sm md:backdrop-blur-none border-t border-outline">
+          <Button
+            onClick={salvar}
+            loading={salvando}
+            disabled={salvando || !nome.trim() || participantes.length === 0 || !cotasValidas}
+            className="w-full"
+          >
+            Criar rateio
+          </Button>
+        </div>
       </div>
-    </div>
+    </FormShell>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { BottomNav } from '../components/ui/BottomNav'
+import { AppShell } from '../components/layout/AppShell'
+import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -25,20 +26,17 @@ export function Component() {
 
   const isOwner = !!rateio && rateio.criado_por_user_id === user?.id
 
-  // --- Cotas ---
   const [cotas, setCotas] = useState<Record<string, string>>({})
   const [salvandoCotas, setSalvandoCotas] = useState(false)
   const [erroCotas, setErroCotas] = useState('')
   const [sucessoCotas, setSucessoCotas] = useState(false)
 
-  // --- Editar rateio ---
   const [nomeEdit, setNomeEdit] = useState('')
   const [corrigirEdit, setCorrigirEdit] = useState(false)
   const [salvandoRateio, setSalvandoRateio] = useState(false)
   const [erroRateio, setErroRateio] = useState('')
   const [sucessoRateio, setSucessoRateio] = useState(false)
 
-  // --- Arquivar ---
   const [confirmandoArquivar, setConfirmandoArquivar] = useState(false)
   const [arquivando, setArquivando] = useState(false)
   const [erroArquivar, setErroArquivar] = useState('')
@@ -115,49 +113,16 @@ export function Component() {
     }
   }
 
-  return (
-    <div className="min-h-dvh bg-background">
-      <Header title="Configurações" back={!!rateioId} />
-
-      <main className="px-margin py-4 pb-24 space-y-6">
-        {/* Aparência */}
-        <section className="space-y-3">
-          <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Aparência</h2>
-
-          <Card>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-body-md text-on-surface font-medium">Modo escuro</p>
-                <p className="text-body-sm text-on-surface-variant">
-                  {theme === 'system' ? 'Seguindo o sistema' : resolvedTheme === 'dark' ? 'Ativado' : 'Desativado'}
-                </p>
-              </div>
-              <Switch
-                checked={resolvedTheme === 'dark'}
-                onChange={checked => setTheme(checked ? 'dark' : 'light')}
-              />
-            </div>
-          </Card>
-
-          {theme !== 'system' && (
-            <button
-              onClick={() => setTheme('system')}
-              className="text-body-sm text-primary hover:underline"
-            >
-              Usar preferência do sistema
-            </button>
-          )}
-        </section>
-
-        {/* Editar rateio — apenas para o criador */}
-        {rateioId && isOwner && (
+  // Config rateio content (used inside FormShell when ?rateio= is present)
+  const ConfigRateioContent = () => (
+    <div className="bg-background">
+      <Header title="Config. Rateio" back />
+      <main className="px-margin py-4 pb-8 space-y-6">
+        {/* Editar rateio */}
+        {isOwner && (
           <section className="space-y-3">
-            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
-              Editar rateio
-            </h2>
-
+            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Editar rateio</h2>
             {loading && <p className="text-body-sm text-on-surface-variant">Carregando…</p>}
-
             {!loading && rateio && (
               <>
                 <Card className="space-y-4">
@@ -166,7 +131,6 @@ export function Component() {
                     value={nomeEdit}
                     onChange={e => setNomeEdit(e.target.value)}
                   />
-
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-body-md text-on-surface font-medium">Correção pelo IPCA</p>
@@ -177,12 +141,8 @@ export function Component() {
                     <Switch checked={corrigirEdit} onChange={setCorrigirEdit} />
                   </div>
                 </Card>
-
                 {erroRateio && <p className="text-body-sm text-error">{erroRateio}</p>}
-                {sucessoRateio && (
-                  <p className="text-body-sm text-primary">Rateio atualizado com sucesso.</p>
-                )}
-
+                {sucessoRateio && <p className="text-body-sm text-primary">Rateio atualizado com sucesso.</p>}
                 <Button
                   onClick={salvarRateio}
                   loading={salvandoRateio}
@@ -196,87 +156,64 @@ export function Component() {
           </section>
         )}
 
-        {/* Cotas do rateio */}
-        {rateioId && (
+        {/* Cotas */}
+        <section className="space-y-3">
+          <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
+            Cotas — {rateio?.nome ?? '…'}
+          </h2>
+          {loading && <p className="text-body-sm text-on-surface-variant">Carregando…</p>}
+          {!loading && rateio?.membros.map(m => (
+            <Card key={m.user_id} className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
+                {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-body-md text-on-surface truncate">
+                  {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
+                </p>
+              </div>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={cotas[m.user_id] ?? ''}
+                onChange={e => setCotas(prev => ({ ...prev, [m.user_id]: e.target.value }))}
+                suffix="%"
+                className="w-16 text-right"
+              />
+            </Card>
+          ))}
+          {!loading && rateio && (
+            <>
+              <div className={['flex justify-end text-body-sm font-medium', cotasValidas ? 'text-primary' : 'text-error'].join(' ')}>
+                Total: {somaCotas.toFixed(1)}%
+                {!cotasValidas && ' (deve ser 100%)'}
+              </div>
+              {erroCotas && <p className="text-body-sm text-error">{erroCotas}</p>}
+              {sucessoCotas && <p className="text-body-sm text-primary">Cotas atualizadas com sucesso.</p>}
+              <Button
+                onClick={salvarCotas}
+                loading={salvandoCotas}
+                disabled={salvandoCotas || !cotasValidas}
+                className="w-full"
+              >
+                Salvar cotas
+              </Button>
+            </>
+          )}
+        </section>
+
+        {/* Arquivar */}
+        {isOwner && !loading && rateio && (
           <section className="space-y-3">
-            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
-              Cotas — {rateio?.nome ?? '…'}
-            </h2>
-
-            {loading && (
-              <p className="text-body-sm text-on-surface-variant">Carregando…</p>
-            )}
-
-            {!loading && rateio?.membros.map(m => (
-              <Card key={m.user_id} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
-                  {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-md text-on-surface truncate">
-                    {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
-                  </p>
-                </div>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={cotas[m.user_id] ?? ''}
-                  onChange={e =>
-                    setCotas(prev => ({ ...prev, [m.user_id]: e.target.value }))
-                  }
-                  suffix="%"
-                  className="w-16 text-right"
-                />
-              </Card>
-            ))}
-
-            {!loading && rateio && (
-              <>
-                <div
-                  className={[
-                    'flex justify-end text-body-sm font-medium',
-                    cotasValidas ? 'text-primary' : 'text-error',
-                  ].join(' ')}
-                >
-                  Total: {somaCotas.toFixed(1)}%
-                  {!cotasValidas && ' (deve ser 100%)'}
-                </div>
-
-                {erroCotas && <p className="text-body-sm text-error">{erroCotas}</p>}
-                {sucessoCotas && (
-                  <p className="text-body-sm text-primary">Cotas atualizadas com sucesso.</p>
-                )}
-
-                <Button
-                  onClick={salvarCotas}
-                  loading={salvandoCotas}
-                  disabled={salvandoCotas || !cotasValidas}
-                  className="w-full"
-                >
-                  Salvar cotas
-                </Button>
-              </>
-            )}
-          </section>
-        )}
-
-        {/* Arquivar rateio — apenas para o criador */}
-        {rateioId && isOwner && !loading && rateio && (
-          <section className="space-y-3">
-            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
-              Zona de perigo
-            </h2>
-
+            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Zona de perigo</h2>
             <Card>
               <p className="text-body-md text-on-surface font-medium">Arquivar rateio</p>
               <p className="text-body-sm text-on-surface-variant mt-1">
                 O rateio será removido da lista principal. As despesas e histórico são preservados.
               </p>
-
               {erroArquivar && <p className="text-body-sm text-error mt-2">{erroArquivar}</p>}
-
               {!confirmandoArquivar ? (
                 <button
                   onClick={() => setConfirmandoArquivar(true)}
@@ -309,8 +246,113 @@ export function Component() {
           </section>
         )}
       </main>
-
-      <BottomNav />
     </div>
+  )
+
+  // Config rateio: FormShell (modal on md+)
+  if (rateioId) {
+    return (
+      <FormShell>
+        <ConfigRateioContent />
+      </FormShell>
+    )
+  }
+
+  // Config globais: AppShell full page
+  return (
+    <AppShell>
+      <Header title="Configurações" />
+
+      <main className="px-4 md:px-6 lg:px-8 py-4 pb-8">
+        <div className="max-w-3xl mx-auto">
+          {/* 2-column grid on lg+ */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-6 lg:space-y-0">
+            {/* Column 1: Conta + Aparência */}
+            <div className="space-y-6">
+              {/* Conta */}
+              <section className="space-y-3">
+                <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Conta</h2>
+                <Card>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-lg font-semibold">
+                      {user?.email?.split('@')[0].slice(0, 2).toUpperCase() ?? '??'}
+                    </div>
+                    <div>
+                      <p className="text-body-md text-on-surface font-medium">
+                        {user?.email?.split('@')[0]}
+                      </p>
+                      <p className="text-body-sm text-on-surface-variant">{user?.email}</p>
+                    </div>
+                  </div>
+                </Card>
+              </section>
+
+              {/* Aparência */}
+              <section className="space-y-3">
+                <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Aparência</h2>
+                <Card>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-body-md text-on-surface font-medium">Modo escuro</p>
+                      <p className="text-body-sm text-on-surface-variant">
+                        {theme === 'system' ? 'Seguindo o sistema' : resolvedTheme === 'dark' ? 'Ativado' : 'Desativado'}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={resolvedTheme === 'dark'}
+                      onChange={checked => setTheme(checked ? 'dark' : 'light')}
+                    />
+                  </div>
+                </Card>
+                {theme !== 'system' && (
+                  <button
+                    onClick={() => setTheme('system')}
+                    className="text-body-sm text-primary hover:underline"
+                  >
+                    Usar preferência do sistema
+                  </button>
+                )}
+              </section>
+            </div>
+
+            {/* Column 2: Índice + Sobre */}
+            <div className="space-y-6">
+              {/* Índice IPCA */}
+              <section className="space-y-3">
+                <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Índice IPCA</h2>
+                <Card>
+                  <p className="text-body-md text-on-surface font-medium">Correção monetária</p>
+                  <p className="text-body-sm text-on-surface-variant mt-1">
+                    Os índices IPCA são atualizados automaticamente pelo sistema a partir dos dados do Banco Central.
+                  </p>
+                </Card>
+              </section>
+
+              {/* Sobre */}
+              <section className="space-y-3">
+                <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Sobre</h2>
+                <Card>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+                      <span
+                        className="material-symbols-outlined text-[22px]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                        aria-hidden="true"
+                      >
+                        payments
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-body-md text-on-surface font-medium">Rateio</p>
+                      <p className="text-body-sm text-on-surface-variant">Controle de despesas compartilhadas</p>
+                    </div>
+                  </div>
+                </Card>
+              </section>
+            </div>
+          </div>
+        </div>
+      </main>
+    </AppShell>
   )
 }

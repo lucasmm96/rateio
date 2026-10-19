@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { BottomNav } from '../components/ui/BottomNav'
+import { AppShell } from '../components/layout/AppShell'
 import { FAB } from '../components/ui/FAB'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
@@ -15,7 +15,7 @@ function RateioCard({ rateio }: { rateio: RateioListItem }) {
   const membros = rateio.membros ?? []
   return (
     <Link to={`/rateios/${rateio.id}`}>
-      <Card className="hover:bg-surface-container transition-colors cursor-pointer">
+      <Card className="hover:bg-surface-container transition-colors cursor-pointer h-full">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
             <h2 className="text-headline-sm text-on-surface truncate">{rateio.nome}</h2>
@@ -26,11 +26,11 @@ function RateioCard({ rateio }: { rateio: RateioListItem }) {
           <div className="flex items-center gap-1 shrink-0">
             {rateio.corrigir_ipca && (
               <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-label-sm font-semibold h-6 bg-primary-container text-on-primary-container">
-                <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">trending_up</span>
                 IPCA
               </span>
             )}
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant">
+            <span className="material-symbols-outlined text-[20px] text-on-surface-variant" aria-hidden="true">
               chevron_right
             </span>
           </div>
@@ -68,23 +68,34 @@ export function Component() {
   const { data: rateios, loading, error } = useAsync(listarRateios)
 
   return (
-    <div className="min-h-dvh bg-background">
+    <AppShell>
       <Header
         title="Rateios"
         actions={
-          <button
-            onClick={() => signOut().then(() => navigate('/login', { replace: true }))}
-            className="p-2 rounded-full text-on-surface-variant hover:bg-surface transition-colors"
-            aria-label="Sair"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-          </button>
+          <>
+            {/* "+ Novo rateio" button — tablet/desktop only */}
+            <button
+              onClick={() => navigate('/novo-rateio')}
+              className="hidden md:flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-on-primary text-label-lg font-medium hover:bg-primary-hover transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+              Novo rateio
+            </button>
+            {/* Logout — mobile only (sidebar/topnav handle it on tablet/desktop) */}
+            <button
+              onClick={() => signOut().then(() => navigate('/login', { replace: true }))}
+              className="md:hidden p-2 rounded-full text-on-surface-variant hover:bg-surface transition-colors"
+              aria-label="Sair"
+            >
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>
+            </button>
+          </>
         }
       />
 
-      <main className="px-margin py-4 pb-32 space-y-3">
+      <main className="px-4 md:px-6 lg:px-8 py-4 pb-32 md:pb-8">
         {user && (
-          <p className="text-body-sm text-on-surface-variant">
+          <p className="text-body-sm text-on-surface-variant mb-4">
             Olá,{' '}
             <span className="font-medium text-on-surface">{user.email?.split('@')[0]}</span>
           </p>
@@ -92,7 +103,7 @@ export function Component() {
 
         {loading && (
           <div className="flex justify-center py-16">
-            <span className="material-symbols-outlined text-primary text-[40px] animate-spin">
+            <span className="material-symbols-outlined text-primary text-[40px] animate-spin" aria-hidden="true">
               progress_activity
             </span>
           </div>
@@ -107,7 +118,7 @@ export function Component() {
         {!loading && !error && rateios?.length === 0 && (
           <div className="flex flex-col items-center text-center py-16 space-y-3">
             <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-[32px] text-on-primary-container">
+              <span className="material-symbols-outlined text-[32px] text-on-primary-container" aria-hidden="true">
                 payments
               </span>
             </div>
@@ -118,11 +129,16 @@ export function Component() {
           </div>
         )}
 
-        {rateios?.map(r => <RateioCard key={r.id} rateio={r} />)}
+        {/* Grid: 1 col mobile, 2 cols tablet, 3 cols wide desktop */}
+        {rateios && rateios.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {rateios.map(r => <RateioCard key={r.id} rateio={r} />)}
+          </div>
+        )}
       </main>
 
-      <BottomNav />
+      {/* FAB — mobile only */}
       <FAB icon="add" label="Novo rateio" onClick={() => navigate('/novo-rateio')} />
-    </div>
+    </AppShell>
   )
 }

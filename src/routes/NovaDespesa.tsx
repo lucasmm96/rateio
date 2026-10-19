@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -49,90 +50,93 @@ export function Component() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
-      <Header title="Nova Despesa" back />
+    <FormShell>
+      <div className="bg-background">
+        <Header title="Nova Despesa" back />
 
-      <main className="px-margin py-4 pb-32 space-y-4">
-        <Input
-          label="Descrição"
-          placeholder="ex: Aluguel outubro"
-          value={descricao}
-          onChange={e => setDescricao(e.target.value)}
-          autoFocus
-        />
+        <main className="px-margin py-4 pb-32 md:pb-6 space-y-4">
+          <Input
+            label="Descrição"
+            placeholder="ex: Aluguel outubro"
+            value={descricao}
+            onChange={e => setDescricao(e.target.value)}
+            autoFocus
+          />
 
-        <Input
-          label="Valor"
-          type="number"
-          inputMode="decimal"
-          placeholder="0,00"
-          prefix="R$"
-          min="0.01"
-          step="0.01"
-          value={valor}
-          onChange={e => setValor(e.target.value)}
-        />
+          <Input
+            label="Valor"
+            type="number"
+            inputMode="decimal"
+            placeholder="0,00"
+            prefix="R$"
+            min="0.01"
+            step="0.01"
+            value={valor}
+            onChange={e => setValor(e.target.value)}
+          />
 
-        <Input
-          label="Data"
-          type="date"
-          value={data}
-          onChange={e => setData(e.target.value)}
-        />
+          <Input
+            label="Data"
+            type="date"
+            value={data}
+            onChange={e => setData(e.target.value)}
+          />
 
-        {/* Quem pagou */}
-        <div className="flex flex-col gap-1.5">
-          <p className="text-label-lg text-on-surface">Quem pagou?</p>
-          <div className="space-y-2">
-            {membros.map(m => (
-              <button
-                key={m.user_id}
-                type="button"
-                onClick={() => setPagadorUserId(m.user_id)}
-                className={[
-                  'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
-                  pagadorUserId === m.user_id
-                    ? 'border-primary bg-primary-container/20'
-                    : 'border-outline hover:bg-surface',
-                ].join(' ')}
-              >
-                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
-                  {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
-                </div>
-                <span className="text-body-md text-on-surface">
-                  {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
-                  {m.user_id === user?.id && ' (você)'}
-                </span>
-                {pagadorUserId === m.user_id && (
-                  <span className="material-symbols-outlined text-primary ml-auto text-[20px]">
-                    check_circle
+          {/* Quem pagou */}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-label-lg text-on-surface">Quem pagou?</p>
+            <div className="space-y-2">
+              {membros.map(m => (
+                <button
+                  key={m.user_id}
+                  type="button"
+                  onClick={() => setPagadorUserId(m.user_id)}
+                  className={[
+                    'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                    pagadorUserId === m.user_id
+                      ? 'border-primary bg-primary-container/20'
+                      : 'border-outline hover:bg-surface',
+                  ].join(' ')}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
+                    {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="text-body-md text-on-surface">
+                    {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
+                    {m.user_id === user?.id && ' (você)'}
                   </span>
-                )}
-              </button>
-            ))}
-            {membros.length === 0 && (
-              <Card>
-                <p className="text-body-sm text-on-surface-variant text-center py-2">
-                  Carregando participantes…
-                </p>
-              </Card>
-            )}
+                  {pagadorUserId === m.user_id && (
+                    <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">
+                      check_circle
+                    </span>
+                  )}
+                </button>
+              ))}
+              {membros.length === 0 && (
+                <Card>
+                  <p className="text-body-sm text-on-surface-variant text-center py-2">
+                    Carregando participantes…
+                  </p>
+                </Card>
+              )}
+            </div>
           </div>
+
+          {erro && <p className="text-body-sm text-error">{erro}</p>}
+        </main>
+
+        {/* Footer — fixed on mobile, static inside modal on md+ */}
+        <div className="fixed md:static bottom-0 inset-x-0 md:inset-auto px-margin md:px-4 pb-6 md:pb-4 pt-3 bg-background/90 md:bg-background backdrop-blur-sm md:backdrop-blur-none border-t border-outline">
+          <Button
+            onClick={salvar}
+            loading={salvando}
+            disabled={salvando || !descricao.trim() || !valor || !pagadorUserId}
+            className="w-full"
+          >
+            Salvar despesa
+          </Button>
         </div>
-
-        {erro && <p className="text-body-sm text-error">{erro}</p>}
-      </main>
-
-      <div className="fixed bottom-0 inset-x-0 px-margin pb-6 pt-3 bg-background/90 backdrop-blur-sm border-t border-outline">
-        <Button
-          onClick={salvar}
-          loading={salvando}
-          disabled={salvando || !descricao.trim() || !valor || !pagadorUserId}
-          className="w-full"
-        >
-          Salvar despesa
-        </Button>
       </div>
-    </div>
+    </FormShell>
   )
 }

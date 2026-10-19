@@ -8,7 +8,7 @@ function FAB({ icon = 'add', label = 'Adicionar', className = '', ...props }: FA
     <button
       aria-label={label}
       className={[
-        'fixed bottom-20 right-4 z-20',
+        'md:hidden fixed bottom-20 right-4 z-20',
         'flex items-center justify-center w-14 h-14 rounded-fab',
         'bg-primary text-on-primary shadow-tier3',
         'hover:bg-primary-hover active:bg-primary-hover',

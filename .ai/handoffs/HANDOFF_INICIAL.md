@@ -218,6 +218,9 @@ dado pessoal, credencial ou configuração específica vai no repositório.
   específicos do Stitch nos mockups (ex.: `style="opacity: 0"` de
   animação, `data-stitch-anim-opacity`, `max-w-[390px] mx-auto border-x`)
   **não devem** ser reproduzidos.
+- O comportamento responsivo de cada tela está definido em
+  **`.ai/design/RESPONSIVE.md`**. Consultar antes de implementar
+  qualquer tela.
 
 ### Direitos
 - Código open source, repositório público, reutilizável.

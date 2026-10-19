@@ -14,7 +14,7 @@ const NAV_ITEMS: NavItem[] = [
 function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-20 bg-background border-t border-outline"
+      className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-background border-t border-outline"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex h-16">

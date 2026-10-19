@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -88,7 +89,7 @@ export function Component() {
                 {m.user_id === user?.id && ' (você)'}
               </span>
               {selected === m.user_id && (
-                <span className="material-symbols-outlined text-primary ml-auto text-[20px]">
+                <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">
                   check_circle
                 </span>
               )}
@@ -107,64 +108,67 @@ export function Component() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
-      <Header title="Novo Reembolso" back />
+    <FormShell>
+      <div className="bg-background">
+        <Header title="Novo Reembolso" back />
 
-      <main className="px-margin py-4 pb-32 space-y-4">
-        <Input
-          label="Valor pago"
-          type="number"
-          inputMode="decimal"
-          placeholder="0,00"
-          prefix="R$"
-          min="0.01"
-          step="0.01"
-          value={valor}
-          onChange={e => setValor(e.target.value)}
-          autoFocus
-        />
+        <main className="px-margin py-4 pb-32 md:pb-6 space-y-4">
+          <Input
+            label="Valor pago"
+            type="number"
+            inputMode="decimal"
+            placeholder="0,00"
+            prefix="R$"
+            min="0.01"
+            step="0.01"
+            value={valor}
+            onChange={e => setValor(e.target.value)}
+            autoFocus
+          />
 
-        <Input
-          label="Data do pagamento"
-          type="date"
-          value={data}
-          onChange={e => setData(e.target.value)}
-        />
+          <Input
+            label="Data do pagamento"
+            type="date"
+            value={data}
+            onChange={e => setData(e.target.value)}
+          />
 
-        <MemberSelector
-          label="Quem pagou (fez o reembolso)?"
-          selected={pagadorUserId}
-          onSelect={id => { setPagadorUserId(id); if (id === recebedorUserId) setRecebedorUserId('') }}
-          exclude={recebedorUserId}
-        />
+          <MemberSelector
+            label="Quem pagou (fez o reembolso)?"
+            selected={pagadorUserId}
+            onSelect={id => { setPagadorUserId(id); if (id === recebedorUserId) setRecebedorUserId('') }}
+            exclude={recebedorUserId}
+          />
 
-        <MemberSelector
-          label="Quem recebeu?"
-          selected={recebedorUserId}
-          onSelect={id => { setRecebedorUserId(id); if (id === pagadorUserId) setPagadorUserId('') }}
-          exclude={pagadorUserId}
-        />
+          <MemberSelector
+            label="Quem recebeu?"
+            selected={recebedorUserId}
+            onSelect={id => { setRecebedorUserId(id); if (id === pagadorUserId) setPagadorUserId('') }}
+            exclude={pagadorUserId}
+          />
 
-        <Input
-          label="Observação (opcional)"
-          placeholder="ex: pix referente ao aluguel"
-          value={observacao}
-          onChange={e => setObservacao(e.target.value)}
-        />
+          <Input
+            label="Observação (opcional)"
+            placeholder="ex: pix referente ao aluguel"
+            value={observacao}
+            onChange={e => setObservacao(e.target.value)}
+          />
 
-        {erro && <p className="text-body-sm text-error">{erro}</p>}
-      </main>
+          {erro && <p className="text-body-sm text-error">{erro}</p>}
+        </main>
 
-      <div className="fixed bottom-0 inset-x-0 px-margin pb-6 pt-3 bg-background/90 backdrop-blur-sm border-t border-outline">
-        <Button
-          onClick={salvar}
-          loading={salvando}
-          disabled={salvando || !valor || !pagadorUserId || !recebedorUserId}
-          className="w-full"
-        >
-          Registrar reembolso
-        </Button>
+        {/* Footer — fixed on mobile, static inside modal on md+ */}
+        <div className="fixed md:static bottom-0 inset-x-0 md:inset-auto px-margin md:px-4 pb-6 md:pb-4 pt-3 bg-background/90 md:bg-background backdrop-blur-sm md:backdrop-blur-none border-t border-outline">
+          <Button
+            onClick={salvar}
+            loading={salvando}
+            disabled={salvando || !valor || !pagadorUserId || !recebedorUserId}
+            className="w-full"
+          >
+            Registrar reembolso
+          </Button>
+        </div>
       </div>
-    </div>
+    </FormShell>
   )
 }

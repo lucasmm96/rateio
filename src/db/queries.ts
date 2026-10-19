@@ -211,3 +211,8 @@ export async function buscarUsuarioPorEmail(email: string): Promise<{ id: string
   const rows = data as { id: string; email: string }[] | null
   return rows?.[0] ?? null
 }
+
+export async function garantirUsuario(email: string): Promise<void> {
+  const { error } = await neon.rpc('garantir_usuario', { p_email: email })
+  if (error) throw new Error(error.message)
+}

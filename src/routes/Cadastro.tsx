@@ -4,6 +4,7 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { signUp, signInWithGoogle } from '../db/auth'
 import { GoogleButton } from '../components/ui/GoogleButton'
+import { garantirUsuario } from '../db/queries'
 
 export function Component() {
   const navigate = useNavigate()
@@ -32,11 +33,18 @@ export function Component() {
       const result = await signUp(email, password, name)
       if (result?.error) {
         setErro(result.error.message || 'Erro ao criar conta.')
+      } else if (!(result?.data as { token?: string | null } | undefined)?.token) {
+        // Conta criada mas sem sessão ativa — provável verificação de e-mail pendente
+        setErro('Conta criada! Verifique seu e-mail para ativar a conta antes de entrar.')
       } else {
+        // Cadastro + login automático: sincroniza usuário na tabela local
+        try { await garantirUsuario(email) } catch { /* non-critical */ }
         navigate('/', { replace: true })
       }
-    } catch {
-      setErro('Erro ao conectar. Tente novamente.')
+    } catch (e) {
+      console.error('[Cadastro] signUp threw:', e)
+      const msg = e instanceof Error ? e.message : String(e)
+      setErro(msg || 'Erro ao conectar. Tente novamente.')
     } finally {
       setLoading(false)
     }

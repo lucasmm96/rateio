@@ -8,6 +8,21 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import pg from 'pg'
 
+// Carrega .env.local se existir (não disponível no ambiente de CI, mas útil localmente)
+try {
+  const envPath = join(import.meta.dirname, '../.env.local')
+  const lines = readFileSync(envPath, 'utf-8').split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const key = trimmed.slice(0, eq).trim()
+    const val = trimmed.slice(eq + 1).trim()
+    if (key && !(key in process.env)) process.env[key] = val
+  }
+} catch { /* arquivo não existe — env já deve estar no process.env */ }
+
 const { Client } = pg
 
 const url = process.env.DATABASE_URL
@@ -106,6 +121,7 @@ async function main() {
     await aplicar(client, '0001_rls.sql')
     await aplicar(client, '0002_grant_auth.sql')
     await aplicar(client, '0003_fix_rls_recursion.sql')
+    await aplicar(client, '0004_sync_users.sql')
     console.log('\n✅ Todas as migrações aplicadas com sucesso.')
   } finally {
     await client.end()

@@ -1,4 +1,4 @@
-import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { createHashRouter, RouterProvider, Navigate, Link } from 'react-router-dom'
 import { useUser } from './db/auth'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,17 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function NotFound() {
+  return (
+    <main className="min-h-dvh bg-surface flex flex-col items-center justify-center px-margin text-center gap-4">
+      <span className="material-symbols-outlined text-[56px] text-on-surface-variant">search_off</span>
+      <h1 className="text-headline-md text-on-surface font-semibold">Página não encontrada</h1>
+      <p className="text-body-md text-on-surface-variant">O endereço acessado não existe.</p>
+      <Link to="/" className="text-label-md text-primary hover:underline">Voltar ao início</Link>
+    </main>
+  )
+}
+
 const router = createHashRouter([
   {
     path: '/login',
@@ -24,6 +35,14 @@ const router = createHashRouter([
   {
     path: '/cadastro',
     lazy: () => import('./routes/Cadastro.tsx'),
+  },
+  {
+    path: '/esqueci-senha',
+    lazy: () => import('./routes/EsqueciSenha.tsx'),
+  },
+  {
+    path: '/redefinir-senha',
+    lazy: () => import('./routes/RedefinirSenha.tsx'),
   },
   {
     path: '/',
@@ -115,6 +134,10 @@ const router = createHashRouter([
         ),
       }
     },
+  },
+  {
+    path: '*',
+    Component: NotFound,
   },
 ])
 

@@ -25,3 +25,13 @@ export async function signInWithGoogle() {
 export async function signOut() {
   return neon.auth.signOut()
 }
+
+// SDK 0.8.0-beta: forgetPassword é um objeto {emailOtp: fn}, não callable diretamente
+export async function solicitarResetSenha(email: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (neon.auth.forgetPassword as any).emailOtp({ email })
+}
+
+export async function redefinirSenha(token: string, newPassword: string) {
+  return neon.auth.resetPassword({ token, newPassword })
+}

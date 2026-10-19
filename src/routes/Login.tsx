@@ -4,6 +4,7 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { signIn, signInWithGoogle } from '../db/auth'
 import { GoogleButton } from '../components/ui/GoogleButton'
+import { garantirUsuario } from '../db/queries'
 
 export function Component() {
   const navigate = useNavigate()
@@ -22,10 +23,14 @@ export function Component() {
       if (result?.error) {
         setErro(result.error.message || 'E-mail ou senha incorretos.')
       } else {
+        // Garante que o usuário existe na tabela users (sincroniza com Neon Auth)
+        try { await garantirUsuario(email) } catch { /* non-critical */ }
         navigate('/', { replace: true })
       }
-    } catch {
-      setErro('Erro ao conectar. Tente novamente.')
+    } catch (e) {
+      console.error('[Login] signIn threw:', e)
+      const msg = e instanceof Error ? e.message : String(e)
+      setErro(msg || 'Erro ao conectar. Tente novamente.')
     } finally {
       setLoading(false)
     }

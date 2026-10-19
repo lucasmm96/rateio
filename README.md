@@ -111,8 +111,13 @@ A URL do `ipca_writer` tem o formato:
 postgresql://ipca_writer:<senha>@<endpoint>/<db>?sslmode=require
 ```
 
-A senha do `ipca_writer` foi definida automaticamente na migração `0001_rls.sql`.
-Para criar uma senha: consulte o Neon Console ou use `ALTER ROLE ipca_writer PASSWORD '...'` via SQL.
+**Como obter a senha:** a migração `0001_rls.sql` cria o role, mas **não define senha** (credenciais não ficam no repositório). Configure manualmente pelo SQL Editor do Neon Console:
+
+```sql
+ALTER ROLE ipca_writer WITH LOGIN PASSWORD 'escolha-uma-senha-forte';
+```
+
+> Se o banco foi criado antes da correção do role (`NOLOGIN → LOGIN`), inclua também `WITH LOGIN` no comando acima.
 
 10. **Fazer push** — o workflow `deploy.yml` vai buildar e publicar no Pages automaticamente.
 

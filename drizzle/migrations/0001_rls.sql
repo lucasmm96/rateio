@@ -4,15 +4,21 @@
 
 -- ---------------------------------------------------------------------------
 -- Role ipca_writer (usada pelo GitHub Action de IPCA)
--- Criada com NOLOGIN; o Action usa a senha via DATABASE_URL específica
+-- Criada com LOGIN para que a connection string funcione.
+-- A senha NÃO é definida aqui — deve ser configurada manualmente:
+--   ALTER ROLE ipca_writer WITH LOGIN PASSWORD 'senha-forte';
+-- Depois adicionar IPCA_WRITER_DATABASE_URL como secret no GitHub Actions.
 -- ---------------------------------------------------------------------------
 do $$
 begin
   if not exists (select from pg_roles where rolname = 'ipca_writer') then
-    create role ipca_writer nologin;
+    create role ipca_writer login;
   end if;
 end
 $$;
+
+-- Para banco já existente com o role criado como NOLOGIN, execute:
+--   ALTER ROLE ipca_writer WITH LOGIN;
 
 grant connect on database neondb to ipca_writer;
 grant usage on schema public to ipca_writer;

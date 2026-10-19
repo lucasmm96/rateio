@@ -104,6 +104,7 @@ async function main() {
   try {
     await aplicar(client, '0000_init.sql')
     await aplicar(client, '0001_rls.sql')
+    await aplicar(client, '0002_grant_auth.sql')
     console.log('\n✅ Todas as migrações aplicadas com sucesso.')
   } finally {
     await client.end()

@@ -91,6 +91,19 @@ const router = createHashRouter([
     },
   },
   {
+    path: '/rateios/:id/memoria',
+    lazy: async () => {
+      const mod = await import('./routes/MemoriaCalculo.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
+  },
+  {
     path: '/configuracoes',
     lazy: async () => {
       const mod = await import('./routes/Configuracoes.tsx')

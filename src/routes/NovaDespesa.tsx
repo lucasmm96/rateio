@@ -1,10 +1,138 @@
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Header } from '../components/ui/Header'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Card } from '../components/ui/Card'
+import { useAsync } from '../hooks/useAsync'
+import { buscarRateio, criarDespesa } from '../db/queries'
+import { useUser } from '../db/auth'
 
 export function Component() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { user } = useUser()
+
+  const { data: rateio } = useAsync(() => buscarRateio(id!), [id])
+  const membros = rateio?.membros ?? []
+
+  const hoje = new Date().toISOString().slice(0, 10)
+  const [descricao, setDescricao] = useState('')
+  const [valor, setValor] = useState('')
+  const [data, setData] = useState(hoje)
+  const [pagadorUserId, setPagadorUserId] = useState(user?.id ?? '')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function salvar() {
+    const valorN = parseFloat(valor.replace(',', '.'))
+    if (!descricao.trim()) { setErro('Informe a descrição.'); return }
+    if (!valor || isNaN(valorN) || valorN <= 0) { setErro('Informe um valor válido.'); return }
+    if (!data) { setErro('Informe a data.'); return }
+    if (!pagadorUserId) { setErro('Informe quem pagou.'); return }
+
+    setSalvando(true)
+    setErro('')
+    try {
+      await criarDespesa({
+        rateioId: id!,
+        data,
+        descricao: descricao.trim(),
+        pagadorUserId,
+        valor: valorN,
+      })
+      navigate(-1)
+    } catch (e) {
+      setErro((e as Error).message)
+      setSalvando(false)
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-background">
       <Header title="Nova Despesa" back />
-      <main className="px-margin py-4" />
+
+      <main className="px-margin py-4 pb-32 space-y-4">
+        <Input
+          label="Descrição"
+          placeholder="ex: Aluguel outubro"
+          value={descricao}
+          onChange={e => setDescricao(e.target.value)}
+          autoFocus
+        />
+
+        <Input
+          label="Valor"
+          type="number"
+          inputMode="decimal"
+          placeholder="0,00"
+          prefix="R$"
+          min="0.01"
+          step="0.01"
+          value={valor}
+          onChange={e => setValor(e.target.value)}
+        />
+
+        <Input
+          label="Data"
+          type="date"
+          value={data}
+          onChange={e => setData(e.target.value)}
+        />
+
+        {/* Quem pagou */}
+        <div className="flex flex-col gap-1.5">
+          <p className="text-label-lg text-on-surface">Quem pagou?</p>
+          <div className="space-y-2">
+            {membros.map(m => (
+              <button
+                key={m.user_id}
+                type="button"
+                onClick={() => setPagadorUserId(m.user_id)}
+                className={[
+                  'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                  pagadorUserId === m.user_id
+                    ? 'border-primary bg-primary-container/20'
+                    : 'border-outline hover:bg-surface',
+                ].join(' ')}
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
+                  {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+                </div>
+                <span className="text-body-md text-on-surface">
+                  {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
+                  {m.user_id === user?.id && ' (você)'}
+                </span>
+                {pagadorUserId === m.user_id && (
+                  <span className="material-symbols-outlined text-primary ml-auto text-[20px]">
+                    check_circle
+                  </span>
+                )}
+              </button>
+            ))}
+            {membros.length === 0 && (
+              <Card>
+                <p className="text-body-sm text-on-surface-variant text-center py-2">
+                  Carregando participantes…
+                </p>
+              </Card>
+            )}
+          </div>
+        </div>
+
+        {erro && <p className="text-body-sm text-error">{erro}</p>}
+      </main>
+
+      <div className="fixed bottom-0 inset-x-0 px-margin pb-6 pt-3 bg-background/90 backdrop-blur-sm border-t border-outline">
+        <Button
+          onClick={salvar}
+          loading={salvando}
+          disabled={salvando || !descricao.trim() || !valor || !pagadorUserId}
+          className="w-full"
+        >
+          Salvar despesa
+        </Button>
+      </div>
     </div>
   )
 }

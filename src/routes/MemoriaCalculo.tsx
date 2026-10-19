@@ -58,7 +58,7 @@ export function Component() {
     : null
 
   const corrigir = rateio?.corrigir_ipca ?? false
-  const resultado = rateioCore ? calcularSaldo(rateioCore, corrigir, hoje, taxasCore) : null
+  const resultado = rateioCore && !loading ? calcularSaldo(rateioCore, corrigir, hoje, taxasCore) : null
 
   const emailDe = (userId: string) => {
     const m = membros.find(m => m.user_id === userId)

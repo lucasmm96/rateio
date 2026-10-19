@@ -61,7 +61,7 @@ export function Component() {
       }
     : null
 
-  const resultado = rateioCore
+  const resultado = rateioCore && !loading
     ? calcularSaldo(rateioCore, rateio!.corrigir_ipca, hoje, taxasCore)
     : null
 

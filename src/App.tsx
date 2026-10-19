@@ -1,33 +1,107 @@
-import { createHashRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { useUser } from './db/auth'
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { user, isPending } = useUser()
+  if (isPending) {
+    return (
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
+        <span className="material-symbols-outlined text-primary text-[48px] animate-spin">
+          progress_activity
+        </span>
+      </div>
+    )
+  }
+  if (!user) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
 
 const router = createHashRouter([
   {
+    path: '/login',
+    lazy: () => import('./routes/Login.tsx'),
+  },
+  {
+    path: '/cadastro',
+    lazy: () => import('./routes/Cadastro.tsx'),
+  },
+  {
     path: '/',
-    lazy: () => import('./routes/Home.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/Home.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
   {
     path: '/rateios/:id',
-    lazy: () => import('./routes/DetalheRateio.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/DetalheRateio.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
   {
     path: '/rateios/:id/nova-despesa',
-    lazy: () => import('./routes/NovaDespesa.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/NovaDespesa.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
   {
     path: '/rateios/:id/novo-reembolso',
-    lazy: () => import('./routes/NovoReembolso.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/NovoReembolso.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
   {
     path: '/novo-rateio',
-    lazy: () => import('./routes/NovoRateio.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/NovoRateio.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
   {
     path: '/configuracoes',
-    lazy: () => import('./routes/Configuracoes.tsx'),
-  },
-  {
-    path: '/login',
-    lazy: () => import('./routes/Login.tsx'),
+    lazy: async () => {
+      const mod = await import('./routes/Configuracoes.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
   },
 ])
 

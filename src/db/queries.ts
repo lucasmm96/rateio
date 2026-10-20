@@ -118,12 +118,14 @@ export async function editarRateio(
 // Membros
 // ---------------------------------------------------------------------------
 
-export async function atualizarCota(rateioId: string, userId: string, cota: number): Promise<void> {
-  const { error } = await neon
-    .from('membros')
-    .update({ cota })
-    .eq('rateio_id', rateioId)
-    .eq('user_id', userId)
+export async function atualizarCotas(
+  rateioId: string,
+  cotas: { userId: string; cota: number }[],
+): Promise<void> {
+  const { error } = await neon.rpc('atualizar_cotas', {
+    p_rateio_id: rateioId,
+    p_cotas: cotas.map(c => ({ user_id: c.userId, cota: c.cota })),
+  })
   if (error) throw new Error(error.message)
 }
 

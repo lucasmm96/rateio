@@ -10,7 +10,7 @@ import { Input } from '../components/ui/Input'
 import { useTheme } from '../components/ThemeProvider'
 import { useAsync } from '../hooks/useAsync'
 import { useUser } from '../db/auth'
-import { buscarRateio, atualizarCota, editarRateio, arquivarRateio } from '../db/queries'
+import { buscarRateio, atualizarCotas, editarRateio, arquivarRateio } from '../db/queries'
 
 export function Component() {
   const [searchParams] = useSearchParams()
@@ -64,13 +64,11 @@ export function Component() {
     setErroCotas('')
     setSucessoCotas(false)
     try {
-      for (const [userId, cotaStr] of Object.entries(cotas)) {
-        const cota = Number(cotaStr) / 100
-        const original = rateio.membros.find(m => m.user_id === userId)?.cota
-        if (original !== undefined && Math.abs(Number(original) - cota) > 0.0001) {
-          await atualizarCota(rateioId, userId, cota)
-        }
-      }
+      const payload = Object.entries(cotas).map(([userId, cotaStr]) => ({
+        userId,
+        cota: Number(cotaStr) / 100,
+      }))
+      await atualizarCotas(rateioId, payload)
       setSucessoCotas(true)
       setTimeout(() => setSucessoCotas(false), 2000)
     } catch (e) {

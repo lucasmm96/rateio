@@ -4,7 +4,6 @@ import { AppShell } from '../components/layout/AppShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { FAB } from '../components/ui/FAB'
 import { useAsync } from '../hooks/useAsync'
 import { buscarRateio, listarDespesas, listarReembolsos, listarTaxasIpca } from '../db/queries'
 import { D } from '../core/decimal'
@@ -29,6 +28,7 @@ export function Component() {
   const navigate = useNavigate()
   const { user } = useUser()
   const [tab, setTab] = useState<Tab>('saldos')
+  const [fabOpen, setFabOpen] = useState(false)
 
   const { data: rateio, loading: lRateio } = useAsync(() => buscarRateio(id!), [id])
   const { data: despesas, loading: lDesp } = useAsync(() => listarDespesas(id!), [id])
@@ -334,8 +334,56 @@ export function Component() {
         </div>
       )}
 
-      {/* FAB — mobile only */}
-      <FAB icon="add" label="Nova despesa" onClick={() => navigate(`/rateios/${id}/nova-despesa`)} />
+      {/* Speed dial — mobile only */}
+      <div className="md:hidden">
+        {fabOpen && (
+          <div className="fixed inset-0 z-10" onClick={() => setFabOpen(false)} aria-hidden="true" />
+        )}
+        <div
+          className="fixed bottom-20 right-4 z-20 flex flex-col-reverse items-end gap-3"
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {/* Main FAB */}
+          <button
+            onClick={() => setFabOpen(prev => !prev)}
+            aria-label={fabOpen ? 'Fechar opções' : 'Adicionar'}
+            className="flex items-center justify-center w-14 h-14 rounded-fab bg-primary text-on-primary shadow-tier3 hover:bg-primary-hover active:bg-primary-hover transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            <span className={`material-symbols-outlined text-2xl transition-transform duration-200 ${fabOpen ? 'rotate-45' : ''}`}>
+              add
+            </span>
+          </button>
+
+          {fabOpen && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded-lg shadow-tier1 whitespace-nowrap">
+                  Nova despesa
+                </span>
+                <button
+                  onClick={() => { navigate(`/rateios/${id}/nova-despesa`); setFabOpen(false) }}
+                  aria-label="Nova despesa"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 transition-opacity"
+                >
+                  <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded-lg shadow-tier1 whitespace-nowrap">
+                  Reembolso
+                </span>
+                <button
+                  onClick={() => { navigate(`/rateios/${id}/novo-reembolso`); setFabOpen(false) }}
+                  aria-label="Reembolso"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 transition-opacity"
+                >
+                  <span className="material-symbols-outlined text-[20px]">payments</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </AppShell>
   )
 }

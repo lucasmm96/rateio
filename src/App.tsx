@@ -56,6 +56,14 @@ const router = createHashRouter([
     lazy: () => import('./routes/RedefinirSenha.tsx'),
   },
   {
+    path: '/termos',
+    lazy: () => import('./routes/Termos.tsx'),
+  },
+  {
+    path: '/privacidade',
+    lazy: () => import('./routes/Privacidade.tsx'),
+  },
+  {
     path: '/',
     lazy: async () => {
       const mod = await import('./routes/Home.tsx')

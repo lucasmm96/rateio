@@ -33,7 +33,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={[
-          'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+          'inline-flex items-center justify-center gap-2 rounded font-medium',
           'transition-colors duration-150 outline-none',
           'disabled:opacity-50 disabled:pointer-events-none',
           variantClasses[variant],

@@ -10,7 +10,8 @@ export function Component() {
 
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmar, setConfirmar] = useState('')
-  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
@@ -102,7 +103,7 @@ export function Component() {
                 <div className="flex items-center h-11 rounded-lg border border-outline bg-background transition-colors duration-150 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary">
                   <input
                     id="nova-senha"
-                    type={mostrarSenha ? 'text' : 'password'}
+                    type={mostrarNovaSenha ? 'text' : 'password'}
                     placeholder="••••••••"
                     autoComplete="new-password"
                     value={novaSenha}
@@ -113,12 +114,12 @@ export function Component() {
                   />
                   <button
                     type="button"
-                    aria-label={mostrarSenha ? 'Ocultar senha' : 'Revelar senha'}
-                    onClick={() => setMostrarSenha(v => !v)}
+                    aria-label={mostrarNovaSenha ? 'Ocultar nova senha' : 'Revelar nova senha'}
+                    onClick={() => setMostrarNovaSenha(v => !v)}
                     className="pr-3 text-tertiary hover:text-on-surface transition-colors"
                   >
                     <span className="material-symbols-outlined text-[20px]">
-                      {mostrarSenha ? 'visibility_off' : 'visibility'}
+                      {mostrarNovaSenha ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
                 </div>
@@ -129,7 +130,7 @@ export function Component() {
                 <div className="flex items-center h-11 rounded-lg border border-outline bg-background transition-colors duration-150 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary">
                   <input
                     id="confirmar"
-                    type={mostrarSenha ? 'text' : 'password'}
+                    type={mostrarConfirmarSenha ? 'text' : 'password'}
                     placeholder="••••••••"
                     autoComplete="new-password"
                     value={confirmar}
@@ -137,6 +138,16 @@ export function Component() {
                     required
                     className="flex-1 h-full bg-transparent px-3 text-body-lg text-on-surface placeholder:text-on-surface-variant outline-none"
                   />
+                  <button
+                    type="button"
+                    aria-label={mostrarConfirmarSenha ? 'Ocultar confirmação' : 'Revelar confirmação'}
+                    onClick={() => setMostrarConfirmarSenha(v => !v)}
+                    className="pr-3 text-tertiary hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {mostrarConfirmarSenha ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
                 </div>
               </div>
 

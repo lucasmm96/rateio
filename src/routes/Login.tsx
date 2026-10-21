@@ -39,7 +39,7 @@ export function Component() {
     <main className="min-h-dvh bg-surface lg:grid lg:grid-cols-2">
 
       {/* Painel esquerdo — brand (desktop only) */}
-      <div className="hidden lg:flex lg:flex-col lg:items-center lg:justify-center lg:bg-primary lg:px-12 lg:gap-6">
+      <div className="hidden lg:flex lg:flex-col lg:items-center lg:justify-center lg:bg-primary lg:px-12 lg:gap-6 relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           aria-hidden="true"

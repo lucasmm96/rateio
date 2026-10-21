@@ -7,7 +7,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Rateios', icon: 'calculate' },
+  { to: '/', label: 'Rateios', icon: 'payments' },
   { to: '/configuracoes', label: 'Config.', icon: 'settings' },
 ]
 

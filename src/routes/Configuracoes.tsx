@@ -10,7 +10,15 @@ import { Input } from '../components/ui/Input'
 import { useTheme } from '../components/ThemeProvider'
 import { useAsync } from '../hooks/useAsync'
 import { useUser } from '../db/auth'
-import { buscarRateio, atualizarCotas, editarRateio, arquivarRateio } from '../db/queries'
+import {
+  buscarRateio,
+  atualizarCotas,
+  editarRateio,
+  arquivarRateio,
+  adicionarMembro,
+  removerMembro,
+  buscarUsuarioPorEmail,
+} from '../db/queries'
 
 export function Component() {
   const [searchParams] = useSearchParams()
@@ -19,27 +27,42 @@ export function Component() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const { user } = useUser()
 
-  const { data: rateio, loading } = useAsync(
+  const { data: rateio, loading, reload: reloadRateio } = useAsync(
     () => (rateioId ? buscarRateio(rateioId) : Promise.resolve(null)),
     [rateioId],
   )
 
   const isOwner = !!rateio && rateio.criado_por_user_id === user?.id
 
+  // ── Cotas ──
   const [cotas, setCotas] = useState<Record<string, string>>({})
   const [salvandoCotas, setSalvandoCotas] = useState(false)
   const [erroCotas, setErroCotas] = useState('')
   const [sucessoCotas, setSucessoCotas] = useState(false)
 
+  // ── Editar rateio ──
   const [nomeEdit, setNomeEdit] = useState('')
   const [corrigirEdit, setCorrigirEdit] = useState(false)
   const [salvandoRateio, setSalvandoRateio] = useState(false)
   const [erroRateio, setErroRateio] = useState('')
   const [sucessoRateio, setSucessoRateio] = useState(false)
 
+  // ── Arquivar ──
   const [confirmandoArquivar, setConfirmandoArquivar] = useState(false)
   const [arquivando, setArquivando] = useState(false)
   const [erroArquivar, setErroArquivar] = useState('')
+
+  // ── Remover membro ──
+  const [removendoId, setRemovendoId] = useState<string | null>(null)
+  const [erroRemover, setErroRemover] = useState('')
+
+  // ── Adicionar participante ──
+  const [emailBusca, setEmailBusca] = useState('')
+  const [buscando, setBuscando] = useState(false)
+  const [novoMembro, setNovoMembro] = useState<{ id: string; email: string } | null>(null)
+  const [erroBusca, setErroBusca] = useState('')
+  const [adicionando, setAdicionando] = useState(false)
+  const [erroAdicionar, setErroAdicionar] = useState('')
 
   useEffect(() => {
     if (rateio?.membros) {
@@ -87,9 +110,11 @@ export function Component() {
       const updates: { nome?: string; corrigir_ipca?: boolean } = {}
       if (nomeEdit.trim() && nomeEdit.trim() !== rateio.nome) updates.nome = nomeEdit.trim()
       if (corrigirEdit !== rateio.corrigir_ipca) updates.corrigir_ipca = corrigirEdit
-      if (Object.keys(updates).length > 0) await editarRateio(rateioId, updates)
-      setSucessoRateio(true)
-      setTimeout(() => setSucessoRateio(false), 2000)
+      if (Object.keys(updates).length > 0) {
+        await editarRateio(rateioId, updates)
+        setSucessoRateio(true)
+        setTimeout(() => setSucessoRateio(false), 2000)
+      }
     } catch (e) {
       setErroRateio((e as Error).message)
     } finally {
@@ -111,11 +136,75 @@ export function Component() {
     }
   }
 
-  // Config rateio content (used inside FormShell when ?rateio= is present)
+  async function confirmarRemover(userId: string) {
+    if (!rateioId) return
+    setErroRemover('')
+    try {
+      await removerMembro(rateioId, userId)
+      setRemovendoId(null)
+      reloadRateio()
+    } catch (e) {
+      setErroRemover((e as Error).message)
+      setRemovendoId(null)
+    }
+  }
+
+  async function buscarNovoMembro() {
+    setErroBusca('')
+    setNovoMembro(null)
+    if (!emailBusca.trim()) return
+    setBuscando(true)
+    try {
+      const encontrado = await buscarUsuarioPorEmail(emailBusca.trim())
+      if (!encontrado) {
+        setErroBusca('Usuário não encontrado. Ele precisa ter uma conta no Rateio.')
+      } else if (rateio?.membros.some(m => m.user_id === encontrado.id)) {
+        setErroBusca('Este usuário já é membro deste rateio.')
+      } else {
+        setNovoMembro(encontrado)
+      }
+    } catch (e) {
+      setErroBusca((e as Error).message)
+    } finally {
+      setBuscando(false)
+    }
+  }
+
+  async function confirmarAdicionar() {
+    if (!rateioId || !rateio || !novoMembro) return
+    setAdicionando(true)
+    setErroAdicionar('')
+    try {
+      const membrosAtuais = rateio.membros
+      const total = membrosAtuais.length + 1
+      const cotaIgual = Math.floor(100 / total)
+      const resto = 100 - cotaIgual * total
+
+      const novasCotas = [
+        ...membrosAtuais.map((m, i) => ({
+          userId: m.user_id,
+          cota: (cotaIgual + (i === 0 ? resto : 0)) / 100,
+        })),
+        { userId: novoMembro.id, cota: cotaIgual / 100 },
+      ]
+
+      await adicionarMembro(rateioId, novoMembro.id, novasCotas)
+      setNovoMembro(null)
+      setEmailBusca('')
+      reloadRateio()
+    } catch (e) {
+      setErroAdicionar((e as Error).message)
+    } finally {
+      setAdicionando(false)
+    }
+  }
+
+  // ── Config rateio content (FormShell when ?rateio= is set) ──────────────
   const ConfigRateioContent = () => (
     <div className="bg-background">
       <Header title="Config. Rateio" back />
       <main className="px-margin py-4 pb-8 space-y-6">
+
         {/* Editar rateio */}
         {isOwner && (
           <section className="space-y-3">
@@ -155,52 +244,141 @@ export function Component() {
         )}
 
         {/* Cotas */}
-        <section className="space-y-3">
-          <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
-            Cotas — {rateio?.nome ?? '…'}
-          </h2>
-          {loading && <p className="text-body-sm text-on-surface-variant">Carregando…</p>}
-          {!loading && rateio?.membros.map(m => (
-            <Card key={m.user_id} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
-                {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+        {isOwner && (
+          <section className="space-y-3">
+            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">
+              Cotas — {rateio?.nome ?? '…'}
+            </h2>
+            {loading && <p className="text-body-sm text-on-surface-variant">Carregando…</p>}
+            {erroRemover && <p className="text-body-sm text-error">{erroRemover}</p>}
+            {!loading && rateio?.membros.map(m => (
+              <div key={m.user_id}>
+                <Card className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
+                    {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-body-md text-on-surface truncate">
+                      {m.users?.email ?? m.user_id.slice(0, 8)}
+                    </p>
+                  </div>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={cotas[m.user_id] ?? ''}
+                    onChange={e => setCotas(prev => ({ ...prev, [m.user_id]: e.target.value }))}
+                    suffix="%"
+                    className="w-16 text-right"
+                  />
+                  {rateio.membros.length > 1 && (
+                    <button
+                      onClick={() => setRemovendoId(m.user_id === removendoId ? null : m.user_id)}
+                      className="p-1.5 rounded text-on-surface-variant hover:text-error transition-colors shrink-0"
+                      aria-label={`Remover ${m.users?.email ?? 'membro'}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                    </button>
+                  )}
+                </Card>
+                {removendoId === m.user_id && (
+                  <div className="mt-1 px-3 py-2 rounded bg-error/10 border border-error/20 flex items-center justify-between gap-3">
+                    <p className="text-body-sm text-error">Remover {m.users?.email?.split('@')[0] ?? 'este membro'}?</p>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => setRemovendoId(null)}
+                        className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                      >
+                        Não
+                      </button>
+                      <button
+                        onClick={() => confirmarRemover(m.user_id)}
+                        className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-body-md text-on-surface truncate">
-                  {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
-                </p>
+            ))}
+            {!loading && rateio && (
+              <>
+                <div className={['flex justify-end text-body-sm font-medium', cotasValidas ? 'text-primary' : 'text-error'].join(' ')}>
+                  Total: {somaCotas.toFixed(1)}%
+                  {!cotasValidas && ' (deve ser 100%)'}
+                </div>
+                {erroCotas && <p className="text-body-sm text-error">{erroCotas}</p>}
+                {sucessoCotas && <p className="text-body-sm text-primary">Cotas atualizadas com sucesso.</p>}
+                <Button
+                  onClick={salvarCotas}
+                  loading={salvandoCotas}
+                  disabled={salvandoCotas || !cotasValidas}
+                  className="w-full"
+                >
+                  Salvar cotas
+                </Button>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* Adicionar participante */}
+        {isOwner && !loading && rateio && (
+          <section className="space-y-3">
+            <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Adicionar participante</h2>
+            <Card className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  label="E-mail do participante"
+                  type="email"
+                  placeholder="participante@email.com"
+                  value={emailBusca}
+                  onChange={e => { setEmailBusca(e.target.value); setNovoMembro(null); setErroBusca('') }}
+                  className="flex-1"
+                />
+                <div className="flex items-end">
+                  <Button
+                    onClick={buscarNovoMembro}
+                    loading={buscando}
+                    variant="outline"
+                    size="sm"
+                    disabled={buscando || !emailBusca.trim()}
+                  >
+                    Buscar
+                  </Button>
+                </div>
               </div>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value={cotas[m.user_id] ?? ''}
-                onChange={e => setCotas(prev => ({ ...prev, [m.user_id]: e.target.value }))}
-                suffix="%"
-                className="w-16 text-right"
-              />
+              {erroBusca && <p className="text-body-sm text-error">{erroBusca}</p>}
+              {novoMembro && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 rounded bg-primary/5 border border-primary/20">
+                    <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold shrink-0">
+                      {novoMembro.email.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-body-md text-on-surface font-medium truncate">{novoMembro.email}</p>
+                      <p className="text-body-sm text-on-surface-variant">
+                        As cotas serão redistribuídas igualmente entre todos os membros.
+                      </p>
+                    </div>
+                  </div>
+                  {erroAdicionar && <p className="text-body-sm text-error">{erroAdicionar}</p>}
+                  <Button
+                    onClick={confirmarAdicionar}
+                    loading={adicionando}
+                    disabled={adicionando}
+                    className="w-full"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    Adicionar ao rateio
+                  </Button>
+                </div>
+              )}
             </Card>
-          ))}
-          {!loading && rateio && (
-            <>
-              <div className={['flex justify-end text-body-sm font-medium', cotasValidas ? 'text-primary' : 'text-error'].join(' ')}>
-                Total: {somaCotas.toFixed(1)}%
-                {!cotasValidas && ' (deve ser 100%)'}
-              </div>
-              {erroCotas && <p className="text-body-sm text-error">{erroCotas}</p>}
-              {sucessoCotas && <p className="text-body-sm text-primary">Cotas atualizadas com sucesso.</p>}
-              <Button
-                onClick={salvarCotas}
-                loading={salvandoCotas}
-                disabled={salvandoCotas || !cotasValidas}
-                className="w-full"
-              >
-                Salvar cotas
-              </Button>
-            </>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* Arquivar */}
         {isOwner && !loading && rateio && (
@@ -215,7 +393,7 @@ export function Component() {
               {!confirmandoArquivar ? (
                 <button
                   onClick={() => setConfirmandoArquivar(true)}
-                  className="mt-3 w-full py-2 rounded-lg text-label-lg text-error border border-error hover:bg-error/10 transition-colors"
+                  className="mt-3 w-full py-2 rounded text-label-lg text-error border border-error hover:bg-error/10 transition-colors"
                 >
                   Arquivar rateio
                 </button>
@@ -225,7 +403,7 @@ export function Component() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setConfirmandoArquivar(false)}
-                      className="flex-1 py-2 rounded-lg text-label-lg text-on-surface border border-outline hover:bg-surface transition-colors"
+                      className="flex-1 py-2 rounded text-label-lg text-on-surface border border-outline hover:bg-surface transition-colors"
                     >
                       Cancelar
                     </button>
@@ -263,11 +441,9 @@ export function Component() {
 
       <main className="px-4 md:px-6 lg:px-8 py-4 pb-8">
         <div className="max-w-3xl mx-auto">
-          {/* 2-column grid on lg+ */}
           <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-6 lg:space-y-0">
             {/* Column 1: Conta + Aparência */}
             <div className="space-y-6">
-              {/* Conta */}
               <section className="space-y-3">
                 <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Conta</h2>
                 <Card>
@@ -285,7 +461,6 @@ export function Component() {
                 </Card>
               </section>
 
-              {/* Aparência */}
               <section className="space-y-3">
                 <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Aparência</h2>
                 <Card>
@@ -315,7 +490,6 @@ export function Component() {
 
             {/* Column 2: Índice + Sobre */}
             <div className="space-y-6">
-              {/* Índice IPCA */}
               <section className="space-y-3">
                 <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Índice IPCA</h2>
                 <Card>
@@ -326,7 +500,6 @@ export function Component() {
                 </Card>
               </section>
 
-              {/* Sobre */}
               <section className="space-y-3">
                 <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Sobre</h2>
                 <Card>

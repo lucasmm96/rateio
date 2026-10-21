@@ -118,6 +118,27 @@ export async function editarRateio(
 // Membros
 // ---------------------------------------------------------------------------
 
+export async function adicionarMembro(
+  rateioId: string,
+  userId: string,
+  cotas: { userId: string; cota: number }[],
+): Promise<void> {
+  const { error } = await neon.rpc('adicionar_membro', {
+    p_rateio_id: rateioId,
+    p_user_id: userId,
+    p_cotas: cotas.map(c => ({ user_id: c.userId, cota: c.cota })),
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function removerMembro(rateioId: string, userId: string): Promise<void> {
+  const { error } = await neon.rpc('remover_membro', {
+    p_rateio_id: rateioId,
+    p_user_id: userId,
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function atualizarCotas(
   rateioId: string,
   cotas: { userId: string; cota: number }[],
@@ -177,6 +198,11 @@ export async function listarReembolsos(rateioId: string): Promise<ReembolsoItem[
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as unknown as ReembolsoItem[]
+}
+
+export async function deletarReembolso(id: string): Promise<void> {
+  const { error } = await neon.from('reembolsos').delete().eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function criarReembolso(args: {

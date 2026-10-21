@@ -13,11 +13,24 @@ const config: Config = {
         },
         'on-primary': 'var(--color-on-primary)',
         'on-primary-container': 'var(--color-on-primary-container)',
+        secondary: {
+          container: 'var(--color-secondary-container)',
+        },
+        'on-secondary-container': 'var(--color-on-secondary-container)',
         background: 'var(--color-background)',
-        surface: 'var(--color-surface)',
+        surface: {
+          DEFAULT: 'var(--color-surface)',
+          container: {
+            DEFAULT: 'var(--color-surface-container)',
+            high: 'var(--color-surface-container-high)',
+            low: 'var(--color-surface-container-low)',
+            lowest: 'var(--color-surface-container-lowest)',
+          },
+        },
         'on-surface': 'var(--color-on-surface)',
         'on-surface-variant': 'var(--color-on-surface-variant)',
         outline: 'var(--color-outline)',
+        tertiary: 'var(--color-tertiary)',
         error: {
           DEFAULT: 'var(--color-error)',
           container: 'var(--color-error-container)',

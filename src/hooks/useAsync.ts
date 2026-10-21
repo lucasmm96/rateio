@@ -15,6 +15,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: React.DependencyList = [
 
   useEffect(() => {
     let cancelled = false
+    setData(null)
     setLoading(true)
     setError(null)
     fn()

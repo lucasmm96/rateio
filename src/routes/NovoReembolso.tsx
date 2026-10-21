@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
@@ -22,7 +22,13 @@ export function Component() {
   const [valor, setValor] = useState('')
   const [data, setData] = useState(hoje)
   const [pagadorUserId, setPagadorUserId] = useState(user?.id ?? '')
-  const [recebedorUserId, setRecebedorUserId] = useState(outrosMembros[0]?.user_id ?? '')
+  const [recebedorUserId, setRecebedorUserId] = useState('')
+
+  useEffect(() => {
+    if (outrosMembros.length > 0 && !recebedorUserId) {
+      setRecebedorUserId(outrosMembros[0].user_id)
+    }
+  }, [outrosMembros.length])
   const [observacao, setObservacao] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')

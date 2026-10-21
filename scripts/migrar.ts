@@ -122,6 +122,8 @@ async function main() {
     await aplicar(client, '0002_grant_auth.sql')
     await aplicar(client, '0003_fix_rls_recursion.sql')
     await aplicar(client, '0004_sync_users.sql')
+    await aplicar(client, '0005_atualizar_cotas.sql')
+    await aplicar(client, '0006_adicionar_remover_membro.sql')
     console.log('\n✅ Todas as migrações aplicadas com sucesso.')
   } finally {
     await client.end()

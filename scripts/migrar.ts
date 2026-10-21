@@ -4,7 +4,7 @@
  * Requer: DATABASE_URL definido no ambiente ou em .env.local
  */
 
-import { readFileSync } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 import pg from 'pg'
 
@@ -117,13 +117,14 @@ async function main() {
   console.log('✅ Conectado ao Neon')
 
   try {
-    await aplicar(client, '0000_init.sql')
-    await aplicar(client, '0001_rls.sql')
-    await aplicar(client, '0002_grant_auth.sql')
-    await aplicar(client, '0003_fix_rls_recursion.sql')
-    await aplicar(client, '0004_sync_users.sql')
-    await aplicar(client, '0005_atualizar_cotas.sql')
-    await aplicar(client, '0006_adicionar_remover_membro.sql')
+    const dir = join(import.meta.dirname, '../drizzle/migrations')
+    const arquivos = readdirSync(dir)
+      .filter(f => f.endsWith('.sql'))
+      .sort()
+
+    for (const arquivo of arquivos) {
+      await aplicar(client, arquivo)
+    }
     console.log('\n✅ Todas as migrações aplicadas com sucesso.')
   } finally {
     await client.end()

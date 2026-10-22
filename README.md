@@ -21,13 +21,13 @@ Código **open source e reutilizável**. Fork e adapte para qualquer cenário de
 | Camada | Tecnologia |
 |--------|-----------|
 | Front | React 19 + Vite 8 + TypeScript + PWA (vite-plugin-pwa) |
-| Roteamento | react-router-dom v7 (hash routing para GitHub Pages) |
+| Roteamento | react-router-dom v7 (BrowserRouter, SPA rewrite via `vercel.json`) |
 | Banco | Neon Postgres (free tier) |
 | Auth | Neon Auth (Better Auth) |
 | Data API | Neon PostgREST via `@neondatabase/neon-js` |
 | ORM / Migrações | Drizzle ORM |
 | Cálculo | decimal.js (nunca `number` para dinheiro) |
-| Hospedagem | GitHub Pages (plano free) |
+| Hospedagem | Vercel (plano Hobby) |
 | CI/CD | GitHub Actions |
 
 ---
@@ -37,7 +37,8 @@ Código **open source e reutilizável**. Fork e adapte para qualquer cenário de
 ### 1. Pré-requisitos
 
 - Conta no [Neon](https://neon.tech) (free tier suficiente)
-- Repositório público no GitHub (necessário para GitHub Pages gratuito)
+- Conta na [Vercel](https://vercel.com) (plano Hobby, gratuito)
+- Repositório público no GitHub
 - Node.js 22+ e pnpm 12+
 
 ### 2. Fork e clone
@@ -96,30 +97,27 @@ LUCAS_EMAIL=seu@email.com LETICIA_EMAIL=outro@email.com \
 
 Edite `scripts/migrar-planilha.mjs` com os dados do seu rateio antes de rodar.
 
-### 9. Configurar GitHub Pages
+### 9. Deploy na Vercel
 
-1. No repositório: **Settings → Pages → Source**: selecione **GitHub Actions**.
-2. Vá em **Settings → Secrets and variables → Actions → Variables** e crie:
-   - `VITE_NEON_AUTH_URL` — sua Auth URL do Neon
-   - `VITE_NEON_DATA_API_URL` — sua Data API URL do Neon
-3. Em **Secrets**, crie:
-   - `DATABASE_URL` — connection string completa (para backup)
-   - `IPCA_WRITER_DATABASE_URL` — connection string do role `ipca_writer` (para atualizar IPCA)
+Instruções completas em **[`.ai/deploy/DEPLOY.md`](.ai/deploy/DEPLOY.md)**. Resumo:
 
-A URL do `ipca_writer` tem o formato:
-```
-postgresql://ipca_writer:<senha>@<endpoint>/<db>?sslmode=require
-```
+1. Acesse [vercel.com](https://vercel.com) → **Add New Project** → **Import Git Repository** → selecione seu fork.
+2. Framework Preset: **Vite** (auto-detectado). Build: `pnpm build`. Output: `dist`.
+3. Em **Environment Variables**, adicione as variáveis `VITE_*` do `.env.example`.
+4. Clique **Deploy**.
+5. Após o primeiro deploy, adicione o domínio de produção na allowlist de CORS do Neon Data API.
 
-**Como obter a senha:** a migração `0001_rls.sql` cria o role, mas **não define senha** (credenciais não ficam no repositório). Configure manualmente pelo SQL Editor do Neon Console:
+Em **GitHub Secrets** (para os workflows de IPCA e backup), crie:
+- `DATABASE_URL` — connection string completa (para backup)
+- `IPCA_WRITER_DATABASE_URL` — connection string do role `ipca_writer`
+
+**Como configurar o `ipca_writer`:** a migração `0001_rls.sql` cria o role, mas não define senha. Configure pelo SQL Editor do Neon Console:
 
 ```sql
 ALTER ROLE ipca_writer WITH LOGIN PASSWORD 'escolha-uma-senha-forte';
 ```
 
-> Se o banco foi criado antes da correção do role (`NOLOGIN → LOGIN`), inclua também `WITH LOGIN` no comando acima.
-
-10. **Fazer push** — o workflow `deploy.yml` vai buildar e publicar no Pages automaticamente.
+10. **Fazer push** — a Vercel vai detectar automaticamente e publicar.
 
 ```bash
 git push
@@ -133,6 +131,12 @@ Para adaptar ao seu caso:
 - O app suporta **n participantes** com cotas livres (somam 100%)
 - Cotas podem ser ajustadas a qualquer momento em Configurações
 - Correção IPCA é opcional por rateio; pode usar qualquer série BCB (variável `BCB_SERIE`)
+
+---
+
+## Deploy
+
+Hospedagem na **Vercel** (plano Hobby). Instruções completas em [`.ai/deploy/DEPLOY.md`](.ai/deploy/DEPLOY.md).
 
 ---
 
@@ -169,7 +173,7 @@ pnpm exec tsx scripts/verificar-schema.ts
 
 | Workflow | Gatilho | Secrets/Vars |
 |----------|---------|--------------|
-| `deploy.yml` | push em `master` | vars: `VITE_NEON_AUTH_URL`, `VITE_NEON_DATA_API_URL` |
+| `deploy.yml` | ~~push em `master`~~ — **obsoleto** (substituído pela Vercel) | — |
 | `smoke-bcb.yml` | dia 9 de cada mês | — |
 | `ipca.yml` | dias 9–15 de cada mês | secret: `IPCA_WRITER_DATABASE_URL` |
 | `backup.yml` | domingo 02:00 UTC | secret: `DATABASE_URL` |

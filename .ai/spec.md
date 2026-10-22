@@ -133,3 +133,10 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 - Tokens mapeados em `tailwind.config.ts`.
 - Dark mode: `darkMode: "class"` + `ThemeProvider` (light/dark/system).
 - Componentes base em `src/components/ui/`.
+
+## 14. Deploy
+
+- Hospedagem: Vercel (Hobby).
+- Roteamento: `BrowserRouter` + rewrite no `vercel.json`.
+- Env vars: `VITE_*` (públicas).
+- Detalhes em `.ai/deploy/DEPLOY.md`.

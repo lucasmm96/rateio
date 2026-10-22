@@ -10,12 +10,11 @@ import App from './App.tsx'
 import { ThemeProvider } from './components/ThemeProvider.tsx'
 
 // Intercepta ?token= gerado pelo Better Auth no link de reset de senha.
-// O hash router não preserva query params, então detectamos antes do render
-// e armazenamos em sessionStorage para a rota /redefinir-senha consumir.
+// Salva em sessionStorage e redireciona para /redefinir-senha.
 const _resetToken = new URLSearchParams(window.location.search).get('token')
 if (_resetToken) {
   sessionStorage.setItem('reset_token', _resetToken)
-  window.history.replaceState(null, '', window.location.pathname + '#/redefinir-senha')
+  window.history.replaceState(null, '', '/redefinir-senha')
 }
 
 createRoot(document.getElementById('root')!).render(

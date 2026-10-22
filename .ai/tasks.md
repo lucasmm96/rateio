@@ -106,9 +106,29 @@
 - [ ] T803 Conferir valores com extrato bancário.
 
 ## Fase 9 — Deploy
-- [ ] T901 Configurar GitHub Pages via Action.
-- [ ] T902 Testar PWA instalável no celular.
-- [ ] T903 Verificar service worker e base path.
+
+- [ ] T901 Criar `vercel.json` na raiz do repo (rewrites + headers).
+- [ ] T902 Ajustar `vite.config.ts`: `base: '/'`, remover configs
+      específicas de GitHub Pages (ex.: `BASE_PATH`, `scope` do
+      service worker apontando para `/rateio/`).
+- [ ] T903 Trocar `createHashRouter` por `createBrowserRouter` (ou
+      `BrowserRouter`) no arquivo de rotas.
+- [ ] T904 Substituir todos os `href="#/..."` por `href="/..."` (ou
+      `to="/..."` se usar react-router-dom). Buscar com grep.
+- [ ] T905 Atualizar `.env.example` se houver variáveis específicas de
+      GitHub Pages.
+- [ ] T906 Conectar repositório na Vercel e configurar env vars
+      (`VITE_*`).
+- [ ] T907 Primeiro deploy na Vercel — validar `https://<domínio>/`.
+- [ ] T908 Adicionar domínio Vercel na allowlist de CORS do Neon Data
+      API.
+- [ ] T909 Testar rota direta (ex.: `/rateios/123`).
+- [ ] T910 Testar PWA instalável no celular a partir do domínio Vercel.
+- [ ] T911 Abrir PR de teste, validar preview deployment.
+- [ ] T912 Após 48h de produção estável, desligar GitHub Pages
+      (Settings → Pages → Source: None).
+- [ ] T913 Atualizar README com instruções de deploy Vercel (linkar
+      `.ai/deploy/DEPLOY.md`).
 
 ## Fase 10 — Documentação
 - [ ] U001 `README.md` com instruções de fork.

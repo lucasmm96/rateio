@@ -95,6 +95,15 @@ usam cores hardcoded. Dark mode é suportado desde o dia 1 via
 `darkMode: "class"`. Mockups visuais (HTML do Stitch) são **referência
 para o design**, não código a copiar.
 
+### 17. Deploy na Vercel com SPA rewrite
+
+Hospedagem na Vercel (plano Hobby). Rotas usam `BrowserRouter` (sem
+hash). O `vercel.json` na raiz define rewrite de `/(.*)` para
+`/index.html` (SPA fallback). Variáveis públicas do front usam prefixo
+`VITE_*` e são embutidas no build — nunca colocar secrets sob esse
+prefixo. GitHub Actions (IPCA, backup, smoke-bcb) continuam no GitHub,
+não na Vercel.
+
 ## Anti-princípios (o que evitar)
 - Cálculo financeiro no front sem passar pelo módulo puro.
 - `number` para dinheiro.

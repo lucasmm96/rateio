@@ -89,13 +89,21 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - **PWA** com `vite-plugin-pwa`. Sem offline de dados (só cache do shell).
 - **Sem backend separado**. Front estático.
 - **Sem SSR**. SPA pura.
+- **Deploy em Vercel** (plano Hobby, gratuito). SPA rewrite via
+  `vercel.json`. Sem hash routing.
 
 ### Hospedagem
-- **GitHub Pages** (repositório público, plano free).
-- Base path do Vite e escopo do service worker configurados para a
-  subpasta do repo (`/nome-do-repo/`).
-- Rotas via **hash routing** (`#/rateios`, etc.) para evitar 404 do Pages.
-- Nenhum segredo no bundle.
+
+- **Vercel** (plano Hobby, gratuito). Deploy automático em push para
+  `main` + preview deployments por PR.
+- **SPA routing** via `BrowserRouter` (rotas sem `#/`). O
+  `vercel.json` define rewrite de `/(.*)` → `/index.html`.
+- Sem `base` path no Vite (`base: '/'`).
+- Service worker gerado pelo `vite-plugin-pwa` com escopo `/`.
+- Domínio padrão `*.vercel.app`; custom domain opcional.
+- Nenhum segredo no bundle. Variáveis `VITE_*` são públicas (embutidas
+  no build).
+- Instruções completas em **`.ai/deploy/DEPLOY.md`**.
 
 ### Banco
 - **Neon Postgres** (free tier).
@@ -221,6 +229,7 @@ dado pessoal, credencial ou configuração específica vai no repositório.
 - O comportamento responsivo de cada tela está definido em
   **`.ai/design/RESPONSIVE.md`**. Consultar antes de implementar
   qualquer tela.
+- **Deploy** detalhado em **`.ai/deploy/DEPLOY.md`**.
 
 ### Direitos
 - Código open source, repositório público, reutilizável.
@@ -891,6 +900,7 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 ├── HANDOFF.md
 ├── LICENSE
 ├── README.md
+├── vercel.json                 # ← novo
 ├── .gitignore
 ├── .ai/
 │   ├── constitution.md
@@ -898,9 +908,12 @@ rateio (unidades = valores nominais). Cada caso traz `saldo_esperado` e
 │   ├── tasks.md
 │   ├── casos-de-teste.json
 │   ├── casos-de-teste-n-pessoas.json
+│   ├── deploy/
+│   │   └── DEPLOY.md           # ← novo
 │   └── design/
-│       ├── DESIGN.md              # design system canônico
-│       └── screens/               # mockups de referência (20 HTML)
+│       ├── DESIGN.md
+│       ├── RESPONSIVE.md
+│       └── screens/            # 20 HTML de referência
 │           ├── login_light.html
 │           ├── login_dark.html
 │           ├── cadastro_light.html
@@ -1082,19 +1095,25 @@ referência antes de escrevermos qualquer código de produção.
 
 ### Fase 6 — Deploy e Documentação
 
-1. **Deploy**: Configurar o GitHub Pages via Action e testar a
-   instalação do PWA.
-2. **Documentação**: Escrever o `README.md` com instruções de fork e o
-   `.env.example`.
-3. **Pare e reporte**.
+1. **Deploy na Vercel**: seguir `.ai/deploy/DEPLOY.md`. Configurar env
+   vars (`VITE_*`) no console da Vercel, conectar o repo, aguardar
+   build.
+2. **Neon CORS**: adicionar o domínio de produção da Vercel na
+   allowlist do Neon Data API.
+3. **Validar PWA** instalável no celular a partir do domínio Vercel.
+4. **Validar rotas diretas**: colar URL tipo
+   `https://<domínio>/rateios/123` no navegador deve carregar a tela,
+   não 404.
+5. **README.md** com instruções de fork + deploy.
+6. **`.env.example`** atualizado.
+7. **Aviso no README** sobre workflows do GitHub serem desativados após
+   60 dias sem atividade (mantém o mesmo comportamento).
+8. **Pare e reporte**.
 
 ---
 
 ## 10. ARMADILHAS CONHECIDAS
 
-- **Base path do Vite em GitHub Pages**: `/nome-do-repo/`. Service worker
-  e manifest devem respeitar. Testar em produção.
-- **Hash routing**: usar `createHashRouter` do react-router-dom.
 - **Decimal**: nunca misturar `number` e `Decimal`.
 - **Data sem hora**: strings ISO `YYYY-MM-DD`. Nunca `new Date()` como
   valor persistido.
@@ -1146,13 +1165,36 @@ referência antes de escrevermos qualquer código de produção.
 - **Inter via fontsource**: instalar `@fontsource/inter` e importar no
   `main.tsx` (`import "@fontsource/inter/400.css"`, `/500.css`, `/600.css`,
   `/700.css`). Evita depender da rede do Google em runtime.
+- **Vercel SPA rewrite**: sem `vercel.json` com rewrite, rotas como
+  `/rateios/123` retornam 404. Arquivo precisa estar na raiz do repo
+  (não em `public/`).
+- **Neon Data API CORS**: bloqueia origens não autorizadas. Após o
+  primeiro deploy Vercel, adicionar o domínio de produção na allowlist.
+  Previews (`*.vercel.app`) não estarão automaticamente autorizados —
+  aceitar que previews funcionam sem dados, ou adicionar wildcard
+  (menos seguro).
+- **Env vars no Vite**: prefixo `VITE_*` = público no bundle. Nunca
+  colocar secrets sob esse prefixo. Secrets de backend ficam em GitHub
+  Actions secrets (para os workflows) ou em env vars server-side (não
+  usadas nesta v1).
+- **PWA service worker**: precisa de `Cache-Control: max-age=0,
+  must-revalidate` para chegar atualização aos usuários. Já coberto no
+  `vercel.json`.
+- **Preview deployments e dados**: se o projeto usa login real, o
+  preview precisa das credenciais de teste. Considerar um seed
+  separado ou usar dados mock em previews.
 
 ---
 
 ## 11. DEFINIÇÃO DE PRONTO (v1)
 
 - [ ] Repositório público no GitHub com o código.
-- [ ] Deploy funcionando no GitHub Pages.
+- [ ] Deploy funcionando na Vercel (`https://<domínio>/`).
+- [ ] Preview deployment gerado em PR de teste.
+- [ ] Rotas diretas funcionam (sem 404).
+- [ ] Neon CORS configurado com domínio de produção.
+- [ ] PWA instalável a partir do domínio Vercel.
+- [ ] GitHub Pages desligado (após 48h de validação em produção).
 - [ ] PWA instalável no celular.
 - [ ] Login com Neon Auth funcionando.
 - [ ] 2 usuários cadastrados (Lucas, Letícia).

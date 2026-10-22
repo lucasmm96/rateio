@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/rateio/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -16,8 +16,8 @@ export default defineConfig({
         theme_color: '#00A868',
         background_color: '#FFFFFF',
         display: 'standalone',
-        start_url: '/rateio/',
-        scope: '/rateio/',
+        start_url: '/',
+        scope: '/',
         lang: 'pt-BR',
         icons: [
           {

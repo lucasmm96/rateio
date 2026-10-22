@@ -1,3 +1,8 @@
+# OBSOLETO: substituído por deploy na Vercel.
+# Desligar (remover este arquivo + Settings → Pages → Source: None)
+# após 48h de produção estável na Vercel.
+# Ver .ai/deploy/DEPLOY.md.
+
 name: Deploy — GitHub Pages
 
 on:

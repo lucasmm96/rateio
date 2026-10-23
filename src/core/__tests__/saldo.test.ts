@@ -122,7 +122,7 @@ describe('calcularSaldo — piloto (cotas 0/1, corrigir_ipca=true)', () => {
 
 const FIXTURE_N = JSON.parse(
   readFileSync(
-    join(import.meta.dirname, '../../../.ai/casos-de-teste-n-pessoas.json'),
+    join(import.meta.dirname, 'fixtures/test-cases-np.json'),
     'utf-8',
   ),
 )

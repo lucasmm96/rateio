@@ -393,7 +393,7 @@ export function Component() {
               {!confirmandoArquivar ? (
                 <button
                   onClick={() => setConfirmandoArquivar(true)}
-                  className="mt-3 w-full py-2 rounded text-label-lg text-error border border-error hover:bg-error/10 transition-colors"
+                  className="mt-3 w-full py-2 rounded text-label-lg text-error border border-error hover:bg-error/10 transition duration-150 active:scale-[0.98]"
                 >
                   Arquivar rateio
                 </button>

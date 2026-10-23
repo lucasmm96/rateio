@@ -509,21 +509,23 @@ export function Component() {
       {/* Mobile/tablet: tab layout */}
       {!loading && !fetchError && (
         <div className="lg:hidden">
-          <div className="flex border-b border-outline sticky top-14 bg-background z-10">
+          <div className="relative flex border-b border-outline sticky top-14 apple-material z-10">
             {(['saldos', 'extrato'] as Tab[]).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={[
-                  'flex-1 py-3 text-label-lg font-medium transition-colors',
-                  tab === t
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-on-surface-variant',
+                  'flex-1 py-3 text-label-lg font-medium transition-colors duration-200',
+                  tab === t ? 'text-primary' : 'text-on-surface-variant',
                 ].join(' ')}
               >
                 {t === 'saldos' ? 'Saldos' : 'Extrato'}
               </button>
             ))}
+            <div
+              className="absolute bottom-0 h-0.5 w-1/2 bg-primary transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{ transform: `translateX(${tab === 'saldos' ? '0%' : '100%'})` }}
+            />
           </div>
 
           {tab === 'saldos' && resultado && (
@@ -630,7 +632,7 @@ export function Component() {
 
           {fabOpen && (
             <>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-fab-appear" style={{ animationDelay: '60ms' }}>
                 <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded shadow-tier1 whitespace-nowrap">
                   Nova despesa
                 </span>
@@ -642,7 +644,7 @@ export function Component() {
                   <span className="material-symbols-outlined text-[20px]">receipt_long</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-fab-appear">
                 <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded shadow-tier1 whitespace-nowrap">
                   Reembolso
                 </span>

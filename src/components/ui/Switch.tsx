@@ -24,7 +24,7 @@ function Switch({ checked, onChange, label, disabled }: SwitchProps) {
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={[
-          'relative inline-flex h-6 w-11 rounded-full transition-colors duration-200',
+          'relative inline-flex h-6 w-11 rounded-full transition duration-200 active:scale-[0.95]',
           'outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
           'disabled:opacity-50 disabled:pointer-events-none',
           checked ? 'bg-primary' : 'bg-outline',
@@ -33,7 +33,7 @@ function Switch({ checked, onChange, label, disabled }: SwitchProps) {
         <span
           className={[
             'absolute top-0.5 h-5 w-5 rounded-full bg-on-primary shadow-sm',
-            'transition-transform duration-200',
+            'transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
             checked ? 'translate-x-5' : 'translate-x-0.5',
           ].join(' ')}
         />

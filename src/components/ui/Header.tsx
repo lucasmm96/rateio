@@ -10,14 +10,14 @@ function Header({ title, back = false, actions }: HeaderProps) {
   const navigate = useNavigate()
 
   return (
-    <header className="sticky top-0 z-10 bg-background border-b border-outline">
+    <header className="sticky top-0 z-10 apple-material border-b border-outline">
       <div className="flex items-center h-14 px-margin gap-3">
         {back && (
           <button
             onClick={() => navigate(-1)}
             aria-label="Voltar"
             className="flex items-center justify-center h-10 w-10 -ml-2 rounded-full
-                       text-on-surface hover:bg-surface transition-colors"
+                       text-on-surface hover:bg-surface transition duration-150 active:scale-[0.90]"
           >
             <span className="material-symbols-outlined text-2xl" aria-hidden="true">
               arrow_back

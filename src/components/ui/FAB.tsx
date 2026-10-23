@@ -11,8 +11,8 @@ function FAB({ icon = 'add', label = 'Adicionar', className = '', ...props }: FA
         'md:hidden fixed bottom-20 right-4 z-20',
         'flex items-center justify-center w-14 h-14 rounded-fab',
         'bg-primary text-on-primary shadow-tier3',
-        'hover:bg-primary-hover active:bg-primary-hover',
-        'transition-colors duration-150 outline-none',
+        'hover:bg-primary-hover active:bg-primary-hover active:scale-[0.92]',
+        'transition duration-150 outline-none',
         'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         className,
       ].join(' ')}

@@ -42,6 +42,7 @@ export function Sidebar() {
                 isActive
                   ? 'bg-primary/10 text-primary'
                   : 'text-on-surface-variant hover:bg-surface',
+                'transition duration-150 active:scale-[0.97]',
               ].join(' ')
             }
           >
@@ -62,7 +63,7 @@ export function Sidebar() {
           <span className="flex-1 text-body-sm text-on-surface truncate">{username}</span>
           <button
             onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-            className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface transition-colors"
+            className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
             title="Sair"
             aria-label="Sair"
           >

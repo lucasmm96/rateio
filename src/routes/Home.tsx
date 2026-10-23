@@ -14,7 +14,7 @@ function initiais(email: string): string {
 function RateioCard({ rateio }: { rateio: RateioListItem }) {
   const membros = rateio.membros ?? []
   return (
-    <Link to={`/rateios/${rateio.id}`}>
+    <Link to={`/rateios/${rateio.id}`} className="block transition-transform duration-200 active:scale-[0.98]">
       <Card className="hover:bg-surface-container transition-colors cursor-pointer h-full">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
@@ -116,7 +116,7 @@ export function Component() {
         )}
 
         {!loading && !error && rateios?.length === 0 && (
-          <div className="flex flex-col items-center text-center py-16 space-y-3">
+          <div className="flex flex-col items-center text-center py-16 space-y-3 animate-fade-in-up">
             <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-[32px] text-on-primary-container" aria-hidden="true">
                 payments
@@ -131,7 +131,7 @@ export function Component() {
 
         {/* Grid: 1 col mobile, 2 cols tablet, 3 cols wide desktop */}
         {rateios && rateios.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up">
             {rateios.map(r => <RateioCard key={r.id} rateio={r} />)}
           </div>
         )}

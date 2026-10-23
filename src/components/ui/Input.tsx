@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <div
           className={[
             'flex items-center h-11 rounded-lg border bg-background',
-            'transition-colors duration-150',
+            'transition duration-150',
             error
               ? 'border-error focus-within:ring-2 focus-within:ring-error'
               : 'border-outline focus-within:border-primary focus-within:ring-2 focus-within:ring-primary',

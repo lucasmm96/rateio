@@ -178,7 +178,7 @@ export function Component() {
                     {p.user_id !== user?.id && (
                       <button
                         onClick={() => removerParticipante(p.user_id)}
-                        className="p-1.5 rounded-full text-on-surface-variant hover:bg-surface hover:text-error transition-colors"
+                        className="p-1.5 rounded-full text-on-surface-variant hover:bg-surface hover:text-error transition duration-150 active:scale-[0.90]"
                         aria-label="Remover participante"
                       >
                         <span className="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>

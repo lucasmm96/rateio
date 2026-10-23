@@ -14,7 +14,7 @@ const NAV_ITEMS: NavItem[] = [
 function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-background border-t border-outline"
+      className="md:hidden fixed bottom-0 inset-x-0 z-20 apple-material border-t border-outline"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex h-16">
@@ -26,7 +26,7 @@ function BottomNav() {
             className={({ isActive }) =>
               [
                 'flex flex-1 flex-col items-center justify-center gap-0.5',
-                'transition-colors duration-150',
+                'transition duration-150 active:scale-[0.90]',
                 isActive ? 'text-primary' : 'text-on-surface-variant',
               ].join(' ')
             }

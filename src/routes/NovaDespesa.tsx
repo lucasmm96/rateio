@@ -92,7 +92,7 @@ export function Component() {
                   type="button"
                   onClick={() => setPagadorUserId(m.user_id)}
                   className={[
-                    'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                    'w-full flex items-center gap-3 p-3 rounded-lg border transition duration-150 active:scale-[0.98]',
                     pagadorUserId === m.user_id
                       ? 'border-primary bg-primary-container/20'
                       : 'border-outline hover:bg-surface',

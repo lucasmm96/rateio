@@ -67,7 +67,7 @@ export function Component() {
 
       {/* Painel direito — formulário */}
       <div className="flex flex-col flex-1 justify-between px-margin py-space-xl lg:items-center lg:justify-center lg:px-12">
-        <div className="w-full lg:max-w-md">
+        <div className="w-full lg:max-w-md animate-fade-in-up">
 
           {/* Branding mobile */}
           <div className="flex flex-col items-center text-center mt-space-lg mb-12 lg:hidden">
@@ -106,7 +106,7 @@ export function Component() {
 
             <div className="flex flex-col gap-1.5 w-full">
               <label htmlFor="senha" className="text-label-lg text-on-surface">Senha</label>
-              <div className="flex items-center h-11 rounded-lg border border-outline bg-background transition-colors duration-150 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary">
+              <div className="flex items-center h-11 rounded-lg border border-outline bg-background transition duration-150 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary">
                 <input
                   id="senha"
                   type={mostrarSenha ? 'text' : 'password'}

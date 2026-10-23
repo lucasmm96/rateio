@@ -61,7 +61,7 @@ export function Sidebar() {
           </div>
           <span className="flex-1 text-body-sm text-on-surface truncate">{username}</span>
           <button
-            onClick={() => signOut().then(() => navigate('/login', { replace: true }))}
+            onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
             className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface transition-colors"
             title="Sair"
             aria-label="Sair"

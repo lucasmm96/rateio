@@ -53,7 +53,7 @@ export function TopNav() {
 
       {/* Avatar / logout */}
       <button
-        onClick={() => signOut().then(() => navigate('/login', { replace: true }))}
+        onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
         className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-container text-on-primary-container text-label-sm font-semibold hover:opacity-80 transition-opacity shrink-0"
         title="Sair"
         aria-label="Sair"

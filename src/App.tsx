@@ -14,15 +14,7 @@ function UserThemeSync() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useUser()
-  if (isPending) {
-    return (
-      <div className="min-h-dvh bg-surface flex items-center justify-center">
-        <span className="material-symbols-outlined text-primary text-[48px] animate-spin">
-          progress_activity
-        </span>
-      </div>
-    )
-  }
+  if (isPending) return null
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }

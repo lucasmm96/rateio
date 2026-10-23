@@ -1,3 +1,5 @@
+> **Nota**: este arquivo é a cópia do Spec Kit. A versão canônica e editável é `.ai/context/spec.md`. Não edite este arquivo manualmente — atualize `.ai/spec.md` e sincronize via `speckit-specify` se necessário.
+
 # Spec — App Controle de Rateios (v1)
 
 ## 1. Contexto

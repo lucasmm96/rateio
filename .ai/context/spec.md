@@ -38,7 +38,6 @@ cenários parecidos (rateio de despesas com correção por índice).
 - **Pool**: o que ainda falta pagar a terceiros.
 
 ## 3. Modelo de dados
-(ver HANDOFF_INICIAL.md seções 3.1 a 3.5)
 
 Tabelas: `users`, `rateios`, `membros`, `despesas`, `reembolsos`,
 `taxas_ipca`, `config`.
@@ -54,7 +53,6 @@ Convenções:
   coluna `situacao` no banco.
 
 ## 4. Regras de cálculo
-(ver HANDOFF_INICIAL.md seções 4.1 a 4.10)
 
 Resumo da Forma B (compromisso/excesso):
 
@@ -85,7 +83,6 @@ Invariantes:
   cotas = 1 no servidor).
 
 ## 6. Telas
-(ver HANDOFF_INICIAL.md seção 7)
 
 - Lista de rateios (home).
 - Detalhe do rateio com saldos por participante e extrato cronológico.
@@ -108,7 +105,6 @@ Invariantes:
 - Action semanal faz `pg_dump` como artifact.
 
 ## 10. Migração da planilha
-(ver HANDOFF_INICIAL.md seção 5)
 
 Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 
@@ -128,7 +124,7 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 
 ## 13. Design system
 
-- Fonte da verdade: `.ai/design/DESIGN.md`.
+- Fonte da verdade: `.ai/design/design.md`.
 - Referência visual: `.ai/design/screens/` (20 mockups).
 - Tokens mapeados em `tailwind.config.ts`.
 - Dark mode: `darkMode: "class"` + `ThemeProvider` (light/dark/system).
@@ -139,4 +135,4 @@ Rateio "Apartamento", cotas Lucas=0 e Letícia=1, `corrigir_ipca=true`.
 - Hospedagem: Vercel (Hobby).
 - Roteamento: `BrowserRouter` + rewrite no `vercel.json`.
 - Env vars: `VITE_*` (públicas).
-- Detalhes em `.ai/deploy/DEPLOY.md`.
+- Detalhes em `.ai/deploy/deploy.md`.

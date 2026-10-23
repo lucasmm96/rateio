@@ -32,3 +32,4 @@ coverage
 
 # Temporários
 .ai/.temp
+.claude/scratchpad/

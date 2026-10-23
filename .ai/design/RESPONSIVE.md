@@ -1,9 +1,8 @@
 # Responsive Design — Rateio
 
 Especificação de adaptação das telas entre mobile, tablet e desktop. Os
-mockups em `.ai/design/screens/` são mobile-first; este documento define
-como cada tela se transforma em telas maiores. **Mockups de desktop não
-existem** — a implementação em React segue as regras abaixo.
+Este documento define como cada tela se transforma em telas maiores. A
+implementação em React segue as regras abaixo.
 
 ## Princípios
 
@@ -142,7 +141,7 @@ Config Globais.
    breakpoint.
 3. **Imagens e ilustrações**: em desktop, no painel do login, usar
    `object-cover` para preencher o split.
-4. **Não redesenhar componentes.** O `DESIGN.md` continua sendo a fonte
+4. **Não redesenhar componentes.** O `design.md` continua sendo a fonte
    dos tokens. Só a **composição** das telas muda por breakpoint.
 5. **Testar sempre 3 widths**: 390px (iPhone), 834px (iPad portrait),
    1440px (laptop).

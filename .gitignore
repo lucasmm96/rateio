@@ -33,3 +33,7 @@ coverage
 # Temporários
 .ai/.temp
 .claude/scratchpad/
+
+# Ícone-fonte (mantido em .ai/design/brand/)
+icon-source.jpg
+icon-source.png

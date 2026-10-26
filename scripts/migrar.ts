@@ -1,6 +1,6 @@
 /**
  * Aplica as migrações SQL no Neon via pg (node-postgres).
- * Executar com: pnpm exec tsx scripts/migrar.ts
+ * Executar com: npx tsx scripts/migrar.ts
  * Requer: DATABASE_URL definido no ambiente ou em .env.local
  */
 

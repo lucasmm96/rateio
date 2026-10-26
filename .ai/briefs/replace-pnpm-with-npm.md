@@ -1,6 +1,6 @@
 # Replace pnpm with npm
 
-> Status: ready
+> Status: done
 
 ## Objective
 

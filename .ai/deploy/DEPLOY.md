@@ -51,9 +51,9 @@ Deploy na Vercel. Documento complementar ao HANDOFF.
 1. Acessar vercel.com → **Add New Project** → **Import Git Repository**.
 2. Selecionar `lucasmm96/rateio`.
 3. Framework Preset: **Vite** (auto-detectado).
-4. Build Command: `pnpm build` (ou `npm run build`).
+4. Build Command: `npm run build`.
 5. Output Directory: `dist`.
-6. Install Command: `pnpm install` (ou `npm install`).
+6. Install Command: `npm install`.
 7. **Environment Variables**: adicionar todas as variáveis `VITE_*` do
    `.env.example`. Prefixadas com `VITE_` são embutidas no bundle no
    build (não são secrets em runtime).

@@ -39,14 +39,14 @@ Código **open source e reutilizável**. Fork e adapte para qualquer cenário de
 - Conta no [Neon](https://neon.tech) (free tier suficiente)
 - Conta na [Vercel](https://vercel.com) (plano Hobby, gratuito)
 - Repositório público no GitHub
-- Node.js 22+ e pnpm 12+
+- Node.js 22+
 
 ### 2. Fork e clone
 
 ```bash
 gh repo fork seu-usuario/rateio --clone
 cd rateio
-pnpm install
+npm install
 ```
 
 ### 3. Criar projeto no Neon
@@ -73,18 +73,18 @@ cp .env.example .env.local
 
 ```bash
 # Aplica schema, RLS, triggers e RPCs
-pnpm exec tsx scripts/migrar.ts
+npx tsx scripts/migrar.ts
 ```
 
 ### 6. Popular taxas IPCA (série 433)
 
 ```bash
-pnpm exec node scripts/seed-taxas.mjs
+node scripts/seed-taxas.mjs
 ```
 
 ### 7. Cadastrar usuários
 
-Acesse o app localmente (`pnpm dev`) e crie as contas pela tela de cadastro. O Neon Auth registra os usuários na tabela `users`.
+Acesse o app localmente (`npm run dev`) e crie as contas pela tela de cadastro. O Neon Auth registra os usuários na tabela `users`.
 
 ### 8. Migrar dados da planilha (opcional)
 
@@ -92,7 +92,7 @@ Se você tiver dados históricos para importar:
 
 ```bash
 LUCAS_EMAIL=seu@email.com LETICIA_EMAIL=outro@email.com \
-  pnpm exec node scripts/migrar-planilha.mjs
+  node scripts/migrar-planilha.mjs
 ```
 
 Edite `scripts/migrar-planilha.mjs` com os dados do seu rateio antes de rodar.
@@ -102,7 +102,7 @@ Edite `scripts/migrar-planilha.mjs` com os dados do seu rateio antes de rodar.
 Instruções completas em **[`.ai/deploy/DEPLOY.md`](.ai/deploy/DEPLOY.md)**. Resumo:
 
 1. Acesse [vercel.com](https://vercel.com) → **Add New Project** → **Import Git Repository** → selecione seu fork.
-2. Framework Preset: **Vite** (auto-detectado). Build: `pnpm build`. Output: `dist`.
+2. Framework Preset: **Vite** (auto-detectado). Build: `npm run build`. Output: `dist`.
 3. Em **Environment Variables**, adicione as variáveis `VITE_*` do `.env.example`.
 4. Clique **Deploy**.
 5. Após o primeiro deploy, adicione o domínio de produção na allowlist de CORS do Neon Data API.
@@ -143,17 +143,17 @@ Hospedagem na **Vercel** (plano Hobby). Instruções completas em [`.ai/deploy/D
 ## Desenvolvimento local
 
 ```bash
-pnpm dev          # servidor de desenvolvimento
-pnpm build        # build de produção
-pnpm test         # testes (vitest)
-pnpm test:coverage
-pnpm lint         # oxlint
+npm run dev       # servidor de desenvolvimento
+npm run build     # build de produção
+npm test          # testes (vitest)
+npm run test:coverage
+npm run lint      # oxlint
 ```
 
 ### Verificar schema no banco
 
 ```bash
-pnpm exec tsx scripts/verificar-schema.ts
+npx tsx scripts/verificar-schema.ts
 ```
 
 ---

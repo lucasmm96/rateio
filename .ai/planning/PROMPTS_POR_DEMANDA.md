@@ -82,7 +82,7 @@ Passos:
    createBrowserRouter. Substituir todos os href="#/" por href="/".
 4. Verificar index.html — nenhum caminho absoluto com /rateio/.
 5. Verificar service worker / manifest PWA — scope deve ser '/'.
-6. Rodar pnpm build && pnpm preview e validar em localhost:4173.
+6. Rodar npm run build && npm run preview e validar em localhost:4173.
 7. Reportar o que mudou e me instruir sobre como desligar GitHub Pages
    manualmente no console do GitHub (Settings → Pages → Source: None).
 
@@ -111,7 +111,7 @@ Passos:
    teste automatizado. Coverage mínimo: definir meta com o usuário
    antes de fechar."
 3. Configurar @vitest/coverage-v8 (v8 é o provider mais rápido).
-4. Adicionar script pnpm test:coverage no package.json.
+4. Adicionar script npm run test:coverage no package.json.
 5. Configurar CI (GitHub Actions) para rodar cobertura em push.
 6. Produzir .ai/planning/coverage-report.md com gap por arquivo.
 7. Reportar % atual e o que falta cobrir. Aguardar minha definição da

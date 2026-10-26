@@ -66,7 +66,7 @@ Se o usuário autorizar `/speckit.implement`, ao final atualize
    de negócio em `src/core/` e todo componente em `src/components/`
    tem teste automatizado. Coverage mínimo X% (definir com o usuário)."
 2. Configurar `vitest` com coverage (via `@vitest/coverage-v8`).
-3. Adicionar script `pnpm test:coverage` no `package.json`.
+3. Adicionar script `npm run test:coverage` no `package.json`.
 4. Configurar CI (GitHub Actions) para rodar testes em push.
 5. Reportar coverage atual e gap por arquivo em
    `.ai/planning/coverage-report.md`.

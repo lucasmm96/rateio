@@ -61,7 +61,7 @@ verifiable.
 
 ## Verification
 How to confirm it worked:
-- Command to run (e.g. `pnpm test`, `pnpm build`)
+- Command to run (e.g. `npm test`, `npm run build`)
 - Manual steps in the browser (golden path + edge cases)
 - Expected behavior
 ```

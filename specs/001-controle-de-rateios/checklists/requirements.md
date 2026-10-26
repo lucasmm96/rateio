@@ -82,8 +82,8 @@
 ## Qualidade de Código
 
 - [ ] `tsc --noEmit` sem erros
-- [ ] `pnpm build` sem erros
-- [ ] Todos os testes passam (`pnpm test`)
+- [ ] `npm run build` sem erros
+- [ ] Todos os testes passam (`npm test`)
 - [ ] Nenhuma cor hardcoded nos componentes (apenas tokens Tailwind)
 - [ ] `darkMode: "class"` configurado no Tailwind
 - [ ] Todas as tabelas têm RLS habilitada

@@ -39,23 +39,23 @@ Start here for context; then read `.ai/README.md` for the full documentation map
 ## Commands
 
 ```bash
-pnpm dev              # dev server (http://localhost:5173/)
-pnpm build            # tsc -b && vite build
-pnpm test             # vitest watch
-pnpm test:coverage    # vitest run --coverage
-pnpm lint             # oxlint
+npm run dev           # dev server (http://localhost:5173/)
+npm run build         # tsc -b && vite build
+npm test              # vitest watch
+npm run test:coverage # vitest run --coverage
+npm run lint          # oxlint
 
 # Run a single test file
-pnpm exec vitest run src/core/__tests__/saldo.test.ts
+npx vitest run src/core/__tests__/saldo.test.ts
 
 # Database scripts (need DATABASE_URL in .env.local)
-pnpm exec tsx scripts/migrar.ts          # apply all SQL migrations
-pnpm exec tsx scripts/verificar-schema.ts
-pnpm exec node scripts/seed-taxas.mjs   # seed IPCA rates from BCB
+npx tsx scripts/migrar.ts          # apply all SQL migrations
+npx tsx scripts/verificar-schema.ts
+node scripts/seed-taxas.mjs   # seed IPCA rates from BCB
 
 # Drizzle
-pnpm db:generate   # generate migration from schema changes
-pnpm db:studio     # Drizzle Studio UI
+npm run db:generate   # generate migration from schema changes
+npm run db:studio     # Drizzle Studio UI
 ```
 
 ## Architecture

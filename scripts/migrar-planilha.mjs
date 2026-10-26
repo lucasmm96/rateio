@@ -7,7 +7,7 @@
  *   LETICIA_EMAIL  — e-mail cadastrado da Letícia no Neon Auth
  *
  * Execução:
- *   LUCAS_EMAIL=... LETICIA_EMAIL=... pnpm exec node scripts/migrar-planilha.mjs
+ *   LUCAS_EMAIL=... LETICIA_EMAIL=... node scripts/migrar-planilha.mjs
  *
  * O script é idempotente: se o rateio "Apartamento" já existe, encerra sem
  * alterar nada. Rode scripts/seed-taxas.mjs antes para garantir que as taxas

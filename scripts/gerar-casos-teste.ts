@@ -1,6 +1,6 @@
 /**
  * Gera .ai/casos-de-teste.json com os 27 casos do piloto calculados.
- * Executar com: pnpm exec tsx scripts/gerar-casos-teste.ts
+ * Executar com: npx tsx scripts/gerar-casos-teste.ts
  */
 
 import { writeFileSync } from 'fs'

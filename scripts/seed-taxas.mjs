@@ -7,7 +7,7 @@
  *   BCB_SERIE                 — código da série (padrão: 433 = IPCA mensal)
  *
  * Execução local:
- *   pnpm exec node scripts/seed-taxas.mjs
+ *   node scripts/seed-taxas.mjs
  *
  * No GitHub Actions:
  *   Configurar secret IPCA_WRITER_DATABASE_URL e rodar via ipca.yml

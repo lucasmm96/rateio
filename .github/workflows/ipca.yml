@@ -32,7 +32,7 @@ jobs:
       - name: Instalar dependências
         run: npm install pg
 
-      - name: Diagnóstico — current_user no banco
+      - name: Diagnóstico — current_user e policies no banco
         env:
           IPCA_WRITER_DATABASE_URL: ${{ secrets.IPCA_WRITER_DATABASE_URL }}
         run: |
@@ -41,7 +41,9 @@ jobs:
           const c = new Client({ connectionString: process.env.IPCA_WRITER_DATABASE_URL });
           c.connect()
             .then(() => c.query('SELECT current_user, session_user'))
-            .then(r => { console.log('roles:', JSON.stringify(r.rows[0])); return c.end(); })
+            .then(r => { console.log('roles:', JSON.stringify(r.rows[0])); })
+            .then(() => c.query(\"SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = 'taxas_ipca'\"))
+            .then(r => { console.log('policies:', JSON.stringify(r.rows)); return c.end(); })
             .catch(e => { console.error(e.message); process.exit(1); });
           "
 

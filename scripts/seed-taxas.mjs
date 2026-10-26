@@ -43,22 +43,19 @@ function parsarData(dataStr) {
 }
 
 async function upsert(client, taxas) {
-  let inseridos = 0
-  let atualizados = 0
+  let count = 0
 
   for (const { mes, taxa } of taxas) {
-    const result = await client.query(
+    await client.query(
       `INSERT INTO taxas_ipca (mes, taxa)
        VALUES ($1, $2)
-       ON CONFLICT (mes) DO UPDATE SET taxa = EXCLUDED.taxa
-       RETURNING xmax`,
+       ON CONFLICT (mes) DO UPDATE SET taxa = EXCLUDED.taxa`,
       [mes, taxa],
     )
-    if (Number(result.rows[0].xmax) === 0) inseridos++
-    else atualizados++
+    count++
   }
 
-  console.log(`   ✅ ${inseridos} inseridos, ${atualizados} atualizados`)
+  console.log(`   ✅ ${count} registros upsertados`)
 }
 
 async function main() {

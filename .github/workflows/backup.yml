@@ -25,6 +25,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          export PATH="/usr/lib/postgresql/17/bin:$PATH"
+          pg_dump --version
           TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)
           FILENAME="backup_${TIMESTAMP}.dump"
           echo "→ Gerando $FILENAME..."

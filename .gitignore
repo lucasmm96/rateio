@@ -1,6 +1,5 @@
 # Dependências
 node_modules
-.pnpm-store
 
 # Build
 dist
@@ -25,7 +24,6 @@ dist-ssr
 
 # Logs
 *.log
-pnpm-debug.log*
 
 # Coverage
 coverage

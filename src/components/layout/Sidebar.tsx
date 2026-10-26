@@ -16,14 +16,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-outline shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-            <span
-              className="material-symbols-outlined text-[18px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-              aria-hidden="true"
-            >
-              payments
-            </span>
+          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-5 h-5" />
           </div>
           <span className="text-headline-sm text-primary font-bold">Rateio</span>
         </div>

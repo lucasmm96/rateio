@@ -15,14 +15,8 @@ export function TopNav() {
     <header className="hidden md:flex lg:hidden items-center h-14 px-4 gap-4 apple-material border-b border-outline shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2 shrink-0">
-        <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-          <span
-            className="material-symbols-outlined text-[16px]"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-            aria-hidden="true"
-          >
-            payments
-          </span>
+        <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center">
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="w-[18px] h-[18px]" />
         </div>
         <span className="text-headline-sm text-primary font-bold">Rateio</span>
       </div>

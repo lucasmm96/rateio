@@ -50,13 +50,7 @@ export function Component() {
         />
         <div className="relative flex flex-col items-center text-center gap-4">
           <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-            <span
-              className="material-symbols-outlined text-[48px] text-white"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-              aria-hidden="true"
-            >
-              payments
-            </span>
+            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-12 h-12 brightness-0 invert" />
           </div>
           <h1 className="text-display text-white font-bold tracking-tight">Rateio</h1>
           <p className="text-body-lg text-white/80 max-w-xs">
@@ -72,14 +66,8 @@ export function Component() {
           {/* Branding mobile */}
           <div className="flex flex-col items-center text-center mt-space-lg mb-12 lg:hidden">
             <div className="flex flex-row items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container shadow-sm">
-                <span
-                  className="material-symbols-outlined text-[28px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                  aria-hidden="true"
-                >
-                  payments
-                </span>
+              <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center shadow-sm">
+                <img src="/favicon.svg" alt="" aria-hidden="true" className="w-7 h-7" />
               </div>
               <h1 className="text-display text-primary tracking-tight font-bold">Rateio</h1>
             </div>

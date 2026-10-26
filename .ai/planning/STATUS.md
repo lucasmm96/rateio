@@ -34,6 +34,6 @@ Decisão técnica relevante registrada em `plan.md`: o plano original usava `cre
 ## Última sessão
 
 - **Data**: 2026-10-26
-- **Onda**: 1 — D-001 (Fix: Config. Rateio vazio)
-- **Feito**: T001–T008 implementadas e validadas. Auth race corrigido em todas as rotas (Configuracoes, Home, DetalheRateio, NovaDespesa, NovoReembolso, MemoriaCalculo). Estados de loading/erro/não-encontrado/acesso-negado adicionados ao modal. CORS do Neon Data API atualizado para incluir localhost. D-001 ✅.
+- **Onda**: 1 — D-002 (Auditoria de workflows)
+- **Feito**: Auditoria completa dos 4 workflows. smoke-bcb.yml removido. GitHub Pages desativado. backup.yml corrigido (pg_dump 17 via PGDG). ipca.yml corrigido (npm install pg + migration 0007 BYPASSRLS para ipca_writer). Ambos confirmados passando: backup run 40405459154, ipca run 40409613760. D-002 ✅.
 - **Pendente**: nenhum — Onda 1 completa. Próxima: D-003 (Onda 2)

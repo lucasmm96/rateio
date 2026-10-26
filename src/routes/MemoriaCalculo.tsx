@@ -3,6 +3,7 @@ import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { useAsync } from '../hooks/useAsync'
+import { useUser } from '../db/auth'
 import { buscarRateio, listarDespesas, listarReembolsos, listarTaxasIpca } from '../db/queries'
 import { D } from '../core/decimal'
 import { calcularSaldo } from '../core/saldo'
@@ -24,12 +25,13 @@ function Linha({ label, valor }: { label: string; valor: string }) {
 
 export function Component() {
   const { id } = useParams<{ id: string }>()
+  const { isPending: authPending } = useUser()
   const hoje = new Date().toISOString().slice(0, 10)
 
-  const { data: rateio, loading: lRateio } = useAsync(() => buscarRateio(id!), [id])
-  const { data: despesas, loading: lDesp } = useAsync(() => listarDespesas(id!), [id])
-  const { data: reembolsos, loading: lReem } = useAsync(() => listarReembolsos(id!), [id])
-  const { data: taxas, loading: lTaxas } = useAsync(listarTaxasIpca)
+  const { data: rateio, loading: lRateio } = useAsync(() => authPending ? Promise.resolve(null) : buscarRateio(id!), [id, authPending])
+  const { data: despesas, loading: lDesp } = useAsync(() => authPending ? Promise.resolve(null) : listarDespesas(id!), [id, authPending])
+  const { data: reembolsos, loading: lReem } = useAsync(() => authPending ? Promise.resolve(null) : listarReembolsos(id!), [id, authPending])
+  const { data: taxas, loading: lTaxas } = useAsync(() => authPending ? Promise.resolve(null) : listarTaxasIpca(), [authPending])
 
   const loading = lRateio || lDesp || lReem || lTaxas
   const membros = rateio?.membros ?? []

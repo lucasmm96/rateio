@@ -12,9 +12,9 @@ import { useUser } from '../db/auth'
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { user, isPending: authPending } = useUser()
 
-  const { data: rateio } = useAsync(() => buscarRateio(id!), [id])
+  const { data: rateio } = useAsync(() => authPending ? Promise.resolve(null) : buscarRateio(id!), [id, authPending])
   const membros = rateio?.membros ?? []
   const outrosMembros = membros.filter(m => m.user_id !== user?.id)
 

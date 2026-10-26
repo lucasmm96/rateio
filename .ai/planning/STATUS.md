@@ -5,7 +5,7 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 
 | ID | Demanda | Onda | Spec | Status | Última atualização |
 |---|---|---|---|---|---|
-| D-001 | Fix: Config. Rateio vazio | 1 | `specs/002-fix-config-rateio` | ⬜ | — |
+| D-001 | Fix: Config. Rateio vazio | 1 | `specs/002-fix-config-rateio` | ✅ | 2026-10-26 |
 | D-002 | Auditoria de workflows | 1 | — | ⬜ | — |
 | D-003 | Remover GitHub Pages | 2 | — | ⬜ | — |
 | D-004 | Coverage de testes | 3 | — | ⬜ | — |
@@ -33,7 +33,7 @@ Decisão técnica relevante registrada em `plan.md`: o plano original usava `cre
 
 ## Última sessão
 
-- **Data**: 2026-10-25
-- **Onda**: — (setup inicial)
-- **Feito**: Criação de `.ai/planning/` (ROADMAP, STATUS, DECISIONS, TEMPLATE-ONDA) + pastas `specs/002` a `specs/008`
-- **Pendente**: Iniciar Onda 1 — D-001 (fix config) ou D-002 (auditoria workflows)
+- **Data**: 2026-10-26
+- **Onda**: 1 — D-001 (Fix: Config. Rateio vazio)
+- **Feito**: T001–T008 implementadas e validadas. Auth race corrigido em todas as rotas (Configuracoes, Home, DetalheRateio, NovaDespesa, NovoReembolso, MemoriaCalculo). Estados de loading/erro/não-encontrado/acesso-negado adicionados ao modal. CORS do Neon Data API atualizado para incluir localhost. D-001 ✅.
+- **Pendente**: D-002 (Auditoria de workflows, Onda 1)

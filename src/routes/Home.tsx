@@ -64,8 +64,11 @@ function RateioCard({ rateio }: { rateio: RateioListItem }) {
 
 export function Component() {
   const navigate = useNavigate()
-  const { user } = useUser()
-  const { data: rateios, loading, error } = useAsync(listarRateios)
+  const { user, isPending: authPending } = useUser()
+  const { data: rateios, loading, error } = useAsync(
+    () => authPending ? Promise.resolve(null) : listarRateios(),
+    [authPending],
+  )
 
   return (
     <AppShell>

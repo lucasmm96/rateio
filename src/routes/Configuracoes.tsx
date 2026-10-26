@@ -25,11 +25,14 @@ export function Component() {
   const navigate = useNavigate()
   const rateioId = searchParams.get('rateio')
   const { theme, setTheme, resolvedTheme } = useTheme()
-  const { user } = useUser()
+  const { user, isPending: authPending } = useUser()
 
-  const { data: rateio, loading, reload: reloadRateio } = useAsync(
-    () => (rateioId ? buscarRateio(rateioId) : Promise.resolve(null)),
-    [rateioId],
+  const { data: rateio, loading, error: rateioError, reload: reloadRateio } = useAsync(
+    () => {
+      if (authPending || !rateioId) return Promise.resolve(null)
+      return buscarRateio(rateioId)
+    },
+    [rateioId, authPending],
   )
 
   const isOwner = !!rateio && rateio.criado_por_user_id === user?.id
@@ -204,6 +207,31 @@ export function Component() {
     <div className="bg-background">
       <Header title="Config. Rateio" back />
       <main className="px-margin py-4 pb-8 space-y-6">
+
+        {(authPending || loading) && (
+          <p className="text-body-sm text-on-surface-variant">Carregando…</p>
+        )}
+
+        {!authPending && !loading && rateioError && (
+          <div className="space-y-3">
+            <p className="text-body-sm text-error">{rateioError}</p>
+            <Button onClick={reloadRateio} variant="outline">Tentar novamente</Button>
+          </div>
+        )}
+
+        {!authPending && !loading && !rateioError && !rateio && (
+          <div className="space-y-3">
+            <p className="text-body-sm text-on-surface-variant">Rateio não encontrado ou sem acesso.</p>
+            <Button onClick={() => navigate(-1)} variant="outline">Voltar</Button>
+          </div>
+        )}
+
+        {!authPending && !loading && !rateioError && rateio && !isOwner && (
+          <div className="space-y-3">
+            <p className="text-body-sm text-on-surface-variant">Apenas o criador do rateio pode alterar as configurações.</p>
+            <Button onClick={() => navigate(-1)} variant="outline">Voltar</Button>
+          </div>
+        )}
 
         {/* Editar rateio */}
         {isOwner && (

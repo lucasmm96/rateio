@@ -393,14 +393,14 @@ function ExtratoContent({
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { user, isPending: authPending } = useUser()
   const [tab, setTab] = useState<Tab>('saldos')
   const [fabOpen, setFabOpen] = useState(false)
 
-  const { data: rateio, loading: lRateio, error: eRateio, reload: reloadRateio } = useAsync(() => buscarRateio(id!), [id])
-  const { data: despesas, loading: lDesp, error: eDesp, reload: reloadDesp } = useAsync(() => listarDespesas(id!), [id])
-  const { data: reembolsos, loading: lReem, error: eReem, reload: reloadReem } = useAsync(() => listarReembolsos(id!), [id])
-  const { data: taxas, loading: lTaxas, error: eTaxas, reload: reloadTaxas } = useAsync(listarTaxasIpca)
+  const { data: rateio, loading: lRateio, error: eRateio, reload: reloadRateio } = useAsync(() => authPending ? Promise.resolve(null) : buscarRateio(id!), [id, authPending])
+  const { data: despesas, loading: lDesp, error: eDesp, reload: reloadDesp } = useAsync(() => authPending ? Promise.resolve(null) : listarDespesas(id!), [id, authPending])
+  const { data: reembolsos, loading: lReem, error: eReem, reload: reloadReem } = useAsync(() => authPending ? Promise.resolve(null) : listarReembolsos(id!), [id, authPending])
+  const { data: taxas, loading: lTaxas, error: eTaxas, reload: reloadTaxas } = useAsync(() => authPending ? Promise.resolve(null) : listarTaxasIpca(), [authPending])
 
   const loading = lRateio || lDesp || lReem || lTaxas
   const fetchError = eRateio ?? eDesp ?? eReem ?? eTaxas

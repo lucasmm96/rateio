@@ -30,10 +30,18 @@ export interface DespesaItem {
   descricao: string
   pagador_user_id: string
   valor: number
-  boleto_url: string | null
-  comprovante_url: string | null
   criado_em: string
   pagador: { email: string } | null
+}
+
+export interface LinkItem {
+  id: string
+  entidade_tipo: 'despesa' | 'reembolso'
+  entidade_id: string
+  rateio_id: string
+  url: string
+  rotulo: string | null
+  criado_em: string
 }
 
 export interface ReembolsoItem {
@@ -157,7 +165,7 @@ export async function atualizarCotas(
 export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
   const { data, error } = await neon
     .from('despesas')
-    .select('id, rateio_id, data, descricao, pagador_user_id, valor, boleto_url, comprovante_url, criado_em, pagador:users!pagador_user_id(email)')
+    .select('id, rateio_id, data, descricao, pagador_user_id, valor, criado_em, pagador:users!pagador_user_id(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -170,15 +178,16 @@ export async function criarDespesa(args: {
   descricao: string
   pagadorUserId: string
   valor: number
-}): Promise<void> {
-  const { error } = await neon.from('despesas').insert({
+}): Promise<string> {
+  const { data: rows, error } = await neon.from('despesas').insert({
     rateio_id: args.rateioId,
     data: args.data,
     descricao: args.descricao,
     pagador_user_id: args.pagadorUserId,
     valor: args.valor,
-  })
+  }).select('id')
   if (error) throw new Error(error.message)
+  return (rows as { id: string }[])[0].id
 }
 
 export async function deletarDespesa(id: string): Promise<void> {
@@ -212,16 +221,17 @@ export async function criarReembolso(args: {
   recebedorUserId: string
   valor: number
   observacao?: string
-}): Promise<void> {
-  const { error } = await neon.from('reembolsos').insert({
+}): Promise<string> {
+  const { data: rows, error } = await neon.from('reembolsos').insert({
     rateio_id: args.rateioId,
     data: args.data,
     pagador_user_id: args.pagadorUserId,
     recebedor_user_id: args.recebedorUserId,
     valor: args.valor,
     ...(args.observacao ? { observacao: args.observacao } : {}),
-  })
+  }).select('id')
   if (error) throw new Error(error.message)
+  return (rows as { id: string }[])[0].id
 }
 
 // ---------------------------------------------------------------------------
@@ -250,5 +260,45 @@ export async function buscarUsuarioPorEmail(email: string): Promise<{ id: string
 
 export async function garantirUsuario(email: string): Promise<void> {
   const { error } = await neon.rpc('garantir_usuario', { p_email: email })
+  if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------------
+// Links
+// ---------------------------------------------------------------------------
+
+export async function listarLinks(
+  entidadeTipo: 'despesa' | 'reembolso',
+  entidadeId: string,
+): Promise<LinkItem[]> {
+  const { data, error } = await neon
+    .from('links')
+    .select('id, entidade_tipo, entidade_id, rateio_id, url, rotulo, criado_em')
+    .eq('entidade_tipo', entidadeTipo)
+    .eq('entidade_id', entidadeId)
+    .order('criado_em', { ascending: true })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as LinkItem[]
+}
+
+export async function adicionarLink(args: {
+  entidadeTipo: 'despesa' | 'reembolso'
+  entidadeId: string
+  rateioId: string
+  url: string
+  rotulo?: string
+}): Promise<void> {
+  const { error } = await neon.from('links').insert({
+    entidade_tipo: args.entidadeTipo,
+    entidade_id:   args.entidadeId,
+    rateio_id:     args.rateioId,
+    url:           args.url,
+    ...(args.rotulo ? { rotulo: args.rotulo } : {}),
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function removerLink(id: string): Promise<void> {
+  const { error } = await neon.from('links').delete().eq('id', id)
   if (error) throw new Error(error.message)
 }

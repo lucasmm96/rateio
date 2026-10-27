@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { LinksList } from '../components/LinksList'
 import { useAsync } from '../hooks/useAsync'
 import {
   buscarRateio,
@@ -205,6 +206,16 @@ function ExtratoContent({
 }: ExtratoContentProps) {
   const [confirmandoExcluir, setConfirmandoExcluir] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
+  const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
+
+  function toggleLinks(cardId: string) {
+    setLinksAbertos(prev => {
+      const next = new Set(prev)
+      if (next.has(cardId)) next.delete(cardId)
+      else next.add(cardId)
+      return next
+    })
+  }
 
   const emailDe = (userId: string) => {
     const m = membros.find(mb => mb.user_id === userId)
@@ -322,6 +333,23 @@ function ExtratoContent({
                         </div>
                       </div>
                     )}
+                    <div className="mt-2 pt-2 border-t border-outline">
+                      <button
+                        onClick={() => toggleLinks(`d-${d.id}`)}
+                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+                        Links
+                        <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksAbertos.has(`d-${d.id}`) ? 'rotate-180' : ''}`} aria-hidden="true">
+                          expand_more
+                        </span>
+                      </button>
+                      {linksAbertos.has(`d-${d.id}`) && (
+                        <div className="mt-2">
+                          <LinksList entidadeTipo="despesa" entidadeId={d.id} rateioId={d.rateio_id} />
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 )
               } else {
@@ -377,6 +405,23 @@ function ExtratoContent({
                         </div>
                       </div>
                     )}
+                    <div className="mt-2 pt-2 border-t border-outline">
+                      <button
+                        onClick={() => toggleLinks(`r-${r.id}`)}
+                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+                        Links
+                        <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksAbertos.has(`r-${r.id}`) ? 'rotate-180' : ''}`} aria-hidden="true">
+                          expand_more
+                        </span>
+                      </button>
+                      {linksAbertos.has(`r-${r.id}`) && (
+                        <div className="mt-2">
+                          <LinksList entidadeTipo="reembolso" entidadeId={r.id} rateioId={r.rateio_id} />
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 )
               }

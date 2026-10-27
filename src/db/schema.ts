@@ -66,8 +66,6 @@ export const despesas = pgTable('despesas', {
     .notNull()
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
-  boletoUrl:       text('boleto_url'),
-  comprovanteUrl:  text('comprovante_url'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -100,6 +98,21 @@ export const taxasIpca = pgTable('taxas_ipca', {
 })
 
 // ---------------------------------------------------------------------------
+// links
+// FK polimórfica via entidade_tipo + entidade_id (sem FK nativa — triggers
+// garantem cascata; CHECK em migration — Drizzle não gera automaticamente)
+// ---------------------------------------------------------------------------
+export const links = pgTable('links', {
+  id:           uuid('id').primaryKey().defaultRandom(),
+  entidadeTipo: text('entidade_tipo').notNull(),
+  entidadeId:   uuid('entidade_id').notNull(),
+  rateioId:     uuid('rateio_id').notNull().references(() => rateios.id, { onDelete: 'cascade' }),
+  url:          text('url').notNull(),
+  rotulo:       text('rotulo'),
+  criadoEm:     timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
 // config
 // ---------------------------------------------------------------------------
 export const config = pgTable('config', {
@@ -123,3 +136,5 @@ export type NewReembolso      = typeof reembolsos.$inferInsert
 export type TaxaIpca          = typeof taxasIpca.$inferSelect
 export type NewTaxaIpca       = typeof taxasIpca.$inferInsert
 export type Config            = typeof config.$inferSelect
+export type Link              = typeof links.$inferSelect
+export type NewLink           = typeof links.$inferInsert

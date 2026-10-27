@@ -6,8 +6,17 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { useAsync } from '../hooks/useAsync'
-import { buscarRateio, criarReembolso } from '../db/queries'
+import { buscarRateio, criarReembolso, adicionarLink } from '../db/queries'
 import { useUser } from '../db/auth'
+
+interface PendingLink { url: string; rotulo: string }
+
+function validarUrl(url: string): string | null {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return 'URL inválida. Use http:// ou https://'
+  }
+  return null
+}
 
 export function Component() {
   const { id } = useParams<{ id: string }>()
@@ -32,6 +41,22 @@ export function Component() {
   const [observacao, setObservacao] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  const [pendingLinks, setPendingLinks] = useState<PendingLink[]>([])
+  const [linkUrl, setLinkUrl] = useState('')
+  const [linkRotulo, setLinkRotulo] = useState('')
+  const [linkUrlErro, setLinkUrlErro] = useState<string | null>(null)
+  const [showLinkForm, setShowLinkForm] = useState(false)
+
+  function addPendingLink() {
+    const trimmed = linkUrl.trim()
+    const err = validarUrl(trimmed)
+    if (err) { setLinkUrlErro(err); return }
+    setPendingLinks(prev => [...prev, { url: trimmed, rotulo: linkRotulo.trim() }])
+    setLinkUrl('')
+    setLinkRotulo('')
+    setLinkUrlErro(null)
+    setShowLinkForm(false)
+  }
 
   async function salvar() {
     const valorN = parseFloat(valor.replace(',', '.'))
@@ -44,7 +69,7 @@ export function Component() {
     setSalvando(true)
     setErro('')
     try {
-      await criarReembolso({
+      const reembolsoId = await criarReembolso({
         rateioId: id!,
         data,
         pagadorUserId,
@@ -52,6 +77,15 @@ export function Component() {
         valor: valorN,
         observacao: observacao.trim() || undefined,
       })
+      for (const link of pendingLinks) {
+        await adicionarLink({
+          entidadeTipo: 'reembolso',
+          entidadeId: reembolsoId,
+          rateioId: id!,
+          url: link.url,
+          rotulo: link.rotulo || undefined,
+        })
+      }
       navigate(-1)
     } catch (e) {
       setErro((e as Error).message)
@@ -159,6 +193,75 @@ export function Component() {
             value={observacao}
             onChange={e => setObservacao(e.target.value)}
           />
+
+          {/* Links opcionais */}
+          <div className="flex flex-col gap-2">
+            <p className="text-label-lg text-on-surface">Links (opcional)</p>
+
+            {pendingLinks.map((link, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-body-sm text-primary truncate">{link.rotulo || link.url}</p>
+                  {link.rotulo && <p className="text-label-sm text-on-surface-variant truncate">{link.url}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPendingLinks(prev => prev.filter((_, j) => j !== i))}
+                  className="text-on-surface-variant hover:text-error transition-colors shrink-0"
+                  aria-label="Remover link"
+                >
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
+                </button>
+              </div>
+            ))}
+
+            {showLinkForm ? (
+              <div className="space-y-2 p-3 rounded-lg border border-outline bg-surface">
+                <div>
+                  <input
+                    type="text"
+                    value={linkUrl}
+                    onChange={e => { setLinkUrl(e.target.value); setLinkUrlErro(null) }}
+                    placeholder="https://..."
+                    className="w-full text-body-sm px-2 py-1.5 rounded border border-outline bg-background text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
+                  />
+                  {linkUrlErro && <p className="text-label-sm text-error mt-0.5">{linkUrlErro}</p>}
+                </div>
+                <input
+                  type="text"
+                  value={linkRotulo}
+                  onChange={e => setLinkRotulo(e.target.value)}
+                  placeholder="Rótulo (opcional)"
+                  className="w-full text-body-sm px-2 py-1.5 rounded border border-outline bg-background text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={addPendingLink}
+                    className="px-3 py-1 rounded text-label-md text-on-primary bg-primary hover:opacity-90"
+                  >
+                    Adicionar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowLinkForm(false); setLinkUrl(''); setLinkRotulo(''); setLinkUrlErro(null) }}
+                    className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowLinkForm(true)}
+                className="flex items-center gap-1 text-label-md text-primary hover:underline self-start"
+              >
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">add</span>
+                Adicionar link
+              </button>
+            )}
+          </div>
 
           {erro && <p className="text-body-sm text-error">{erro}</p>}
         </main>

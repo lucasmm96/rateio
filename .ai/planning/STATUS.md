@@ -9,7 +9,7 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 | D-002 | Auditoria de workflows | 1 | — | ✅ | 2026-10-26 |
 | D-003 | Remover GitHub Pages | 2 | — | ✅ | 2026-10-27 |
 | D-004 | Coverage de testes | 3 | — | ✅ | 2026-10-27 |
-| D-005 | Links em despesas/reembolsos | 4 | `specs/003-links-despesas-reembolsos` | ⬜ | — |
+| D-005 | Links em despesas/reembolsos | 4 | `specs/003-links-despesas-reembolsos` | 🟠 | 2026-10-27 |
 | D-006 | Editar lançamentos + auditoria | 4 | `specs/004-editar-lancamentos-auditoria` | ⬜ | — |
 | D-007 | Perfil do usuário | 4 | `specs/005-perfil-usuario` | ⬜ | — |
 | D-008 | Dashboard | 5 | `specs/006-dashboard` | ⬜ | — |

@@ -147,6 +147,19 @@ const router = createBrowserRouter([
     },
   },
   {
+    path: '/perfil',
+    lazy: async () => {
+      const mod = await import('./routes/Perfil.tsx')
+      return {
+        Component: () => (
+          <RequireAuth>
+            <mod.Component />
+          </RequireAuth>
+        ),
+      }
+    },
+  },
+  {
     path: '*',
     Component: NotFound,
   },

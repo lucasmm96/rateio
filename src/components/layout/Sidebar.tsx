@@ -6,10 +6,15 @@ const NAV_ITEMS = [
   { to: '/configuracoes', label: 'Configurações', icon: 'settings' },
 ]
 
+function initiais(name: string | null | undefined, email: string | null | undefined): string {
+  const base = name?.trim() || email?.split('@')[0] || '?'
+  return base.slice(0, 2).toUpperCase()
+}
+
 export function Sidebar() {
   const navigate = useNavigate()
   const { user } = useUser()
-  const username = user?.email?.split('@')[0] ?? ''
+  const displayName = user?.name?.trim() || user?.email?.split('@')[0] || ''
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 lg:min-h-screen lg:bg-background lg:border-r lg:border-outline">
@@ -51,10 +56,16 @@ export function Sidebar() {
       {/* User + logout */}
       <div className="px-3 py-4 border-t border-outline shrink-0">
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
-          <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold shrink-0">
-            {username.slice(0, 2).toUpperCase()}
-          </div>
-          <span className="flex-1 text-body-sm text-on-surface truncate">{username}</span>
+          <NavLink
+            to="/perfil"
+            className="flex items-center gap-3 flex-1 min-w-0 rounded-lg hover:bg-surface transition duration-150 active:scale-[0.97]"
+            title="Editar perfil"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold shrink-0">
+              {initiais(user?.name, user?.email)}
+            </div>
+            <span className="flex-1 text-body-sm text-on-surface truncate">{displayName}</span>
+          </NavLink>
           <button
             onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
             className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"

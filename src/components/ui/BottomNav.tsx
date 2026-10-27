@@ -9,6 +9,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Rateios', icon: 'payments' },
   { to: '/configuracoes', label: 'Config.', icon: 'settings' },
+  { to: '/perfil', label: 'Perfil', icon: 'account_circle' },
 ]
 
 function BottomNav() {

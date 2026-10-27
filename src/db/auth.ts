@@ -35,3 +35,8 @@ export async function solicitarResetSenha(email: string) {
 export async function redefinirSenha(token: string, newPassword: string) {
   return neon.auth.resetPassword({ token, newPassword })
 }
+
+export async function atualizarNome(name: string): Promise<void> {
+  const { error } = await (neon.auth as any).updateUser({ name })
+  if (error) throw new Error(error.message)
+}

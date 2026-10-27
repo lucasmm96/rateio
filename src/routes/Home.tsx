@@ -100,7 +100,9 @@ export function Component() {
         {user && (
           <p className="text-body-sm text-on-surface-variant mb-4">
             Olá,{' '}
-            <span className="font-medium text-on-surface">{user.email?.split('@')[0]}</span>
+            <span className="font-medium text-on-surface">
+              {user.name?.trim() || user.email?.split('@')[0]}
+            </span>
           </p>
         )}
 

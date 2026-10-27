@@ -6,10 +6,14 @@ const NAV_ITEMS = [
   { to: '/configuracoes', label: 'Configurações', icon: 'settings' },
 ]
 
+function initiais(name: string | null | undefined, email: string | null | undefined): string {
+  const base = name?.trim() || email?.split('@')[0] || '?'
+  return base.slice(0, 2).toUpperCase()
+}
+
 export function TopNav() {
   const navigate = useNavigate()
   const { user } = useUser()
-  const username = user?.email?.split('@')[0] ?? ''
 
   return (
     <header className="hidden md:flex lg:hidden items-center h-14 px-4 gap-4 apple-material border-b border-outline shrink-0">
@@ -46,15 +50,25 @@ export function TopNav() {
         ))}
       </nav>
 
-      {/* Avatar / logout */}
-      <button
-        onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-        className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-container text-on-primary-container text-label-sm font-semibold hover:opacity-80 transition duration-150 active:scale-[0.90] shrink-0"
-        title="Sair"
-        aria-label="Sair"
-      >
-        {username.slice(0, 2).toUpperCase()}
-      </button>
+      {/* Avatar (link para perfil) + logout */}
+      <div className="flex items-center gap-1 shrink-0">
+        <NavLink
+          to="/perfil"
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-container text-on-primary-container text-label-sm font-semibold hover:opacity-80 transition duration-150 active:scale-[0.90]"
+          title="Editar perfil"
+          aria-label="Perfil"
+        >
+          {initiais(user?.name, user?.email)}
+        </NavLink>
+        <button
+          onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
+          className="p-2 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
+          title="Sair"
+          aria-label="Sair"
+        >
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">logout</span>
+        </button>
+      </div>
     </header>
   )
 }

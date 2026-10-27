@@ -147,6 +147,10 @@ Design reference: `.ai/design/design.md` (color tokens, typography, spacing, com
 
 Icons use Material Symbols (Outlined/Filled), loaded from CDN via `index.html`.
 
+## After every push
+
+Run `gh run list --limit 5` to check CI status. If any run shows `failure`, run `gh run view <id> --log-failed` to diagnose and fix before continuing other work.
+
 ## Key constraints
 
 - **Never use `number` for money or indices** — always `decimal.js`. The `D()` helper is the canonical constructor.

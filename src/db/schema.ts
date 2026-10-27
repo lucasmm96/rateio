@@ -121,6 +121,23 @@ export const config = pgTable('config', {
 })
 
 // ---------------------------------------------------------------------------
+// audit_log
+// FK polimórfica para despesas/reembolsos via entidade + entidade_id (sem FK
+// nativa — mesmo padrão de links). RLS SELECT via membros. Inserção somente
+// via RPCs SECURITY DEFINER (editar_despesa, editar_reembolso).
+// ---------------------------------------------------------------------------
+export const auditLog = pgTable('audit_log', {
+  id:         uuid('id').primaryKey().defaultRandom(),
+  entidade:   text('entidade').notNull(),
+  entidadeId: uuid('entidade_id').notNull(),
+  rateioId:   uuid('rateio_id').notNull().references(() => rateios.id, { onDelete: 'cascade' }),
+  userId:     uuid('user_id').notNull().references(() => users.id),
+  acao:       text('acao').notNull().default('update'),
+  diffJson:   jsonb('diff_json').notNull(),
+  criadoEm:   timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
 // Tipos inferidos
 // ---------------------------------------------------------------------------
 export type User              = typeof users.$inferSelect
@@ -138,3 +155,5 @@ export type NewTaxaIpca       = typeof taxasIpca.$inferInsert
 export type Config            = typeof config.$inferSelect
 export type Link              = typeof links.$inferSelect
 export type NewLink           = typeof links.$inferInsert
+export type AuditLog          = typeof auditLog.$inferSelect
+export type NewAuditLog       = typeof auditLog.$inferInsert

@@ -302,3 +302,69 @@ export async function removerLink(id: string): Promise<void> {
   const { error } = await neon.from('links').delete().eq('id', id)
   if (error) throw new Error(error.message)
 }
+
+// ---------------------------------------------------------------------------
+// Audit log
+// ---------------------------------------------------------------------------
+
+export interface AuditLogItem {
+  id: string
+  entidade: 'despesa' | 'reembolso'
+  entidade_id: string
+  rateio_id: string
+  user_id: string
+  acao: 'update' | 'delete'
+  diff_json: Record<string, { de: unknown; para: unknown }>
+  criado_em: string
+  ator: { email: string } | null
+}
+
+export async function listarAuditLog(
+  entidade: 'despesa' | 'reembolso',
+  entidadeId: string,
+): Promise<AuditLogItem[]> {
+  const { data, error } = await neon
+    .from('audit_log')
+    .select('id, entidade, entidade_id, rateio_id, user_id, acao, diff_json, criado_em, ator:users!user_id(email)')
+    .eq('entidade', entidade)
+    .eq('entidade_id', entidadeId)
+    .order('criado_em', { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as unknown as AuditLogItem[]
+}
+
+export async function editarDespesa(args: {
+  id: string
+  data: string
+  descricao: string
+  pagadorUserId: string
+  valor: number
+}): Promise<void> {
+  const { error } = await neon.rpc('editar_despesa', {
+    p_id:         args.id,
+    p_data:       args.data,
+    p_descricao:  args.descricao,
+    p_pagador_id: args.pagadorUserId,
+    p_valor:      args.valor,
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function editarReembolso(args: {
+  id: string
+  data: string
+  pagadorUserId: string
+  recebedorUserId: string
+  valor: number
+  observacao?: string | null
+}): Promise<void> {
+  const { error } = await neon.rpc('editar_reembolso', {
+    p_id:            args.id,
+    p_data:          args.data,
+    p_pagador_id:    args.pagadorUserId,
+    p_recebedor_id:  args.recebedorUserId,
+    p_valor:         args.valor,
+    p_observacao:    args.observacao ?? null,
+  })
+  if (error) throw new Error(error.message)
+}

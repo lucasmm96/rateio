@@ -5,6 +5,9 @@ import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { LinksList } from '../components/LinksList'
+import { EditarDespesaModal } from '../components/EditarDespesaModal'
+import { EditarReembolsoModal } from '../components/EditarReembolsoModal'
+import { AuditLogPanel } from '../components/AuditLogPanel'
 import { useAsync } from '../hooks/useAsync'
 import {
   buscarRateio,
@@ -199,10 +202,13 @@ interface ExtratoContentProps {
   membros: RateioDetalhe['membros']
   onDeleteDespesa: (id: string) => Promise<void>
   onDeleteReembolso: (id: string) => Promise<void>
+  onEditDespesa: (despesa: DespesaItem) => void
+  onEditReembolso: (reembolso: ReembolsoItem) => void
 }
 
 function ExtratoContent({
-  despesas, reembolsos, hoje, corrigirIpca, taxasCore, membros, onDeleteDespesa, onDeleteReembolso,
+  despesas, reembolsos, hoje, corrigirIpca, taxasCore, membros,
+  onDeleteDespesa, onDeleteReembolso, onEditDespesa, onEditReembolso,
 }: ExtratoContentProps) {
   const [confirmandoExcluir, setConfirmandoExcluir] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
@@ -304,13 +310,22 @@ function ExtratoContent({
                         </p>
                         {isPaga && <Badge variant="default" className="!bg-success/10 !text-success">Paga</Badge>}
                         {isPrevista && <Badge variant="prevista">prevista</Badge>}
-                        <button
-                          onClick={() => setConfirmandoExcluir(isConfirmando ? null : `d-${d.id}`)}
-                          className="text-on-surface-variant hover:text-error transition-colors"
-                          aria-label="Excluir despesa"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => onEditDespesa(d)}
+                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            aria-label="Editar despesa"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => setConfirmandoExcluir(isConfirmando ? null : `d-${d.id}`)}
+                            className="text-on-surface-variant hover:text-error transition-colors"
+                            aria-label="Excluir despesa"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                     {isConfirmando && (
@@ -350,6 +365,7 @@ function ExtratoContent({
                         </div>
                       )}
                     </div>
+                    <AuditLogPanel entidade="despesa" entidadeId={d.id} />
                   </Card>
                 )
               } else {
@@ -376,13 +392,22 @@ function ExtratoContent({
                         <p className="text-body-md font-semibold text-primary">
                           {fmtReais(Number(r.valor))}
                         </p>
-                        <button
-                          onClick={() => setConfirmandoExcluir(isConfirmando ? null : `r-${r.id}`)}
-                          className="text-on-surface-variant hover:text-error transition-colors"
-                          aria-label="Excluir reembolso"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => onEditReembolso(r)}
+                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            aria-label="Editar reembolso"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => setConfirmandoExcluir(isConfirmando ? null : `r-${r.id}`)}
+                            className="text-on-surface-variant hover:text-error transition-colors"
+                            aria-label="Excluir reembolso"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                     {isConfirmando && (
@@ -422,6 +447,7 @@ function ExtratoContent({
                         </div>
                       )}
                     </div>
+                    <AuditLogPanel entidade="reembolso" entidadeId={r.id} />
                   </Card>
                 )
               }
@@ -441,6 +467,8 @@ export function Component() {
   const { user, isPending: authPending } = useUser()
   const [tab, setTab] = useState<Tab>('saldos')
   const [fabOpen, setFabOpen] = useState(false)
+  const [editandoDespesa, setEditandoDespesa] = useState<DespesaItem | null>(null)
+  const [editandoReembolso, setEditandoReembolso] = useState<ReembolsoItem | null>(null)
 
   const { data: rateio, loading: lRateio, error: eRateio, reload: reloadRateio } = useAsync(() => authPending ? Promise.resolve(null) : buscarRateio(id!), [id, authPending])
   const { data: despesas, loading: lDesp, error: eDesp, reload: reloadDesp } = useAsync(() => authPending ? Promise.resolve(null) : listarDespesas(id!), [id, authPending])
@@ -494,6 +522,18 @@ export function Component() {
   async function handleDeleteReembolso(reembolsoId: string) {
     await deletarReembolso(reembolsoId)
     reloadReem()
+  }
+
+  function handleSaveDespesa() {
+    setEditandoDespesa(null)
+    reloadDesp()
+    reloadRateio()
+  }
+
+  function handleSaveReembolso() {
+    setEditandoReembolso(null)
+    reloadReem()
+    reloadRateio()
   }
 
   return (
@@ -607,6 +647,8 @@ export function Component() {
                 membros={membros}
                 onDeleteDespesa={handleDeleteDespesa}
                 onDeleteReembolso={handleDeleteReembolso}
+                onEditDespesa={setEditandoDespesa}
+                onEditReembolso={setEditandoReembolso}
               />
             </div>
           )}
@@ -651,9 +693,29 @@ export function Component() {
               membros={membros}
               onDeleteDespesa={handleDeleteDespesa}
               onDeleteReembolso={handleDeleteReembolso}
+              onEditDespesa={setEditandoDespesa}
+              onEditReembolso={setEditandoReembolso}
             />
           </div>
         </div>
+      )}
+
+      {/* Edit modals */}
+      {editandoDespesa && (
+        <EditarDespesaModal
+          despesa={editandoDespesa}
+          membros={membros}
+          onSave={handleSaveDespesa}
+          onClose={() => setEditandoDespesa(null)}
+        />
+      )}
+      {editandoReembolso && (
+        <EditarReembolsoModal
+          reembolso={editandoReembolso}
+          membros={membros}
+          onSave={handleSaveReembolso}
+          onClose={() => setEditandoReembolso(null)}
+        />
       )}
 
       {/* Speed dial — mobile only */}

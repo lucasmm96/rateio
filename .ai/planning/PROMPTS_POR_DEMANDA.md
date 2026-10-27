@@ -21,7 +21,7 @@ de um bloco de uma vez.
 
 ## Onda 1 — Correções
 
-### D-001 — Fix: Config. Rateio vazio (spec `002-fix-config-rateio`)
+### (OK) D-001 — Fix: Config. Rateio vazio (spec `002-fix-config-rateio`)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos executar
@@ -40,7 +40,7 @@ Passos:
 5. Ao final de cada etapa, atualize .ai/planning/STATUS.md.
 ```
 
-### D-002 — Auditoria de workflows (sem spec)
+### (OK) D-002 — Auditoria de workflows (sem spec)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos fazer
@@ -62,7 +62,7 @@ Reporte o relatório completo.
 
 ## Onda 2 — Infra e limpeza
 
-### D-003 — Remover GitHub Pages (sem spec)
+### (OK) D-003 — Remover GitHub Pages (sem spec)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos fazer
@@ -94,7 +94,7 @@ Atualize .ai/planning/STATUS.md ao final. Commit único com mensagem
 
 ## Onda 3 — Qualidade
 
-### D-004 — Coverage de testes (sem spec)
+### (OK) D-004 — Coverage de testes (sem spec)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos fazer
@@ -124,7 +124,7 @@ Atualize .ai/planning/STATUS.md ao final.
 
 ## Onda 4 — Features pequenas
 
-### D-005 — Links em despesas/reembolsos (spec `003-links-despesas-reembolsos`)
+### (OK) D-005 — Links em despesas/reembolsos (spec `003-links-despesas-reembolsos`)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos executar
@@ -145,7 +145,7 @@ Passos:
 5. Atualize .ai/planning/STATUS.md a cada etapa.
 ```
 
-### D-006 — Editar lançamentos + auditoria (spec `004-editar-lancamentos-auditoria`)
+### (OK) D-006 — Editar lançamentos + auditoria (spec `004-editar-lancamentos-auditoria`)
 
 ```
 Leia .ai/planning/STATUS.md, ROADMAP.md e DECISIONS.md. Vamos executar

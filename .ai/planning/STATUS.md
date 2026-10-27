@@ -7,7 +7,7 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 |---|---|---|---|---|---|
 | D-001 | Fix: Config. Rateio vazio | 1 | `specs/002-fix-config-rateio` | ✅ | 2026-10-26 |
 | D-002 | Auditoria de workflows | 1 | — | ✅ | 2026-10-26 |
-| D-003 | Remover GitHub Pages | 2 | — | ⬜ | — |
+| D-003 | Remover GitHub Pages | 2 | — | ✅ | 2026-10-27 |
 | D-004 | Coverage de testes | 3 | — | ⬜ | — |
 | D-005 | Links em despesas/reembolsos | 4 | `specs/003-links-despesas-reembolsos` | ⬜ | — |
 | D-006 | Editar lançamentos + auditoria | 4 | `specs/004-editar-lancamentos-auditoria` | ⬜ | — |
@@ -33,7 +33,7 @@ Decisão técnica relevante registrada em `plan.md`: o plano original usava `cre
 
 ## Última sessão
 
-- **Data**: 2026-10-26
-- **Onda**: 1 — D-002 (Auditoria de workflows)
-- **Feito**: Auditoria completa dos 4 workflows. smoke-bcb.yml removido. GitHub Pages desativado. backup.yml corrigido (pg_dump 17 via PGDG). ipca.yml corrigido (npm install pg + migration 0007 BYPASSRLS para ipca_writer). Ambos confirmados passando: backup run 40405459154, ipca run 40409613760. D-002 ✅.
-- **Pendente**: nenhum — Onda 1 completa. Próxima: D-003 (Onda 2)
+- **Data**: 2026-10-27
+- **Onda**: 2 — D-003 (Remover GitHub Pages)
+- **Feito**: Auditoria completa do código — tudo já correto desde D-002. `vite.config.ts` usa `base: '/'`. PWA tem `scope: '/'` e `start_url: '/'`. Roteamento usa `createBrowserRouter`. Nenhum `href="#/"` nem caminho `/rateio/` no source. Nenhum workflow de GitHub Pages existe. Build validado (`npm run build` ✅). Nenhuma mudança de código necessária. D-003 ✅.
+- **Pendente**: desligar GitHub Pages no console do GitHub manualmente (instruções abaixo) — confirmado pelo usuário que foi feito em D-002. Próxima: D-004 (Onda 3)

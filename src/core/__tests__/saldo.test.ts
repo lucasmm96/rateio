@@ -195,3 +195,11 @@ describe('calcularSaldo — casos sintéticos n-pessoas (corrigir_ipca=false)', 
     })
   }
 })
+
+describe('saldoEmReais — userId desconhecido', () => {
+  it('retorna zero quando userId não está no rateio', () => {
+    const resultado = calcularSaldo(rateio(), true, REFERENCIA, TAXAS)
+    const saldo = saldoEmReais(resultado, 'DESCONHECIDO', REFERENCIA, true, TAXAS)
+    expect(saldo.toNumber()).toBe(0)
+  })
+})

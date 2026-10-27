@@ -104,6 +104,12 @@ hash). O `vercel.json` na raiz define rewrite de `/(.*)` para
 prefixo. GitHub Actions (IPCA, backup, smoke-bcb) continuam no GitHub,
 não na Vercel.
 
+### 18. Cobertura de testes obrigatória em core e componentes
+Toda regra de negócio em `src/core/` e todo componente reutilizável em
+`src/components/` tem teste automatizado. A meta de cobertura (linhas/branches)
+é definida pelo usuário antes de fechar a demanda e configurada como threshold no
+`vitest.config.ts` para falhar o CI se não atingida.
+
 ## Anti-princípios (o que evitar)
 - Cálculo financeiro no front sem passar pelo módulo puro.
 - `number` para dinheiro.

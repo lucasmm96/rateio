@@ -8,7 +8,7 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 | D-001 | Fix: Config. Rateio vazio | 1 | `specs/002-fix-config-rateio` | ✅ | 2026-10-26 |
 | D-002 | Auditoria de workflows | 1 | — | ✅ | 2026-10-26 |
 | D-003 | Remover GitHub Pages | 2 | — | ✅ | 2026-10-27 |
-| D-004 | Coverage de testes | 3 | — | ⬜ | — |
+| D-004 | Coverage de testes | 3 | — | ✅ | 2026-10-27 |
 | D-005 | Links em despesas/reembolsos | 4 | `specs/003-links-despesas-reembolsos` | ⬜ | — |
 | D-006 | Editar lançamentos + auditoria | 4 | `specs/004-editar-lancamentos-auditoria` | ⬜ | — |
 | D-007 | Perfil do usuário | 4 | `specs/005-perfil-usuario` | ⬜ | — |
@@ -34,6 +34,11 @@ Decisão técnica relevante registrada em `plan.md`: o plano original usava `cre
 ## Última sessão
 
 - **Data**: 2026-10-27
-- **Onda**: 2 — D-003 (Remover GitHub Pages)
-- **Feito**: Auditoria completa do código — tudo já correto desde D-002. `vite.config.ts` usa `base: '/'`. PWA tem `scope: '/'` e `start_url: '/'`. Roteamento usa `createBrowserRouter`. Nenhum `href="#/"` nem caminho `/rateio/` no source. Nenhum workflow de GitHub Pages existe. Build validado (`npm run build` ✅). Nenhuma mudança de código necessária. D-003 ✅.
-- **Pendente**: desligar GitHub Pages no console do GitHub manualmente (instruções abaixo) — confirmado pelo usuário que foi feito em D-002. Próxima: D-004 (Onda 3)
+- **Onda**: 3 — D-004 (Coverage de testes)
+- **Feito**:
+  - Auditado estado atual: `src/core/` em ~98% de statements; `src/components/` em 0% de linhas (15 arquivos sem teste).
+  - Configurado `coverage` block em `vitest.config.ts` (provider v8, include core+components, reporters text/lcov/html).
+  - Adicionado princípio 18 em `constitution.md` (cobertura obrigatória, meta a definir).
+  - Criado workflow CI `.github/workflows/coverage.yml` (roda em push/PR no master).
+  - Gerado `.ai/planning/coverage-report.md` com gap por arquivo e análise de prioridade.
+- **Resultado**: 209 testes passando, thresholds 90% todos atingidos (100%/94%/93%/100% — stmts/branches/funcs/lines). Próxima: D-005 (Onda 4)

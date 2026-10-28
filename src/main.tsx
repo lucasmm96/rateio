@@ -17,6 +17,15 @@ if (_resetToken) {
   window.history.replaceState(null, '', '/redefinir-senha')
 }
 
+// Recarrega quando um novo service worker assume o controle (novo deploy ativo).
+// Sem isso, o SW novo apaga os chunks antigos enquanto a página ainda os usa,
+// causando ChunkLoadError e tela branca.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload()
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>

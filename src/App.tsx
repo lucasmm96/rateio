@@ -1,7 +1,35 @@
-import { useEffect } from 'react'
+import { useEffect, Component } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate, Link } from 'react-router-dom'
 import { useUser } from './db/auth'
 import { useTheme } from './components/ThemeProvider'
+
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      return (
+        <main className="min-h-dvh bg-surface flex flex-col items-center justify-center px-6 text-center gap-4">
+          <span className="material-symbols-outlined text-[56px] text-on-surface-variant">error</span>
+          <h1 className="text-headline-md text-on-surface font-semibold">Algo deu errado</h1>
+          <p className="text-body-md text-on-surface-variant">
+            O app pode estar desatualizado. Recarregue a página.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="h-12 px-6 rounded bg-primary text-on-primary text-label-lg font-medium"
+          >
+            Recarregar
+          </button>
+        </main>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function UserThemeSync() {
   const { user } = useUser()
@@ -14,7 +42,11 @@ function UserThemeSync() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useUser()
-  if (isPending) return null
+  if (isPending) return (
+    <main className="min-h-dvh bg-surface flex items-center justify-center">
+      <span className="material-symbols-outlined animate-spin text-primary text-[32px]">progress_activity</span>
+    </main>
+  )
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
@@ -167,9 +199,9 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <>
+    <ErrorBoundary>
       <UserThemeSync />
       <RouterProvider router={router} />
-    </>
+    </ErrorBoundary>
   )
 }

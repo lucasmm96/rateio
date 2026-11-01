@@ -91,7 +91,7 @@ export function Component() {
               {/* E-mail (read-only) */}
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-label-lg text-on-surface">E-mail</label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col md:flex-row md:items-center gap-2">
                   <div className="flex-1 h-11 rounded-lg border border-outline bg-background px-3 flex items-center text-body-lg text-on-surface-variant select-all">
                     {user?.email ?? ''}
                   </div>

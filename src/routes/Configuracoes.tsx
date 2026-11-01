@@ -17,7 +17,7 @@ import {
   arquivarRateio,
   adicionarMembro,
   removerMembro,
-  buscarUsuarioPorEmail,
+  buscarUsuariosPorPrefixo,
 } from '../db/queries'
 
 export function Component() {
@@ -61,9 +61,8 @@ export function Component() {
 
   // ── Adicionar participante ──
   const [emailBusca, setEmailBusca] = useState('')
-  const [buscando, setBuscando] = useState(false)
+  const [candidatos, setCandidatos] = useState<{ id: string; email: string }[]>([])
   const [novoMembro, setNovoMembro] = useState<{ id: string; email: string } | null>(null)
-  const [erroBusca, setErroBusca] = useState('')
   const [adicionando, setAdicionando] = useState(false)
   const [erroAdicionar, setErroAdicionar] = useState('')
 
@@ -80,6 +79,22 @@ export function Component() {
       setCorrigirEdit(rateio.corrigir_ipca)
     }
   }, [rateio])
+
+  useEffect(() => {
+    if (emailBusca.length < 2) {
+      setCandidatos([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await buscarUsuariosPorPrefixo(emailBusca.trim())
+        setCandidatos(res)
+      } catch {
+        setCandidatos([])
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [emailBusca])
 
   const somaCotas = Object.values(cotas).reduce((acc, v) => acc + Number(v || '0'), 0)
   const cotasValidas = Math.abs(somaCotas - 100) < 0.01
@@ -149,27 +164,6 @@ export function Component() {
     } catch (e) {
       setErroRemover((e as Error).message)
       setRemovendoId(null)
-    }
-  }
-
-  async function buscarNovoMembro() {
-    setErroBusca('')
-    setNovoMembro(null)
-    if (!emailBusca.trim()) return
-    setBuscando(true)
-    try {
-      const encontrado = await buscarUsuarioPorEmail(emailBusca.trim())
-      if (!encontrado) {
-        setErroBusca('Usuário não encontrado. Ele precisa ter uma conta no Rateio.')
-      } else if (rateio?.membros.some(m => m.user_id === encontrado.id)) {
-        setErroBusca('Este usuário já é membro deste rateio.')
-      } else {
-        setNovoMembro(encontrado)
-      }
-    } catch (e) {
-      setErroBusca((e as Error).message)
-    } finally {
-      setBuscando(false)
     }
   }
 
@@ -357,28 +351,43 @@ export function Component() {
           <section className="space-y-3">
             <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Adicionar participante</h2>
             <Card className="space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  label="E-mail do participante"
-                  type="email"
-                  placeholder="participante@email.com"
-                  value={emailBusca}
-                  onChange={e => { setEmailBusca(e.target.value); setNovoMembro(null); setErroBusca('') }}
-                  className="flex-1"
-                />
-                <div className="flex items-end">
-                  <Button
-                    onClick={buscarNovoMembro}
-                    loading={buscando}
-                    variant="outline"
-                    size="sm"
-                    disabled={buscando || !emailBusca.trim()}
-                  >
-                    Buscar
-                  </Button>
-                </div>
-              </div>
-              {erroBusca && <p className="text-body-sm text-error">{erroBusca}</p>}
+              <Input
+                label="E-mail do participante"
+                type="email"
+                placeholder="participante@email.com"
+                value={emailBusca}
+                onChange={e => {
+                  setEmailBusca(e.target.value)
+                  setNovoMembro(null)
+                }}
+              />
+              {candidatos.length > 0 && (
+                <ul className="border border-outline-variant rounded-lg bg-surface-container overflow-hidden">
+                  {candidatos.map((c) => {
+                    const jaMembro = rateio.membros.some((m) => m.user_id === c.id)
+                    return (
+                      <li
+                        key={c.id}
+                        className={`px-4 py-2 text-sm ${jaMembro ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                        onClick={() => {
+                          if (jaMembro) return
+                          setNovoMembro(c)
+                          setCandidatos([])
+                          setEmailBusca('')
+                        }}
+                      >
+                        {c.email}
+                        {jaMembro && <span className="ml-2 text-xs">(já membro)</span>}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              {emailBusca.length >= 2 && candidatos.length === 0 && !novoMembro && (
+                <p className="text-sm text-on-surface/60">
+                  Nenhum usuário encontrado. Ele precisa ter uma conta no Rateio.
+                </p>
+              )}
               {novoMembro && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded bg-primary/5 border border-primary/20">

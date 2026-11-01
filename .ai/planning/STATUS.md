@@ -12,9 +12,9 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 | D-005 | Links em despesas/reembolsos | 4 | `specs/003-links-despesas-reembolsos` | ✅ | 2026-10-27 |
 | D-006 | Editar lançamentos + auditoria | 4 | `specs/004-editar-lancamentos-auditoria` | ✅ | 2026-10-27 |
 | D-007 | Perfil do usuário | 4 | `specs/005-perfil-usuario` | ✅ | 2026-10-27 |
-| D-008 | Dashboard | 5 | `specs/006-dashboard` | ⬜ | — |
-| D-009 | Transparência IPCA | 5 | `specs/007-transparencia-ipca` | ⬜ | — |
-| D-010 | Busca por username | 5 | `specs/008-busca-username` | ⬜ | — |
+| D-008 | Dashboard | 5 | `specs/006-dashboard` | 🟠 | 2026-11-01 |
+| D-009 | Transparência IPCA | 5 | `specs/007-transparencia-ipca` | 🟠 | 2026-11-01 |
+| D-010 | Busca por username | 5 | `specs/008-busca-username` | ✅ | 2026-11-01 |
 
 ## Estado atual do Spec Kit
 
@@ -33,14 +33,12 @@ Decisão técnica relevante registrada em `plan.md`: o plano original usava `cre
 
 ## Última sessão
 
-- **Data**: 2026-10-27
-- **Onda**: 4 — D-007 (Perfil do usuário)
+- **Data**: 2026-11-01
+- **Onda**: 5 — D-008, D-009, D-010 (preparação)
 - **Feito**:
-  - Gerado spec (`specs/005-perfil-usuario/spec.md`), plan e tasks.
-  - Criado `src/routes/Perfil.tsx`: nome editável (max 80), e-mail read-only, badge Google via `user.image`, salvo via `neon.auth.updateUser`.
-  - Adicionado `atualizarNome()` em `src/db/auth.ts`.
-  - Registrada rota `/perfil` com `RequireAuth` em `src/App.tsx`.
-  - Sidebar e TopNav: avatar vira `NavLink to="/perfil"`; logout separado; iniciais/nome usam `user.name` se disponível.
-  - BottomNav: adicionado item "Perfil" (ícone `account_circle`).
-  - Home.tsx: saudação usa `user.name` antes do email prefix.
-- **Resultado**: 257 testes passando, thresholds 90% todos atingidos; build limpo. T010/T011 (teste no browser) pendentes — verificar `neon.auth.updateUser` em runtime.
+  - Gerado spec, plan, tasks e checklist para D-008 (Dashboard) em `specs/006-dashboard/`
+  - Gerado spec, plan, tasks e checklist para D-009 (Transparência IPCA) em `specs/007-transparencia-ipca/`
+  - Gerado spec, plan, tasks e checklist para D-010 (Busca por username) em `specs/008-busca-username/`
+  - D-008, D-009, D-010 marcados como 🟠 (tasks criadas)
+- **Resultado**: Onda 5 pronta para implementação. Aguardando execução de `/speckit-implement` para cada demanda.
+- **Pendente (sessão anterior)**: T010/T011 de D-007 (teste no browser de `neon.auth.updateUser`) ainda não verificados.

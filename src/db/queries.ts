@@ -258,6 +258,16 @@ export async function buscarUsuarioPorEmail(email: string): Promise<{ id: string
   return rows?.[0] ?? null
 }
 
+export async function buscarUsuariosPorPrefixo(
+  prefixo: string,
+): Promise<{ id: string; email: string }[]> {
+  const { data, error } = await neon.rpc('buscar_usuarios_por_prefixo_email', {
+    p_prefixo: prefixo,
+  })
+  if (error) throw new Error(error.message)
+  return (data as { id: string; email: string }[]) ?? []
+}
+
 export async function garantirUsuario(email: string): Promise<void> {
   const { error } = await neon.rpc('garantir_usuario', { p_email: email })
   if (error) throw new Error(error.message)

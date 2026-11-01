@@ -75,7 +75,7 @@ export interface MembroUsuario {
 export async function listarRateios(): Promise<RateioListItem[]> {
   const { data, error } = await neon
     .from('rateios')
-    .select('id, nome, corrigir_ipca, criado_em, arquivado_em, membros(user_id, cota, users(email))')
+    .select('id, nome, corrigir_ipca, criado_em, arquivado_em, membros!membros_rateio_id_fkey(user_id, cota, users!membros_user_id_fkey(email))')
     .is('arquivado_em', null)
     .order('criado_em', { ascending: false })
   if (error) throw new Error(error.message)
@@ -85,7 +85,7 @@ export async function listarRateios(): Promise<RateioListItem[]> {
 export async function buscarRateio(id: string): Promise<RateioDetalhe | null> {
   const { data, error } = await neon
     .from('rateios')
-    .select('id, nome, corrigir_ipca, criado_em, arquivado_em, criado_por_user_id, membros(user_id, cota, users(email))')
+    .select('id, nome, corrigir_ipca, criado_em, arquivado_em, criado_por_user_id, membros!membros_rateio_id_fkey(user_id, cota, users!membros_user_id_fkey(email))')
     .eq('id', id)
     .maybeSingle()
   if (error) throw new Error(error.message)

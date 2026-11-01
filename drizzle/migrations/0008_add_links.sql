@@ -80,16 +80,34 @@ CREATE TRIGGER trg_delete_links_reembolso
 
 -- ---------------------------------------------------------------------------
 -- 6. Migrar dados existentes (boleto_url e comprovante_url → links)
+-- Usa EXECUTE dinâmico: se a coluna já foi dropada numa run anterior, o
+-- bloco é ignorado em vez de falhar com "column does not exist".
 -- ---------------------------------------------------------------------------
-INSERT INTO links (entidade_tipo, entidade_id, rateio_id, url, rotulo)
-  SELECT 'despesa', id, rateio_id, boleto_url, 'Boleto'
-  FROM despesas
-  WHERE boleto_url IS NOT NULL;
-
-INSERT INTO links (entidade_tipo, entidade_id, rateio_id, url, rotulo)
-  SELECT 'despesa', id, rateio_id, comprovante_url, 'Comprovante'
-  FROM despesas
-  WHERE comprovante_url IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'boleto_url'
+  ) THEN
+    EXECUTE '
+      INSERT INTO links (entidade_tipo, entidade_id, rateio_id, url, rotulo)
+        SELECT ''despesa'', id, rateio_id, boleto_url, ''Boleto''
+        FROM despesas
+        WHERE boleto_url IS NOT NULL
+    ';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'comprovante_url'
+  ) THEN
+    EXECUTE '
+      INSERT INTO links (entidade_tipo, entidade_id, rateio_id, url, rotulo)
+        SELECT ''despesa'', id, rateio_id, comprovante_url, ''Comprovante''
+        FROM despesas
+        WHERE comprovante_url IS NOT NULL
+    ';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 7. Remover colunas antigas

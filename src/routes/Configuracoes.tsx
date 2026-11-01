@@ -62,6 +62,7 @@ export function Component() {
   // ── Adicionar participante ──
   const [emailBusca, setEmailBusca] = useState('')
   const [candidatos, setCandidatos] = useState<{ id: string; email: string }[]>([])
+  const [buscando, setBuscando] = useState(false)
   const [novoMembro, setNovoMembro] = useState<{ id: string; email: string } | null>(null)
   const [adicionando, setAdicionando] = useState(false)
   const [erroAdicionar, setErroAdicionar] = useState('')
@@ -83,14 +84,18 @@ export function Component() {
   useEffect(() => {
     if (emailBusca.length < 2) {
       setCandidatos([])
+      setBuscando(false)
       return
     }
+    setBuscando(true)
     const timer = setTimeout(async () => {
       try {
         const res = await buscarUsuariosPorPrefixo(emailBusca.trim())
         setCandidatos(res)
       } catch {
         setCandidatos([])
+      } finally {
+        setBuscando(false)
       }
     }, 300)
     return () => clearTimeout(timer)
@@ -383,7 +388,7 @@ export function Component() {
                   })}
                 </ul>
               )}
-              {emailBusca.length >= 2 && candidatos.length === 0 && !novoMembro && (
+              {emailBusca.length >= 2 && !buscando && candidatos.length === 0 && !novoMembro && (
                 <p className="text-sm text-on-surface/60">
                   Nenhum usuário encontrado. Ele precisa ter uma conta no Rateio.
                 </p>

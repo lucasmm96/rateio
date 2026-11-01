@@ -165,7 +165,7 @@ export async function atualizarCotas(
 export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
   const { data, error } = await neon
     .from('despesas')
-    .select('id, rateio_id, data, descricao, pagador_user_id, valor, criado_em, pagador:users!pagador_user_id(email)')
+    .select('id, rateio_id, data, descricao, pagador_user_id, valor, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -202,7 +202,7 @@ export async function deletarDespesa(id: string): Promise<void> {
 export async function listarReembolsos(rateioId: string): Promise<ReembolsoItem[]> {
   const { data, error } = await neon
     .from('reembolsos')
-    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, observacao, criado_em, pagador:users!pagador_user_id(email), recebedor:users!recebedor_user_id(email)')
+    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, observacao, criado_em, pagador:users!reembolsos_pagador_user_id_fkey(email), recebedor:users!reembolsos_recebedor_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -335,7 +335,7 @@ export async function listarAuditLog(
 ): Promise<AuditLogItem[]> {
   const { data, error } = await neon
     .from('audit_log')
-    .select('id, entidade, entidade_id, rateio_id, user_id, acao, diff_json, criado_em, ator:users!user_id(email)')
+    .select('id, entidade, entidade_id, rateio_id, user_id, acao, diff_json, criado_em, ator:users!audit_log_user_id_fkey(email)')
     .eq('entidade', entidade)
     .eq('entidade_id', entidadeId)
     .order('criado_em', { ascending: false })

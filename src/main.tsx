@@ -24,6 +24,16 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload()
   })
+
+  // SPA nunca dispara carregamento de página, então o navegador nunca verifica
+  // se o SW mudou automaticamente. Verificar quando o usuário retorna à aba.
+  navigator.serviceWorker.ready.then(registration => {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        registration.update()
+      }
+    })
+  })
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -7,8 +7,8 @@ import { useAsync } from '../hooks/useAsync'
 import { listarRateios, type RateioListItem } from '../db/queries'
 import { useUser, signOut } from '../db/auth'
 
-function initiais(email: string): string {
-  return email.split('@')[0].slice(0, 2).toUpperCase()
+function initiais(nome: string | null | undefined, email: string | null | undefined): string {
+  return (nome?.trim() || email?.split('@')[0] || '?').slice(0, 2).toUpperCase()
 }
 
 function RateioCard({ rateio }: { rateio: RateioListItem }) {
@@ -42,9 +42,9 @@ function RateioCard({ rateio }: { rateio: RateioListItem }) {
               <div
                 key={m.user_id}
                 className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm ring-2 ring-surface"
-                title={m.users?.email ?? m.user_id}
+                title={m.users?.nome ?? m.users?.email ?? m.user_id}
               >
-                {initiais(m.users?.email ?? m.user_id)}
+                {initiais(m.users?.nome, m.users?.email)}
               </div>
             ))}
             {membros.length > 4 && (
@@ -54,7 +54,7 @@ function RateioCard({ rateio }: { rateio: RateioListItem }) {
             )}
           </div>
           <p className="text-body-sm text-on-surface-variant truncate">
-            {membros.map(m => m.users?.email?.split('@')[0] ?? '?').join(', ')}
+            {membros.map(m => m.users?.nome ?? m.users?.email?.split('@')[0] ?? '?').join(', ')}
           </p>
         </div>
       </Card>

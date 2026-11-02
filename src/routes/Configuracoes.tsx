@@ -595,7 +595,7 @@ export function Component() {
                 </Card>
                 {removendoId === m.user_id && (
                   <div className="mt-1 px-3 py-2 rounded bg-error/10 border border-error/20 flex items-center justify-between gap-3">
-                    <p className="text-body-sm text-error">Remover {m.users?.email?.split('@')[0] ?? 'este membro'}?</p>
+                    <p className="text-body-sm text-error">Remover {m.users?.nome ?? m.users?.email?.split('@')[0] ?? 'este membro'}?</p>
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => setRemovendoId(null)}
@@ -779,11 +779,11 @@ export function Component() {
                 <Card>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-lg font-semibold">
-                      {user?.email?.split('@')[0].slice(0, 2).toUpperCase() ?? '??'}
+                      {(user?.name?.trim() || user?.email?.split('@')[0] || '??').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <p className="text-body-md text-on-surface font-medium">
-                        {user?.email?.split('@')[0]}
+                        {user?.name?.trim() || user?.email?.split('@')[0]}
                       </p>
                       <p className="text-body-sm text-on-surface-variant">{user?.email}</p>
                     </div>

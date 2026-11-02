@@ -4,7 +4,7 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { signUp, signInWithGoogle } from '../db/auth'
 import { GoogleButton } from '../components/ui/GoogleButton'
-import { garantirUsuario } from '../db/queries'
+import { garantirUsuario, atualizarNomeUsuario } from '../db/queries'
 
 export function Component() {
   const navigate = useNavigate()
@@ -36,7 +36,10 @@ export function Component() {
       } else if (!(result?.data as { token?: string | null } | undefined)?.token) {
         setErro('Conta criada! Verifique seu e-mail para ativar a conta antes de entrar.')
       } else {
-        try { await garantirUsuario(email) } catch { /* non-critical */ }
+        try {
+          await garantirUsuario(email)
+          await atualizarNomeUsuario(name)
+        } catch { /* non-critical */ }
         navigate('/', { replace: true })
       }
     } catch (e) {

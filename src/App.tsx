@@ -2,7 +2,7 @@ import { useEffect, Component } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate, Link } from 'react-router-dom'
 import { useUser } from './db/auth'
 import { useTheme } from './components/ThemeProvider'
-import { garantirUsuario } from './db/queries'
+import { garantirUsuario, atualizarNomeUsuario } from './db/queries'
 
 class ErrorBoundary extends Component<
   { children: React.ReactNode },
@@ -45,7 +45,10 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useUser()
   useEffect(() => {
     if (user?.email) {
-      garantirUsuario(user.email).catch(() => { /* non-critical */ })
+      garantirUsuario(user.email).catch(() => {})
+      if (user.name) {
+        atualizarNomeUsuario(user.name).catch(() => {})
+      }
     }
   }, [user?.email])
   if (isPending) return (

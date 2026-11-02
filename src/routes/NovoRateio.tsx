@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Switch } from '../components/ui/Switch'
 import { Card } from '../components/ui/Card'
-import { buscarUsuarioPorEmail, criarRateio } from '../db/queries'
+import { buscarUsuariosPorPrefixo, criarRateio } from '../db/queries'
 import { useUser } from '../db/auth'
 
 interface Participante {
@@ -29,8 +29,8 @@ export function Component() {
   const [nome, setNome] = useState('')
   const [corrigirIpca, setCorrigirIpca] = useState(false)
   const [emailBusca, setEmailBusca] = useState('')
+  const [candidatos, setCandidatos] = useState<{ id: string; email: string }[]>([])
   const [buscando, setBuscando] = useState(false)
-  const [erroBusca, setErroBusca] = useState('')
   const [participantes, setParticipantes] = useState<Participante[]>(() => {
     if (!user?.email || !user?.id) return []
     return [{ user_id: user.id, email: user.email, cota: '100' }]
@@ -41,30 +41,33 @@ export function Component() {
   const somaCotas = participantes.reduce((acc, p) => acc + Number(p.cota || '0'), 0)
   const cotasValidas = Math.abs(somaCotas - 100) < 0.01
 
-  async function buscarParticipante() {
-    const email = emailBusca.trim().toLowerCase()
-    if (!email) return
-    if (participantes.some(p => p.email.toLowerCase() === email)) {
-      setErroBusca('Este participante já foi adicionado.')
+  useEffect(() => {
+    if (emailBusca.length < 2) {
+      setCandidatos([])
+      setBuscando(false)
       return
     }
     setBuscando(true)
-    setErroBusca('')
-    try {
-      const resultado = await buscarUsuarioPorEmail(email)
-      if (!resultado) {
-        setErroBusca('Usuário não encontrado. Ele precisa ter uma conta.')
-        return
+    const timer = setTimeout(async () => {
+      try {
+        const res = await buscarUsuariosPorPrefixo(emailBusca.trim())
+        setCandidatos(res)
+      } catch {
+        setCandidatos([])
+      } finally {
+        setBuscando(false)
       }
-      const novaLista = [...participantes, { user_id: resultado.id, email: resultado.email, cota: '0' }]
-      const cotas = distribuirCotas(novaLista.length)
-      setParticipantes(novaLista.map((p, i) => ({ ...p, cota: cotas[i] })))
-      setEmailBusca('')
-    } catch (e) {
-      setErroBusca((e as Error).message)
-    } finally {
-      setBuscando(false)
-    }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [emailBusca])
+
+  function selecionarCandidato(candidato: { id: string; email: string }) {
+    if (participantes.some(p => p.user_id === candidato.id)) return
+    const novaLista = [...participantes, { user_id: candidato.id, email: candidato.email, cota: '0' }]
+    const cotas = distribuirCotas(novaLista.length)
+    setParticipantes(novaLista.map((p, i) => ({ ...p, cota: cotas[i] })))
+    setEmailBusca('')
+    setCandidatos([])
   }
 
   function removerParticipante(userId: string) {
@@ -128,26 +131,35 @@ export function Component() {
           {/* Buscar participante */}
           <div className="space-y-2">
             <p className="text-label-lg text-on-surface">Participantes</p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="E-mail do participante"
-                type="email"
-                value={emailBusca}
-                onChange={e => { setEmailBusca(e.target.value); setErroBusca('') }}
-                onKeyDown={e => e.key === 'Enter' && buscarParticipante()}
-                error={erroBusca}
-                className="flex-1"
-              />
-              <Button
-                variant="secondary"
-                onClick={buscarParticipante}
-                loading={buscando}
-                disabled={!emailBusca.trim() || buscando}
-                className="shrink-0"
-              >
-                Buscar
-              </Button>
-            </div>
+            <Input
+              placeholder="Nome ou e-mail do participante"
+              type="text"
+              value={emailBusca}
+              onChange={e => setEmailBusca(e.target.value)}
+              className="w-full"
+            />
+            {candidatos.length > 0 && (
+              <ul className="border border-outline-variant rounded-lg bg-surface-container overflow-hidden">
+                {candidatos.map((c) => {
+                  const jaAdicionado = participantes.some(p => p.user_id === c.id)
+                  return (
+                    <li
+                      key={c.id}
+                      className={`px-4 py-2 text-sm ${jaAdicionado ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                      onClick={() => selecionarCandidato(c)}
+                    >
+                      {c.email}
+                      {jaAdicionado && <span className="ml-2 text-xs">(já adicionado)</span>}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            {emailBusca.length >= 2 && !buscando && candidatos.length === 0 && (
+              <p className="text-sm text-on-surface/60">
+                Nenhum usuário encontrado. Ele precisa ter uma conta no Rateio.
+              </p>
+            )}
           </div>
 
           {/* Lista de participantes */}

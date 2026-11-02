@@ -18,7 +18,291 @@ import {
   adicionarMembro,
   removerMembro,
   buscarUsuariosPorPrefixo,
+  listarTaxasIpca,
 } from '../db/queries'
+import { indiceEmData } from '../core/indice'
+import type { TaxaIPCA } from '../core/indice'
+
+function IpcaSection() {
+  const hoje = new Date().toISOString().slice(0, 10)
+  const defaultInicio = (() => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 24)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })()
+
+  const [dataInicio, setDataInicio] = useState(defaultInicio)
+  const [dataFim, setDataFim] = useState(hoje)
+  const [inputInicio, setInputInicio] = useState(defaultInicio.slice(0, 7))
+  const [inputFim, setInputFim] = useState(hoje.slice(0, 7))
+  const [erroData, setErroData] = useState('')
+  const [sortBy, setSortBy] = useState<'mes' | 'taxa' | 'indice' | 'variacao'>('mes')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [tooltipIdx, setTooltipIdx] = useState<number | null>(null)
+
+  const { data: taxasRaw, loading, error, reload } = useAsync(
+    () => listarTaxasIpca(),
+    [],
+  )
+
+  const taxasCore: TaxaIPCA[] = (taxasRaw ?? [])
+    .map(t => ({ mes: t.mes.slice(0, 10), taxa: Number(t.taxa) }))
+    .sort((a, b) => a.mes.localeCompare(b.mes))
+
+  const taxasFiltradas = taxasCore.filter(t => t.mes >= dataInicio && t.mes <= dataFim)
+
+  interface Dado {
+    mes: string
+    taxa: number
+    indice: number
+    variacao: number | null
+  }
+
+  const dadosCalc: Dado[] = taxasCore.length === 0 ? [] : taxasFiltradas.map((t, i) => {
+    let indice = 0
+    try { indice = Number(indiceEmData(t.mes, taxasCore).toFixed(4)) } catch { /* série vazia */ }
+    const prev = taxasFiltradas[i - 1]
+    const variacao = prev && prev.taxa !== 0 ? (t.taxa / prev.taxa - 1) * 100 : null
+    return { mes: t.mes, taxa: t.taxa, indice, variacao }
+  })
+
+  const dadosOrdenados = [...dadosCalc].sort((a, b) => {
+    let cmp = 0
+    if (sortBy === 'mes') cmp = a.mes.localeCompare(b.mes)
+    else if (sortBy === 'taxa') cmp = a.taxa - b.taxa
+    else if (sortBy === 'indice') cmp = a.indice - b.indice
+    else if (sortBy === 'variacao') cmp = (a.variacao ?? -Infinity) - (b.variacao ?? -Infinity)
+    return sortDir === 'asc' ? cmp : -cmp
+  })
+
+  function toggleSort(col: typeof sortBy) {
+    if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortBy(col); setSortDir('asc') }
+  }
+
+  function aplicar() {
+    const inicio = inputInicio + '-01'
+    const fim = inputFim + '-01'
+    if (inicio > fim) { setErroData('Data inicial não pode ser maior que a data final.'); return }
+    setErroData('')
+    setDataInicio(inicio)
+    setDataFim(fim)
+  }
+
+  function formatMes(mes: string) {
+    const [ano, m] = mes.split('-')
+    return new Date(Number(ano), Number(m) - 1, 1)
+      .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+  }
+
+  // SVG chart geometry
+  const W = 500, H = 160, PL = 50, PR = 16, PT = 12, PB = 28
+  const n = dadosCalc.length
+  const idxs = dadosCalc.map(d => d.indice)
+  const minY = idxs.length ? Math.min(...idxs) : 0
+  const maxY = idxs.length ? Math.max(...idxs) : 1
+  const rangeY = maxY - minY || 1
+
+  function svgX(i: number) { return PL + (n > 1 ? i / (n - 1) : 0.5) * (W - PL - PR) }
+  function svgY(v: number) { return PT + ((maxY - v) / rangeY) * (H - PT - PB) }
+
+  const pathD = dadosCalc
+    .map((d, i) => `${i === 0 ? 'M' : 'L'}${svgX(i).toFixed(1)},${svgY(d.indice).toFixed(1)}`)
+    .join(' ')
+
+  const hovered = tooltipIdx !== null ? dadosCalc[tooltipIdx] : null
+
+  const cols: { key: typeof sortBy; label: string }[] = [
+    { key: 'mes', label: 'Mês' },
+    { key: 'taxa', label: 'Taxa (%)' },
+    { key: 'indice', label: 'Índice' },
+    { key: 'variacao', label: 'Variação (%)' },
+  ]
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Índice IPCA</h2>
+
+      {loading && (
+        <Card className="bg-surface-container border-outline-variant">
+          <div className="h-40 rounded bg-surface-variant animate-pulse" />
+        </Card>
+      )}
+
+      {!loading && error && (
+        <Card className="border-error bg-error-container">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-body-sm text-on-error-container">{error}</p>
+            <button onClick={reload} className="shrink-0 text-label-sm text-on-error-container underline">
+              Tentar novamente
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {!loading && !error && taxasCore.length === 0 && (
+        <Card className="bg-surface-container border-outline-variant">
+          <p className="text-body-md text-on-surface font-medium mb-1">Nenhuma taxa disponível</p>
+          <p className="text-body-sm text-on-surface-variant mb-3">
+            Verifique o workflow{' '}
+            <code className="text-label-sm bg-surface-variant px-1 rounded">ipca.yml</code>{' '}
+            no GitHub Actions.
+          </p>
+          <a
+            href="https://www3.bcb.gov.br/sgspub/localizarseries/localizar.jsp?measure=612&serie=433"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-body-sm text-primary hover:underline inline-flex items-center gap-1"
+          >
+            BCB — Série 433
+            <span className="material-symbols-outlined text-[13px]" aria-hidden="true">open_in_new</span>
+          </a>
+        </Card>
+      )}
+
+      {!loading && !error && taxasCore.length > 0 && (
+        <>
+          {/* Filtros De/Até */}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-label-sm text-on-surface-variant">De</label>
+              <input
+                type="month"
+                value={inputInicio}
+                onChange={e => setInputInicio(e.target.value)}
+                className="h-9 px-2 rounded border border-outline bg-surface text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-label-sm text-on-surface-variant">Até</label>
+              <input
+                type="month"
+                value={inputFim}
+                onChange={e => setInputFim(e.target.value)}
+                className="h-9 px-2 rounded border border-outline bg-surface text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <button
+              onClick={aplicar}
+              className="h-9 px-4 rounded bg-primary text-on-primary text-label-md font-medium transition-colors"
+            >
+              Aplicar
+            </button>
+            {erroData && <p className="w-full text-body-sm text-error">{erroData}</p>}
+          </div>
+
+          {/* Gráfico */}
+          <Card className="bg-surface-container border-outline-variant">
+            <p className="text-label-sm text-on-surface-variant mb-2">Índice acumulado</p>
+            {dadosCalc.length === 0 ? (
+              <p className="text-body-sm text-on-surface-variant py-6 text-center">
+                Nenhum dado no intervalo selecionado.
+              </p>
+            ) : (
+              <div className="relative">
+                <div className="text-primary">
+                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: '160px' }}>
+                    <line x1={PL} y1={PT} x2={PL} y2={H - PB} stroke="currentColor" strokeWidth="1" opacity="0.15" />
+                    <line x1={PL} y1={H - PB} x2={W - PR} y2={H - PB} stroke="currentColor" strokeWidth="1" opacity="0.15" />
+                    <text x={PL - 4} y={PT + 4} textAnchor="end" fontSize="9" fill="currentColor" opacity="0.5">{maxY.toFixed(1)}</text>
+                    <text x={PL - 4} y={H - PB} textAnchor="end" fontSize="9" fill="currentColor" opacity="0.5">{minY.toFixed(1)}</text>
+                    {n > 1 && (
+                      <path d={pathD} fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinejoin="round" strokeLinecap="round" />
+                    )}
+                    {dadosCalc.map((d, i) => (
+                      <circle
+                        key={d.mes}
+                        cx={svgX(i)} cy={svgY(d.indice)}
+                        r={tooltipIdx === i ? 5 : 3.5}
+                        fill="currentColor"
+                        className="cursor-pointer"
+                        onMouseEnter={() => setTooltipIdx(i)}
+                        onMouseLeave={() => setTooltipIdx(null)}
+                      />
+                    ))}
+                    {n >= 1 && <text x={svgX(0)} y={H - 4} textAnchor="start" fontSize="9" fill="currentColor" opacity="0.5">{formatMes(dadosCalc[0].mes)}</text>}
+                    {n >= 3 && <text x={svgX(Math.floor(n / 2))} y={H - 4} textAnchor="middle" fontSize="9" fill="currentColor" opacity="0.5">{formatMes(dadosCalc[Math.floor(n / 2)].mes)}</text>}
+                    {n >= 2 && <text x={svgX(n - 1)} y={H - 4} textAnchor="end" fontSize="9" fill="currentColor" opacity="0.5">{formatMes(dadosCalc[n - 1].mes)}</text>}
+                  </svg>
+                </div>
+                {hovered && (
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 bg-surface border border-outline rounded-lg px-3 py-2 shadow-md pointer-events-none z-10 whitespace-nowrap">
+                    <p className="text-label-sm text-on-surface font-medium">{formatMes(hovered.mes)}</p>
+                    <p className="text-body-sm text-on-surface-variant">Taxa: {hovered.taxa.toFixed(2).replace('.', ',')}%</p>
+                    <p className="text-body-sm text-on-surface-variant">Índice: {hovered.indice.toFixed(4).replace('.', ',')}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
+          {/* Tabela */}
+          <Card className="bg-surface-container border-outline-variant !p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-body-sm">
+                <thead className="border-b border-outline-variant">
+                  <tr>
+                    {cols.map(({ key, label }) => (
+                      <th
+                        key={key}
+                        onClick={() => toggleSort(key)}
+                        className="px-3 py-2 text-left text-label-sm text-on-surface-variant cursor-pointer select-none hover:text-on-surface whitespace-nowrap"
+                      >
+                        {label}
+                        {sortBy === key && (
+                          <span className="ml-1 material-symbols-outlined text-[11px] align-middle" aria-hidden="true">
+                            {sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                          </span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dadosOrdenados.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-3 py-6 text-center text-on-surface-variant">
+                        Nenhum dado no intervalo selecionado.
+                      </td>
+                    </tr>
+                  )}
+                  {dadosOrdenados.map(d => (
+                    <tr key={d.mes} className="border-b border-outline-variant/40 hover:bg-surface-variant">
+                      <td className="px-3 py-2 text-on-surface whitespace-nowrap">{formatMes(d.mes)}</td>
+                      <td className="px-3 py-2 text-on-surface tabular-nums">{d.taxa.toFixed(2).replace('.', ',')}%</td>
+                      <td className="px-3 py-2 text-on-surface tabular-nums">{d.indice.toFixed(4).replace('.', ',')}</td>
+                      <td className="px-3 py-2 text-on-surface-variant tabular-nums">
+                        {d.variacao === null
+                          ? '—'
+                          : `${d.variacao > 0 ? '+' : ''}${d.variacao.toFixed(2).replace('.', ',')}%`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Fonte */}
+          <p className="text-body-sm text-on-surface-variant flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">info</span>
+            Fonte: Banco Central do Brasil —{' '}
+            <a
+              href="https://www3.bcb.gov.br/sgspub/localizarseries/localizar.jsp?measure=612&serie=433"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline inline-flex items-center gap-0.5"
+            >
+              Série 433
+              <span className="material-symbols-outlined text-[12px]" aria-hidden="true">open_in_new</span>
+            </a>
+          </p>
+        </>
+      )}
+    </section>
+  )
+}
 
 export function Component() {
   const [searchParams] = useSearchParams()
@@ -482,7 +766,7 @@ export function Component() {
       <Header title="Configurações" />
 
       <main className="px-4 md:px-6 lg:px-8 py-4 pb-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto space-y-6">
           <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-6 lg:space-y-0">
             {/* Column 1: Conta + Aparência */}
             <div className="space-y-6">
@@ -530,18 +814,8 @@ export function Component() {
               </section>
             </div>
 
-            {/* Column 2: Índice + Sobre */}
+            {/* Column 2: Sobre */}
             <div className="space-y-6">
-              <section className="space-y-3">
-                <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Índice IPCA</h2>
-                <Card>
-                  <p className="text-body-md text-on-surface font-medium">Correção monetária</p>
-                  <p className="text-body-sm text-on-surface-variant mt-1">
-                    Os índices IPCA são atualizados automaticamente pelo sistema a partir dos dados do Banco Central.
-                  </p>
-                </Card>
-              </section>
-
               <section className="space-y-3">
                 <h2 className="text-label-lg text-on-surface-variant uppercase tracking-wider">Sobre</h2>
                 <Card>
@@ -564,6 +838,8 @@ export function Component() {
               </section>
             </div>
           </div>
+
+          <IpcaSection />
         </div>
       </main>
     </AppShell>

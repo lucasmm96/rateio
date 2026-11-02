@@ -13,7 +13,7 @@ Legenda: `⬜ não iniciado` · `🟡 spec escrita` · `🟠 tasks criadas` ·
 | D-006 | Editar lançamentos + auditoria | 4 | `specs/004-editar-lancamentos-auditoria` | ✅ | 2026-10-27 |
 | D-007 | Perfil do usuário | 4 | `specs/005-perfil-usuario` | ✅ | 2026-10-27 |
 | D-008 | Dashboard | 5 | `specs/006-dashboard` | ✅ | 2026-11-01 |
-| D-009 | Transparência IPCA | 5 | `specs/007-transparencia-ipca` | 🟠 | 2026-11-01 |
+| D-009 | Transparência IPCA | 5 | `specs/007-transparencia-ipca` | ✅ | 2026-11-01 |
 | D-010 | Busca por username | 5 | `specs/008-busca-username` | ✅ | 2026-11-01 |
 
 ## Estado atual do Spec Kit

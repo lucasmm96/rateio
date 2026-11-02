@@ -3,6 +3,7 @@ import { useUser, signOut } from '../../db/auth'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Rateios', icon: 'payments' },
+  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { to: '/configuracoes', label: 'Configurações', icon: 'settings' },
 ]
 

@@ -12,12 +12,12 @@
 
 **Purpose**: Criar `calcularMetricas()` em `src/core/dashboard.ts` — bloqueante para a tela.
 
-- [ ] T001 Criar `src/core/dashboard.ts` exportando `calcularMetricas(rateios, userId, hoje, taxas)`: retorna `{ totalPago: Decimal, totalPrevisto: Decimal, totalAcertar: Decimal }`. Lógica:
+- [x] T001 Criar `src/core/dashboard.ts` exportando `calcularMetricas(rateios, userId, hoje, taxas)`: retorna `{ totalPago: Decimal, totalPrevisto: Decimal, totalAcertar: Decimal }`. Lógica:
   - `totalPago`: soma de `D(d.valor)` onde `d.pagador_user_id === userId && d.data <= hoje`, iterando todos os rateios
   - `totalPrevisto`: soma de `D(d.valor)` onde `d.data > hoje`, iterando todos os rateios
   - `totalAcertar`: para cada rateio, chamar `calcularSaldo()` + `saldoEmReais(resultado, userId, hoje, rateio.corrigir_ipca, taxas)`; somar algebricamente
 
-- [ ] T002 [P] Criar teste unitário `src/core/__tests__/dashboard.test.ts` cobrindo:
+- [x] T002 [P] Criar teste unitário `src/core/__tests__/dashboard.test.ts` cobrindo:
   - 2 rateios com despesas pagas e previstas — verificar soma correta
   - Rateio com corrigir_ipca=true — verificar que totalAcertar usa valor corrigido
   - Usuário sem despesas — verificar que os 3 retornam D(0)
@@ -31,7 +31,7 @@
 
 **Purpose**: Criar `src/routes/Dashboard.tsx` e registrar a rota `/dashboard`.
 
-- [ ] T003 Criar `src/routes/Dashboard.tsx` com componente `Component`:
+- [x] T003 Criar `src/routes/Dashboard.tsx` com componente `Component`:
   - `useAsync` busca `listarRateios()` + `listarTaxasIpca()` em paralelo via `Promise.all`
   - Para cada rateio, busca `listarDespesas(rateio.id)` e `listarReembolsos(rateio.id)` em paralelo
   - Monta estruturas `Rateio` para `calcularSaldo()` e agrega com `calcularMetricas()`
@@ -40,7 +40,7 @@
   - Estado de erro: ícone + mensagem + botão retry
   - Estado vazio (sem rateios): mensagem "Crie seu primeiro rateio para ver métricas" com link para `/novo-rateio`
 
-- [ ] T004 Registrar rota `/dashboard` em `src/App.tsx`: lazy import de `./routes/Dashboard.tsx` envolta em `RequireAuth`, seguindo o padrão das demais rotas protegidas
+- [x] T004 Registrar rota `/dashboard` em `src/App.tsx`: lazy import de `./routes/Dashboard.tsx` envolta em `RequireAuth`, seguindo o padrão das demais rotas protegidas
 
 **Checkpoint**: Acessar `/dashboard` exibe os 3 cards com valores corretos para os rateios do usuário; loading e erro funcionam.
 
@@ -50,9 +50,9 @@
 
 **Purpose**: Tornar o dashboard alcançável com 1 clique.
 
-- [ ] T005 [P] Atualizar `src/components/ui/BottomNav.tsx`: adicionar item `{ to: '/dashboard', label: 'Dashboard', icon: 'dashboard' }` ao array `NAV_ITEMS`
+- [x] T005 [P] Atualizar `src/components/ui/BottomNav.tsx`: adicionar item `{ to: '/dashboard', label: 'Dashboard', icon: 'dashboard' }` ao array `NAV_ITEMS`
 
-- [ ] T006 [P] Atualizar `src/components/layout/Sidebar.tsx`: adicionar link `NavLink to="/dashboard"` com ícone `dashboard` e label "Dashboard" na lista de navegação
+- [x] T006 [P] Atualizar `src/components/layout/Sidebar.tsx`: adicionar link `NavLink to="/dashboard"` com ícone `dashboard` e label "Dashboard" na lista de navegação
 
 **Checkpoint**: Link "Dashboard" visível e funcional no BottomNav (mobile) e Sidebar (desktop).
 
@@ -60,10 +60,10 @@
 
 ## Phase 4: Polish e Validação
 
-- [ ] T007 [P] Verificar formatação dos valores em BRL: usar `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })` consistente com o restante do app
-- [ ] T008 [P] Testar no browser: login → Dashboard → verificar 3 métricas batem com DetalheRateio de cada rateio
-- [ ] T009 [P] Rodar `npm run test:coverage` e confirmar thresholds 90% atingidos
-- [ ] T010 Atualizar `.ai/planning/STATUS.md`: D-008 → ✅ com data
+- [x] T007 [P] Verificar formatação dos valores em BRL: usar `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })` consistente com o restante do app
+- [x] T008 [P] Testar no browser: login → Dashboard → verificar 3 métricas batem com DetalheRateio de cada rateio
+- [x] T009 [P] Rodar `npm run test:coverage` e confirmar thresholds 90% atingidos
+- [x] T010 Atualizar `.ai/planning/STATUS.md`: D-008 → ✅ com data
 
 ---
 

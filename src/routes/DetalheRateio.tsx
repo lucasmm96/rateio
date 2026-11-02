@@ -233,6 +233,11 @@ function ExtratoContent({
   const [excluindo, setExcluindo] = useState(false)
   const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
 
+  type FiltroTipo   = 'todos' | 'despesas' | 'reembolsos'
+  type FiltroStatus = 'pagas' | 'previstas' | 'todas'
+  const [filtroTipo,   setFiltroTipo]   = useState<FiltroTipo>('todos')
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('pagas')
+
   function toggleLinks(cardId: string) {
     setLinksAbertos(prev => {
       const next = new Set(prev)
@@ -251,10 +256,53 @@ function ExtratoContent({
     | { tipo: 'despesa'; data: string; item: DespesaItem }
     | { tipo: 'reembolso'; data: string; item: ReembolsoItem }
 
+  const despesasFiltradas = filtroTipo === 'reembolsos' ? [] : despesas.filter(d => {
+    const isPaga = d.data <= hoje
+    if (filtroStatus === 'pagas' && !isPaga) return false
+    if (filtroStatus === 'previstas' && isPaga) return false
+    return true
+  })
+
+  const reembolsosFiltrados = filtroTipo === 'despesas' ? [] : reembolsos.filter(r => {
+    const isPago = r.data <= hoje
+    if (filtroStatus === 'pagas' && !isPago) return false
+    if (filtroStatus === 'previstas' && isPago) return false
+    return true
+  })
+
   const entries: EntradaExtrato[] = [
-    ...despesas.map(d => ({ tipo: 'despesa' as const, data: d.data, item: d })),
-    ...reembolsos.map(r => ({ tipo: 'reembolso' as const, data: r.data, item: r })),
+    ...despesasFiltradas.map(d => ({ tipo: 'despesa' as const, data: d.data, item: d })),
+    ...reembolsosFiltrados.map(r => ({ tipo: 'reembolso' as const, data: r.data, item: r })),
   ].sort((a, b) => b.data.localeCompare(a.data))
+
+  const temDadosOriginais = despesas.length > 0 || reembolsos.length > 0
+
+  const filtroBar = (
+    <div className="flex flex-wrap gap-x-4 gap-y-2">
+      <div className="flex gap-1.5">
+        {(['todos', 'despesas', 'reembolsos'] as FiltroTipo[]).map(t => (
+          <button
+            key={t}
+            onClick={() => setFiltroTipo(t)}
+            className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroTipo === t ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+          >
+            {t === 'todos' ? 'Todos' : t === 'despesas' ? 'Despesas' : 'Reembolsos'}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-1.5">
+        {(['pagas', 'previstas', 'todas'] as FiltroStatus[]).map(s => (
+          <button
+            key={s}
+            onClick={() => setFiltroStatus(s)}
+            className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroStatus === s ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+          >
+            {s === 'pagas' ? 'Pagas' : s === 'previstas' ? 'Previstas' : 'Todas'}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   // Group by YYYY-MM
   const byMonth: { key: string; label: string; items: EntradaExtrato[] }[] = []
@@ -281,14 +329,20 @@ function ExtratoContent({
 
   if (entries.length === 0) {
     return (
-      <p className="text-body-md text-on-surface-variant text-center py-8">
-        Nenhuma movimentação ainda.
-      </p>
+      <div className="space-y-2">
+        {filtroBar}
+        <p className="text-body-md text-on-surface-variant text-center py-8">
+          {temDadosOriginais
+            ? 'Nenhum resultado para os filtros selecionados.'
+            : 'Nenhuma movimentação ainda.'}
+        </p>
+      </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {filtroBar}
       {byMonth.map(grupo => (
         <div key={grupo.key}>
           <div className="sticky top-14 z-[5] bg-background/90 backdrop-blur-sm py-1.5 mb-2 border-b border-outline">

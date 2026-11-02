@@ -36,7 +36,7 @@ export interface DespesaItem {
 
 export interface LinkItem {
   id: string
-  entidade_tipo: 'despesa' | 'reembolso'
+  entidade_tipo: 'despesa' | 'reembolso' | 'rateio'
   entidade_id: string
   rateio_id: string
   url: string
@@ -283,7 +283,7 @@ export async function garantirUsuario(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function listarLinks(
-  entidadeTipo: 'despesa' | 'reembolso',
+  entidadeTipo: 'despesa' | 'reembolso' | 'rateio',
   entidadeId: string,
 ): Promise<LinkItem[]> {
   const { data, error } = await neon
@@ -297,7 +297,7 @@ export async function listarLinks(
 }
 
 export async function adicionarLink(args: {
-  entidadeTipo: 'despesa' | 'reembolso'
+  entidadeTipo: 'despesa' | 'reembolso' | 'rateio'
   entidadeId: string
   rateioId: string
   url: string

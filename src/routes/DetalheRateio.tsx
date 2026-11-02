@@ -72,6 +72,7 @@ interface SaldosContentProps {
 
 function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rateioId, currentUserId }: SaldosContentProps) {
   const navigate = useNavigate()
+  const [linksRateioAbertos, setLinksRateioAbertos] = useState(false)
 
   const nomeDe = (userId: string) => {
     const m = membros.find(mb => mb.user_id === userId)
@@ -177,6 +178,24 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
           </Card>
         )
       })}
+
+      <Card variant="elevated">
+        <button
+          onClick={() => setLinksRateioAbertos(prev => !prev)}
+          className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+        >
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+          Links do rateio
+          <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksRateioAbertos ? 'rotate-180' : ''}`} aria-hidden="true">
+            expand_more
+          </span>
+        </button>
+        {linksRateioAbertos && (
+          <div className="mt-2">
+            <LinksList entidadeTipo="rateio" entidadeId={rateioId} rateioId={rateioId} />
+          </div>
+        )}
+      </Card>
 
       {membros.length > 0 && (
         <Link

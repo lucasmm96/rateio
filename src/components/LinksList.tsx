@@ -3,7 +3,7 @@ import { listarLinks, adicionarLink, removerLink } from '../db/queries'
 import type { LinkItem } from '../db/queries'
 
 interface LinksListProps {
-  entidadeTipo: 'despesa' | 'reembolso'
+  entidadeTipo: 'despesa' | 'reembolso' | 'rateio'
   entidadeId: string
   rateioId: string
 }

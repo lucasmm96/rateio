@@ -2,6 +2,7 @@ import { useEffect, Component } from 'react'
 import { createBrowserRouter, RouterProvider, Navigate, Link } from 'react-router-dom'
 import { useUser } from './db/auth'
 import { useTheme } from './components/ThemeProvider'
+import { garantirUsuario } from './db/queries'
 
 class ErrorBoundary extends Component<
   { children: React.ReactNode },
@@ -42,6 +43,11 @@ function UserThemeSync() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, isPending } = useUser()
+  useEffect(() => {
+    if (user?.email) {
+      garantirUsuario(user.email).catch(() => { /* non-critical */ })
+    }
+  }, [user?.email])
   if (isPending) return (
     <main className="min-h-dvh bg-surface flex items-center justify-center">
       <span className="material-symbols-outlined animate-spin text-primary text-[32px]">progress_activity</span>

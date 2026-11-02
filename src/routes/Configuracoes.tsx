@@ -345,9 +345,9 @@ export function Component() {
 
   // ── Adicionar participante ──
   const [emailBusca, setEmailBusca] = useState('')
-  const [candidatos, setCandidatos] = useState<{ id: string; email: string }[]>([])
+  const [candidatos, setCandidatos] = useState<{ id: string; email: string; nome: string | null }[]>([])
   const [buscando, setBuscando] = useState(false)
-  const [novoMembro, setNovoMembro] = useState<{ id: string; email: string } | null>(null)
+  const [novoMembro, setNovoMembro] = useState<{ id: string; email: string; nome: string | null } | null>(null)
   const [adicionando, setAdicionando] = useState(false)
   const [erroAdicionar, setErroAdicionar] = useState('')
 
@@ -657,7 +657,7 @@ export function Component() {
                     return (
                       <li
                         key={c.id}
-                        className={`px-4 py-2 text-sm ${jaMembro ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                        className={`px-4 py-2 ${jaMembro ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
                         onClick={() => {
                           if (jaMembro) return
                           setNovoMembro(c)
@@ -665,8 +665,11 @@ export function Component() {
                           setEmailBusca('')
                         }}
                       >
-                        {c.email}
-                        {jaMembro && <span className="ml-2 text-xs">(já membro)</span>}
+                        {c.nome
+                          ? <><p className="text-sm text-on-surface">{c.nome}</p><p className="text-xs text-on-surface-variant">{c.email}</p></>
+                          : <p className="text-sm text-on-surface">{c.email}</p>
+                        }
+                        {jaMembro && <span className="text-xs">(já membro)</span>}
                       </li>
                     )
                   })}
@@ -681,10 +684,11 @@ export function Component() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded bg-primary/5 border border-primary/20">
                     <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold shrink-0">
-                      {novoMembro.email.slice(0, 2).toUpperCase()}
+                      {(novoMembro.nome ?? novoMembro.email).slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-body-md text-on-surface font-medium truncate">{novoMembro.email}</p>
+                      <p className="text-body-md text-on-surface font-medium truncate">{novoMembro.nome ?? novoMembro.email}</p>
+                      {novoMembro.nome && <p className="text-body-sm text-on-surface-variant truncate">{novoMembro.email}</p>}
                       <p className="text-body-sm text-on-surface-variant">
                         As cotas serão redistribuídas igualmente entre todos os membros.
                       </p>

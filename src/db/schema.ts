@@ -15,6 +15,7 @@ import {
 export const users = pgTable('users', {
   id:        uuid('id').primaryKey(),
   email:     text('email').notNull().unique(),
+  nome:      text('nome'),
   criadoEm: timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 

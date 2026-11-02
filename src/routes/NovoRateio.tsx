@@ -12,6 +12,7 @@ import { useUser } from '../db/auth'
 interface Participante {
   user_id: string
   email: string
+  nome: string | null
   cota: string
 }
 
@@ -29,11 +30,11 @@ export function Component() {
   const [nome, setNome] = useState('')
   const [corrigirIpca, setCorrigirIpca] = useState(false)
   const [emailBusca, setEmailBusca] = useState('')
-  const [candidatos, setCandidatos] = useState<{ id: string; email: string }[]>([])
+  const [candidatos, setCandidatos] = useState<{ id: string; email: string; nome: string | null }[]>([])
   const [buscando, setBuscando] = useState(false)
   const [participantes, setParticipantes] = useState<Participante[]>(() => {
     if (!user?.email || !user?.id) return []
-    return [{ user_id: user.id, email: user.email, cota: '100' }]
+    return [{ user_id: user.id, email: user.email, nome: user.name ?? null, cota: '100' }]
   })
   const [salvando, setSalvando] = useState(false)
   const [erroForm, setErroForm] = useState('')
@@ -61,9 +62,9 @@ export function Component() {
     return () => clearTimeout(timer)
   }, [emailBusca])
 
-  function selecionarCandidato(candidato: { id: string; email: string }) {
+  function selecionarCandidato(candidato: { id: string; email: string; nome: string | null }) {
     if (participantes.some(p => p.user_id === candidato.id)) return
-    const novaLista = [...participantes, { user_id: candidato.id, email: candidato.email, cota: '0' }]
+    const novaLista = [...participantes, { user_id: candidato.id, email: candidato.email, nome: candidato.nome, cota: '0' }]
     const cotas = distribuirCotas(novaLista.length)
     setParticipantes(novaLista.map((p, i) => ({ ...p, cota: cotas[i] })))
     setEmailBusca('')
@@ -145,11 +146,14 @@ export function Component() {
                   return (
                     <li
                       key={c.id}
-                      className={`px-4 py-2 text-sm ${jaAdicionado ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                      className={`px-4 py-2 ${jaAdicionado ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
                       onClick={() => selecionarCandidato(c)}
                     >
-                      {c.email}
-                      {jaAdicionado && <span className="ml-2 text-xs">(já adicionado)</span>}
+                      {c.nome
+                        ? <><p className="text-sm text-on-surface">{c.nome}</p><p className="text-xs text-on-surface-variant">{c.email}</p></>
+                        : <p className="text-sm text-on-surface">{c.email}</p>
+                      }
+                      {jaAdicionado && <span className="text-xs">(já adicionado)</span>}
                     </li>
                   )
                 })}
@@ -168,11 +172,14 @@ export function Component() {
               {participantes.map(p => (
                 <Card key={p.user_id} className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-md font-semibold shrink-0">
-                    {p.email.split('@')[0].slice(0, 2).toUpperCase()}
+                    {(p.nome ?? p.email.split('@')[0]).slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-body-md text-on-surface truncate">{p.email}</p>
-                    {p.user_id === user?.id && (
+                    {p.nome
+                      ? <><p className="text-body-md text-on-surface truncate">{p.nome}</p><p className="text-body-sm text-on-surface-variant truncate">{p.email}</p></>
+                      : <p className="text-body-md text-on-surface truncate">{p.email}</p>
+                    }
+                    {p.user_id === user?.id && !p.nome && (
                       <p className="text-body-sm text-on-surface-variant">você</p>
                     )}
                   </div>

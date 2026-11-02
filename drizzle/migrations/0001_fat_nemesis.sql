@@ -10,7 +10,8 @@ AS $$
 $$;
 
 -- Atualiza busca de usuários para incluir nome além do email
-CREATE OR REPLACE FUNCTION buscar_usuarios_por_prefixo_email(p_prefixo TEXT)
+DROP FUNCTION IF EXISTS buscar_usuarios_por_prefixo_email(TEXT);
+CREATE FUNCTION buscar_usuarios_por_prefixo_email(p_prefixo TEXT)
 RETURNS TABLE(id UUID, email TEXT, nome TEXT)
 LANGUAGE sql
 SECURITY DEFINER

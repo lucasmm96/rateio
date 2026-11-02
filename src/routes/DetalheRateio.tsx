@@ -16,6 +16,8 @@ import {
   listarTaxasIpca,
   deletarDespesa,
   deletarReembolso,
+  listarPresencaLinks,
+  listarPresencaAuditLog,
 } from '../db/queries'
 import type { DespesaItem, ReembolsoItem } from '../db/queries'
 import { D } from '../core/decimal'
@@ -68,9 +70,10 @@ interface SaldosContentProps {
   taxasCore: TaxaIPCA[]
   rateioId: string
   currentUserId: string | undefined
+  rateioTemLinks: boolean
 }
 
-function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rateioId, currentUserId }: SaldosContentProps) {
+function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rateioId, currentUserId, rateioTemLinks }: SaldosContentProps) {
   const navigate = useNavigate()
   const [linksRateioAbertos, setLinksRateioAbertos] = useState(false)
 
@@ -184,7 +187,7 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
           onClick={() => setLinksRateioAbertos(prev => !prev)}
           className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
         >
-          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+          <span className={`material-symbols-outlined text-[14px] ${rateioTemLinks ? 'text-primary' : ''}`} aria-hidden="true">link</span>
           Links do rateio
           <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksRateioAbertos ? 'rotate-180' : ''}`} aria-hidden="true">
             expand_more
@@ -223,11 +226,14 @@ interface ExtratoContentProps {
   onDeleteReembolso: (id: string) => Promise<void>
   onEditDespesa: (despesa: DespesaItem) => void
   onEditReembolso: (reembolso: ReembolsoItem) => void
+  entidadesComLinks: Set<string>
+  entidadesComAuditLog: Set<string>
 }
 
 function ExtratoContent({
   despesas, reembolsos, hoje, corrigirIpca, taxasCore, membros,
   onDeleteDespesa, onDeleteReembolso, onEditDespesa, onEditReembolso,
+  entidadesComLinks, entidadesComAuditLog,
 }: ExtratoContentProps) {
   const [confirmandoExcluir, setConfirmandoExcluir] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
@@ -426,7 +432,7 @@ function ExtratoContent({
                         onClick={() => toggleLinks(`d-${d.id}`)}
                         className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+                        <span className={`material-symbols-outlined text-[14px] ${entidadesComLinks.has(d.id) ? 'text-primary' : ''}`} aria-hidden="true">link</span>
                         Links
                         <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksAbertos.has(`d-${d.id}`) ? 'rotate-180' : ''}`} aria-hidden="true">
                           expand_more
@@ -438,7 +444,7 @@ function ExtratoContent({
                         </div>
                       )}
                     </div>
-                    <AuditLogPanel entidade="despesa" entidadeId={d.id} />
+                    <AuditLogPanel entidade="despesa" entidadeId={d.id} hasEntries={entidadesComAuditLog.has(d.id)} />
                   </Card>
                 )
               } else {
@@ -508,7 +514,7 @@ function ExtratoContent({
                         onClick={() => toggleLinks(`r-${r.id}`)}
                         className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">link</span>
+                        <span className={`material-symbols-outlined text-[14px] ${entidadesComLinks.has(r.id) ? 'text-primary' : ''}`} aria-hidden="true">link</span>
                         Links
                         <span className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${linksAbertos.has(`r-${r.id}`) ? 'rotate-180' : ''}`} aria-hidden="true">
                           expand_more
@@ -520,7 +526,7 @@ function ExtratoContent({
                         </div>
                       )}
                     </div>
-                    <AuditLogPanel entidade="reembolso" entidadeId={r.id} />
+                    <AuditLogPanel entidade="reembolso" entidadeId={r.id} hasEntries={entidadesComAuditLog.has(r.id)} />
                   </Card>
                 )
               }
@@ -547,15 +553,22 @@ export function Component() {
   const { data: despesas, loading: lDesp, error: eDesp, reload: reloadDesp } = useAsync(() => authPending ? Promise.resolve(null) : listarDespesas(id!), [id, authPending])
   const { data: reembolsos, loading: lReem, error: eReem, reload: reloadReem } = useAsync(() => authPending ? Promise.resolve(null) : listarReembolsos(id!), [id, authPending])
   const { data: taxas, loading: lTaxas, error: eTaxas, reload: reloadTaxas } = useAsync(() => authPending ? Promise.resolve(null) : listarTaxasIpca(), [authPending])
+  const { data: presencaLinks, reload: reloadPresencaLinks } = useAsync(() => authPending ? Promise.resolve(null) : listarPresencaLinks(id!), [id, authPending])
+  const { data: presencaAuditLog, reload: reloadPresencaAuditLog } = useAsync(() => authPending ? Promise.resolve(null) : listarPresencaAuditLog(id!), [id, authPending])
 
   const loading = lRateio || lDesp || lReem || lTaxas
   const fetchError = eRateio ?? eDesp ?? eReem ?? eTaxas
+
+  const entidadesComLinks    = new Set(presencaLinks    ?? [])
+  const entidadesComAuditLog = new Set(presencaAuditLog ?? [])
 
   function reloadAll() {
     reloadRateio()
     reloadDesp()
     reloadReem()
     reloadTaxas()
+    reloadPresencaLinks()
+    reloadPresencaAuditLog()
   }
 
   const membros = rateio?.membros ?? []
@@ -696,6 +709,7 @@ export function Component() {
                 taxasCore={taxasCore}
                 rateioId={id!}
                 currentUserId={user?.id}
+                rateioTemLinks={entidadesComLinks.has(id!)}
               />
             </div>
           )}
@@ -722,6 +736,8 @@ export function Component() {
                 onDeleteReembolso={handleDeleteReembolso}
                 onEditDespesa={setEditandoDespesa}
                 onEditReembolso={setEditandoReembolso}
+                entidadesComLinks={entidadesComLinks}
+                entidadesComAuditLog={entidadesComAuditLog}
               />
             </div>
           )}
@@ -742,6 +758,7 @@ export function Component() {
                 taxasCore={taxasCore}
                 rateioId={id!}
                 currentUserId={user?.id}
+                rateioTemLinks={entidadesComLinks.has(id!)}
               />
             ) : (
               <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -768,6 +785,8 @@ export function Component() {
               onDeleteReembolso={handleDeleteReembolso}
               onEditDespesa={setEditandoDespesa}
               onEditReembolso={setEditandoReembolso}
+              entidadesComLinks={entidadesComLinks}
+              entidadesComAuditLog={entidadesComAuditLog}
             />
           </div>
         </div>

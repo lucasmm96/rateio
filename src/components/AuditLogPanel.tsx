@@ -5,6 +5,7 @@ import type { AuditLogItem } from '../db/queries'
 interface AuditLogPanelProps {
   entidade: 'despesa' | 'reembolso'
   entidadeId: string
+  hasEntries?: boolean
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -24,7 +25,7 @@ function fmtDataHora(iso: string): string {
   })
 }
 
-export function AuditLogPanel({ entidade, entidadeId }: AuditLogPanelProps) {
+export function AuditLogPanel({ entidade, entidadeId, hasEntries }: AuditLogPanelProps) {
   const [aberto, setAberto] = useState(false)
   const [logs, setLogs] = useState<AuditLogItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,7 +47,7 @@ export function AuditLogPanel({ entidade, entidadeId }: AuditLogPanelProps) {
         onClick={() => setAberto(prev => !prev)}
         className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
       >
-        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">history</span>
+        <span className={`material-symbols-outlined text-[14px] ${hasEntries ? 'text-primary' : ''}`} aria-hidden="true">history</span>
         Histórico
         <span
           className={`material-symbols-outlined text-[12px] transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}

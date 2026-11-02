@@ -318,6 +318,15 @@ export async function removerLink(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+export async function listarPresencaLinks(rateioId: string): Promise<string[]> {
+  const { data, error } = await neon
+    .from('links')
+    .select('entidade_id')
+    .eq('rateio_id', rateioId)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map(d => (d as { entidade_id: string }).entidade_id)
+}
+
 // ---------------------------------------------------------------------------
 // Audit log
 // ---------------------------------------------------------------------------
@@ -346,6 +355,15 @@ export async function listarAuditLog(
     .order('criado_em', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as unknown as AuditLogItem[]
+}
+
+export async function listarPresencaAuditLog(rateioId: string): Promise<string[]> {
+  const { data, error } = await neon
+    .from('audit_log')
+    .select('entidade_id')
+    .eq('rateio_id', rateioId)
+  if (error) throw new Error(error.message)
+  return (data ?? []).map(d => (d as { entidade_id: string }).entidade_id)
 }
 
 export async function editarDespesa(args: {

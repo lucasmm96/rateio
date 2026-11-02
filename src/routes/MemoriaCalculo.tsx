@@ -61,9 +61,9 @@ export function Component() {
   const corrigir = rateio?.corrigir_ipca ?? false
   const resultado = rateioCore && !loading ? calcularSaldo(rateioCore, corrigir, hoje, taxasCore) : null
 
-  const emailDe = (userId: string) => {
+  const nomeDe = (userId: string) => {
     const m = membros.find(m => m.user_id === userId)
-    return m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
+    return m?.users?.nome ?? m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
   }
 
   return (
@@ -119,10 +119,10 @@ export function Component() {
                   <Card key={m.user_id}>
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
-                        {emailDe(m.user_id).slice(0, 2).toUpperCase()}
+                        {nomeDe(m.user_id).slice(0, 2).toUpperCase()}
                       </div>
-                      <p className="text-body-md text-on-surface font-semibold capitalize">
-                        {emailDe(m.user_id)}
+                      <p className="text-body-md text-on-surface font-semibold">
+                        {nomeDe(m.user_id)}
                       </p>
                       <span className="ml-auto text-body-sm text-on-surface-variant">
                         {(Number(m.cota) * 100).toFixed(0)}%
@@ -158,11 +158,11 @@ export function Component() {
                       const valorR = Number(paraReais(dp.unidades, hoje, corrigir, taxasCore).toFixed(2))
                       return (
                         <div key={i} className="flex items-center gap-2 text-body-sm">
-                          <span className="font-medium text-on-surface capitalize">{emailDe(dp.de)}</span>
+                          <span className="font-medium text-on-surface">{nomeDe(dp.de)}</span>
                           <span className="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">
                             arrow_forward
                           </span>
-                          <span className="font-medium text-on-surface capitalize">{emailDe(dp.para)}</span>
+                          <span className="font-medium text-on-surface">{nomeDe(dp.para)}</span>
                           <span className="ml-auto font-bold text-error tabular-nums">{fmtReais(valorR)}</span>
                         </div>
                       )

@@ -163,10 +163,10 @@ function MemberSelect({ label, membros, value, onChange }: MemberSelectProps) {
             ].join(' ')}
           >
             <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
-              {(m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+              {(m.users?.nome ?? m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
             </div>
             <span className="text-body-md text-on-surface">
-              {m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
+              {m.users?.nome ?? m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
             </span>
             {value === m.user_id && (
               <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">

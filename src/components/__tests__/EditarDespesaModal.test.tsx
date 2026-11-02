@@ -22,8 +22,8 @@ const despesa: DespesaItem = {
 }
 
 const membros = [
-  { user_id: 'user-a', cota: 0.5, users: { email: 'alice@test.com' } },
-  { user_id: 'user-b', cota: 0.5, users: { email: 'bob@test.com' } },
+  { user_id: 'user-a', cota: 0.5, users: { email: 'alice@test.com', nome: null } },
+  { user_id: 'user-b', cota: 0.5, users: { email: 'bob@test.com', nome: null } },
 ]
 
 const defaultProps = {

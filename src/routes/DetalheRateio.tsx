@@ -73,9 +73,9 @@ interface SaldosContentProps {
 function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rateioId, currentUserId }: SaldosContentProps) {
   const navigate = useNavigate()
 
-  const emailDe = (userId: string) => {
+  const nomeDe = (userId: string) => {
     const m = membros.find(mb => mb.user_id === userId)
-    return m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
+    return m?.users?.nome ?? m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
   }
 
   const currentMembro = membros.find(m => m.user_id === currentUserId)
@@ -134,11 +134,11 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-lg font-semibold">
-                  {emailDe(m.user_id).slice(0, 2).toUpperCase()}
+                  {nomeDe(m.user_id).slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-body-md text-on-surface font-medium capitalize">
-                    {emailDe(m.user_id)}
+                  <p className="text-body-md text-on-surface font-medium">
+                    {nomeDe(m.user_id)}
                     {m.user_id === currentUserId && <span className="text-on-surface-variant font-normal"> (você)</span>}
                   </p>
                   <p className="text-body-sm text-on-surface-variant">
@@ -165,7 +165,7 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
                   const valorReais = paraReais(dp.unidades, hoje, corrigirIpca, taxasCore)
                   return (
                     <div key={dp.para} className="flex justify-between text-body-sm text-on-surface-variant">
-                      <span>→ {emailDe(dp.para)}</span>
+                      <span>→ {nomeDe(dp.para)}</span>
                       <span className="text-error font-medium">
                         {fmtReais(Number(valorReais.toFixed(2)))}
                       </span>
@@ -223,9 +223,9 @@ function ExtratoContent({
     })
   }
 
-  const emailDe = (userId: string) => {
+  const nomeDe = (userId: string) => {
     const m = membros.find(mb => mb.user_id === userId)
-    return m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
+    return m?.users?.nome ?? m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
   }
 
   type EntradaExtrato =
@@ -295,7 +295,7 @@ function ExtratoContent({
                         <div className="min-w-0">
                           <p className="text-body-md text-on-surface font-medium">{d.descricao}</p>
                           <p className="text-body-sm text-on-surface-variant">
-                            {fmtData(d.data)} · pago por {emailDe(d.pagador_user_id)}
+                            {fmtData(d.data)} · pago por {nomeDe(d.pagador_user_id)}
                           </p>
                           {correcao !== null && correcao > 0.01 && (
                             <p className="text-label-sm text-on-surface-variant mt-0.5">
@@ -381,7 +381,7 @@ function ExtratoContent({
                         <div className="min-w-0">
                           <p className="text-body-md text-on-surface font-medium">Reembolso</p>
                           <p className="text-body-sm text-on-surface-variant">
-                            {fmtData(r.data)} · {emailDe(r.pagador_user_id)} → {emailDe(r.recebedor_user_id)}
+                            {fmtData(r.data)} · {nomeDe(r.pagador_user_id)} → {nomeDe(r.recebedor_user_id)}
                           </p>
                           {r.observacao && (
                             <p className="text-body-sm text-on-surface-variant italic">{r.observacao}</p>

@@ -10,6 +10,7 @@ vi.mock('../../db/queries', () => ({
 }))
 
 const mockEditar = vi.mocked(queries.editarDespesa)
+const mockMarcarSituacao = vi.mocked(queries.marcarSituacaoDespesa)
 
 const despesa: DespesaItem = {
   id: 'desp-1',
@@ -105,6 +106,26 @@ describe('EditarDespesaModal — validação', () => {
     expect(screen.getByText('Valor deve ser maior que zero.')).toBeTruthy()
     expect(mockEditar).not.toHaveBeenCalled()
   })
+
+  it('exibe erro se status=paga e data futura', async () => {
+    render(<EditarDespesaModal {...defaultProps} />)
+    fireEvent.change(screen.getByDisplayValue('2026-01-15'), { target: { value: '2099-01-01' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(screen.getByText('Data deve ser hoje ou anterior para marcar como paga.')).toBeTruthy()
+    expect(mockEditar).not.toHaveBeenCalled()
+  })
+
+  it('exibe erro se status=prevista e data passada', async () => {
+    render(<EditarDespesaModal {...defaultProps} />)
+    fireEvent.click(screen.getByText('Prevista'))
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(screen.getByText('Data deve ser futura para marcar como prevista.')).toBeTruthy()
+    expect(mockEditar).not.toHaveBeenCalled()
+  })
 })
 
 describe('EditarDespesaModal — submit', () => {
@@ -144,5 +165,29 @@ describe('EditarDespesaModal — submit', () => {
       fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
     })
     expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ pagadorUserId: 'user-b' }))
+  })
+
+  it('chama marcarSituacaoDespesa quando situacao muda para prevista', async () => {
+    mockEditar.mockResolvedValue(undefined)
+    mockMarcarSituacao.mockResolvedValue(undefined)
+    render(<EditarDespesaModal {...defaultProps} />)
+    fireEvent.click(screen.getByText('Prevista'))
+    fireEvent.change(screen.getByDisplayValue('2026-01-15'), { target: { value: '2099-01-01' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(mockEditar).toHaveBeenCalled()
+    expect(mockMarcarSituacao).toHaveBeenCalledWith('desp-1', 'prevista')
+    expect(defaultProps.onSave).toHaveBeenCalled()
+  })
+
+  it('nao chama marcarSituacaoDespesa quando situacao nao muda', async () => {
+    mockEditar.mockResolvedValue(undefined)
+    render(<EditarDespesaModal {...defaultProps} />)
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(mockEditar).toHaveBeenCalled()
+    expect(mockMarcarSituacao).not.toHaveBeenCalled()
   })
 })

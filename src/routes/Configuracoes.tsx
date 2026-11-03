@@ -409,19 +409,15 @@ export function Component() {
   }
 
   async function salvarRateio() {
-    if (!rateioId || !rateio) return
+    if (!rateioId || !rateio || !nomeEdit.trim()) return
     setSalvandoRateio(true)
     setErroRateio('')
     setSucessoRateio(false)
     try {
-      const updates: { nome?: string; corrigir_ipca?: boolean } = {}
-      if (nomeEdit.trim() && nomeEdit.trim() !== rateio.nome) updates.nome = nomeEdit.trim()
-      if (corrigirEdit !== rateio.corrigir_ipca) updates.corrigir_ipca = corrigirEdit
-      if (Object.keys(updates).length > 0) {
-        await editarRateio(rateioId, updates)
-        setSucessoRateio(true)
-        setTimeout(() => setSucessoRateio(false), 2000)
-      }
+      await editarRateio(rateioId, { nome: nomeEdit.trim(), corrigir_ipca: corrigirEdit })
+      setSucessoRateio(true)
+      reloadRateio()
+      setTimeout(() => setSucessoRateio(false), 2000)
     } catch (e) {
       setErroRateio((e as Error).message)
     } finally {

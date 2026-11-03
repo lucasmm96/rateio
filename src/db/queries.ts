@@ -118,8 +118,9 @@ export async function editarRateio(
   id: string,
   updates: { nome?: string; corrigir_ipca?: boolean },
 ): Promise<void> {
-  const { error } = await neon.from('rateios').update(updates).eq('id', id)
+  const { error, data } = await neon.from('rateios').update(updates).eq('id', id).select('id')
   if (error) throw new Error(error.message)
+  if (!data || data.length === 0) throw new Error('Sem permissão para editar este rateio')
 }
 
 // ---------------------------------------------------------------------------

@@ -10,7 +10,8 @@ export interface Participante {
 export interface Despesa {
   pagadorUserId: string
   valor: Decimal
-  data: string // YYYY-MM-DD; paga se data <= hoje
+  data: string
+  situacao: 'paga' | 'prevista'
 }
 
 export interface Reembolso {
@@ -49,7 +50,8 @@ export function calcularSaldo(
   taxas: TaxaIPCA[],
 ): ResultadoSaldo {
   const userIds = rateio.participantes.map((p) => p.userId)
-  const ehPaga = (d: Despesa) => d.data <= hoje
+  void hoje
+  const ehPaga = (d: Despesa) => d.situacao === 'paga'
 
   // 1) U_total — soma das despesas pagas em unidades
   let uTotal = D(0)

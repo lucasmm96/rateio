@@ -48,6 +48,7 @@ export function Component() {
           data: d.data,
           valor: D(d.valor),
           pagadorUserId: d.pagador_user_id,
+          situacao: d.situacao,
         })),
         reembolsos: (reembolsos ?? []).map(r => ({
           data: r.data,

@@ -6,6 +6,7 @@ import type { DespesaItem } from '../../db/queries'
 
 vi.mock('../../db/queries', () => ({
   editarDespesa: vi.fn(),
+  marcarSituacaoDespesa: vi.fn(),
 }))
 
 const mockEditar = vi.mocked(queries.editarDespesa)
@@ -17,6 +18,7 @@ const despesa: DespesaItem = {
   descricao: 'Aluguel',
   pagador_user_id: 'user-a',
   valor: 1200,
+  situacao: 'paga',
   criado_em: '2026-01-01T00:00:00Z',
   pagador: { email: 'alice@test.com' },
 }

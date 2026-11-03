@@ -25,7 +25,7 @@ export function calcularMetricas(
 
   for (const { rateio, corrigirIpca } of rateios) {
     for (const d of rateio.despesas) {
-      if (d.data <= hoje) {
+      if (d.situacao === 'paga') {
         if (d.pagadorUserId === userId) {
           totalPago = totalPago.plus(d.valor)
         }

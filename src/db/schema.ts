@@ -54,7 +54,6 @@ export const membros = pgTable(
 
 // ---------------------------------------------------------------------------
 // despesas
-// Sem coluna "situacao" — derivada em runtime: data <= hoje → paga
 // ---------------------------------------------------------------------------
 export const despesas = pgTable('despesas', {
   id:              uuid('id').primaryKey().defaultRandom(),
@@ -67,6 +66,7 @@ export const despesas = pgTable('despesas', {
     .notNull()
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
+  situacao:        text('situacao').notNull().default('prevista'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 

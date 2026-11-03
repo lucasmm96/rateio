@@ -29,22 +29,22 @@ function rateio(): Rateio {
       { userId: 'LETICIA', cota: new Decimal(1) },
     ],
     despesas: [
-      { data: '2025-12-26', pagadorUserId: 'LETICIA', valor: new Decimal('500.00') },
-      { data: '2026-01-20', pagadorUserId: 'LETICIA', valor: new Decimal('158.46') },
-      { data: '2026-02-06', pagadorUserId: 'LETICIA', valor: new Decimal('158.79') },
-      { data: '2026-03-03', pagadorUserId: 'LETICIA', valor: new Decimal('159.93') },
-      { data: '2026-03-31', pagadorUserId: 'LUCAS',   valor: new Decimal('2500.00') },
-      { data: '2026-04-03', pagadorUserId: 'LETICIA', valor: new Decimal('160.38') },
-      { data: '2026-05-11', pagadorUserId: 'LUCAS',   valor: new Decimal('161.25') },
-      { data: '2026-05-25', pagadorUserId: 'LUCAS',   valor: new Decimal('200.75') },
-      { data: '2026-06-04', pagadorUserId: 'LUCAS',   valor: new Decimal('162.86') },
-      { data: '2026-06-25', pagadorUserId: 'LUCAS',   valor: new Decimal('455.73') },
-      { data: '2026-07-05', pagadorUserId: 'LUCAS',   valor: new Decimal('164.29') },
-      { data: '2026-07-25', pagadorUserId: 'LUCAS',   valor: new Decimal('542.15') }, // em aberto
-      { data: '2026-08-03', pagadorUserId: 'LUCAS',   valor: new Decimal('165.57') }, // em aberto
-      // previstas — não entram no cálculo pois data > REFERENCIA
-      { data: '2026-09-02', pagadorUserId: 'LUCAS',   valor: new Decimal('166.58') },
-      { data: '2026-10-01', pagadorUserId: 'LUCAS',   valor: new Decimal('167.68') },
+      { data: '2025-12-26', situacao: 'paga' as const, pagadorUserId: 'LETICIA', valor: new Decimal('500.00') },
+      { data: '2026-01-20', situacao: 'paga' as const, pagadorUserId: 'LETICIA', valor: new Decimal('158.46') },
+      { data: '2026-02-06', situacao: 'paga' as const, pagadorUserId: 'LETICIA', valor: new Decimal('158.79') },
+      { data: '2026-03-03', situacao: 'paga' as const, pagadorUserId: 'LETICIA', valor: new Decimal('159.93') },
+      { data: '2026-03-31', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('2500.00') },
+      { data: '2026-04-03', situacao: 'paga' as const, pagadorUserId: 'LETICIA', valor: new Decimal('160.38') },
+      { data: '2026-05-11', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('161.25') },
+      { data: '2026-05-25', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('200.75') },
+      { data: '2026-06-04', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('162.86') },
+      { data: '2026-06-25', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('455.73') },
+      { data: '2026-07-05', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('164.29') },
+      { data: '2026-07-25', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('542.15') }, // em aberto
+      { data: '2026-08-03', situacao: 'paga' as const, pagadorUserId: 'LUCAS',   valor: new Decimal('165.57') }, // em aberto
+      // previstas — não entram no cálculo
+      { data: '2026-09-02', situacao: 'prevista' as const, pagadorUserId: 'LUCAS', valor: new Decimal('166.58') },
+      { data: '2026-10-01', situacao: 'prevista' as const, pagadorUserId: 'LUCAS', valor: new Decimal('167.68') },
     ],
     // Reembolsos para os itens LUCAS com data_reembolso (valor = original, mesmo dia)
     reembolsos: [
@@ -137,6 +137,7 @@ describe('calcularSaldo — casos sintéticos n-pessoas (corrigir_ipca=false)', 
         data: d.data,
         pagadorUserId: d.pagador,
         valor: new Decimal(d.valor),
+        situacao: 'paga' as const,
       }))
       const reembolsos = (caso.reembolsos ?? []).map(
         (r: { data: string; pagador: string; recebedor: string; valor: number }) => ({

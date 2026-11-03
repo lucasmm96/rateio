@@ -263,7 +263,7 @@ function ExtratoContent({
     | { tipo: 'reembolso'; data: string; item: ReembolsoItem }
 
   const despesasFiltradas = filtroTipo === 'reembolsos' ? [] : despesas.filter(d => {
-    const isPaga = d.data <= hoje
+    const isPaga = d.situacao === 'paga'
     if (filtroStatus === 'pagas' && !isPaga) return false
     if (filtroStatus === 'previstas' && isPaga) return false
     return true
@@ -358,8 +358,8 @@ function ExtratoContent({
             {grupo.items.map(entry => {
               if (entry.tipo === 'despesa') {
                 const d = entry.item
-                const isPrevista = d.data > hoje
-                const isPaga = !isPrevista
+                const isPaga = d.situacao === 'paga'
+                const isPrevista = !isPaga
                 const correcao = (corrigirIpca && isPaga)
                   ? ipcaCorrecaoPct(d.data.slice(0, 10), hoje, taxasCore)
                   : null

@@ -66,6 +66,7 @@ export function Component() {
         descricao: descricao.trim(),
         pagadorUserId,
         valor: valorN,
+        situacao: data <= hoje ? 'paga' : 'prevista',
       })
       for (const link of pendingLinks) {
         await adicionarLink({

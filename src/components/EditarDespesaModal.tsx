@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Input } from './ui/Input'
 import { Button } from './ui/Button'
-import { editarDespesa } from '../db/queries'
+import { editarDespesa, marcarSituacaoDespesa } from '../db/queries'
 import type { DespesaItem } from '../db/queries'
 import type { RateioDetalhe } from '../db/queries'
 import { D } from '../core/decimal'
@@ -14,10 +14,12 @@ interface EditarDespesaModalProps {
 }
 
 export function EditarDespesaModal({ despesa, membros, onSave, onClose }: EditarDespesaModalProps) {
+  const hoje = new Date().toISOString().slice(0, 10)
   const [data, setData] = useState(despesa.data.slice(0, 10))
   const [descricao, setDescricao] = useState(despesa.descricao)
   const [pagadorUserId, setPagadorUserId] = useState(despesa.pagador_user_id)
   const [valor, setValor] = useState(String(despesa.valor))
+  const [situacao, setSituacao] = useState<'paga' | 'prevista'>(despesa.situacao)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -26,6 +28,14 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
     const valorDecimal = D(valor.replace(',', '.'))
     if (valorDecimal.lte(0)) {
       setErro('Valor deve ser maior que zero.')
+      return
+    }
+    if (situacao === 'paga' && data > hoje) {
+      setErro('Data deve ser hoje ou anterior para marcar como paga.')
+      return
+    }
+    if (situacao === 'prevista' && data <= hoje) {
+      setErro('Data deve ser futura para marcar como prevista.')
       return
     }
     setSalvando(true)
@@ -38,6 +48,9 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
         pagadorUserId,
         valor: valorDecimal.toNumber(),
       })
+      if (situacao !== despesa.situacao) {
+        await marcarSituacaoDespesa(despesa.id, situacao)
+      }
       onSave()
     } catch (e: unknown) {
       setErro((e as Error).message)
@@ -92,6 +105,30 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
             onChange={e => setData(e.target.value)}
             required
           />
+
+          <div className="flex flex-col gap-1.5">
+            <p className="text-label-lg text-on-surface">Status</p>
+            <div className="flex gap-2">
+              {(['paga', 'prevista'] as const).map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSituacao(s)}
+                  className={[
+                    'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border transition duration-150 text-body-md',
+                    situacao === s
+                      ? 'border-primary bg-primary-container/20 text-primary font-medium'
+                      : 'border-outline text-on-surface-variant hover:bg-surface-variant',
+                  ].join(' ')}
+                >
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    {s === 'paga' ? 'check_circle' : 'schedule'}
+                  </span>
+                  {s === 'paga' ? 'Paga' : 'Prevista'}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <p className="text-label-lg text-on-surface">Quem pagou?</p>

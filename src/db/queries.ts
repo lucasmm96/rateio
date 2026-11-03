@@ -30,6 +30,7 @@ export interface DespesaItem {
   descricao: string
   pagador_user_id: string
   valor: number
+  situacao: 'paga' | 'prevista'
   criado_em: string
   pagador: { email: string } | null
 }
@@ -166,7 +167,7 @@ export async function atualizarCotas(
 export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
   const { data, error } = await neon
     .from('despesas')
-    .select('id, rateio_id, data, descricao, pagador_user_id, valor, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
+    .select('id, rateio_id, data, descricao, pagador_user_id, valor, situacao, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -179,6 +180,7 @@ export async function criarDespesa(args: {
   descricao: string
   pagadorUserId: string
   valor: number
+  situacao: 'paga' | 'prevista'
 }): Promise<string> {
   const { data: rows, error } = await neon.from('despesas').insert({
     rateio_id: args.rateioId,
@@ -186,9 +188,16 @@ export async function criarDespesa(args: {
     descricao: args.descricao,
     pagador_user_id: args.pagadorUserId,
     valor: args.valor,
+    situacao: args.situacao,
   }).select('id')
   if (error) throw new Error(error.message)
   return (rows as { id: string }[])[0].id
+}
+
+export async function marcarSituacaoDespesa(id: string, situacao: 'paga' | 'prevista'): Promise<void> {
+  const { error, data } = await neon.from('despesas').update({ situacao }).eq('id', id).select('id')
+  if (error) throw new Error(error.message)
+  if (!data || data.length === 0) throw new Error('Sem permissão para editar esta despesa')
 }
 
 export async function deletarDespesa(id: string): Promise<void> {

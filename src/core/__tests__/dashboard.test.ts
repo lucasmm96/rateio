@@ -23,8 +23,8 @@ describe('calcularMetricas', () => {
             { userId: 'U2', cota: D('0.5') },
           ],
           despesas: [
-            { data: '2026-01-10', pagadorUserId: 'U1', valor: D('100') },
-            { data: '2026-04-01', pagadorUserId: 'U1', valor: D('200') },
+            { data: '2026-01-10', situacao: 'paga' as const,     pagadorUserId: 'U1', valor: D('100') },
+            { data: '2026-04-01', situacao: 'prevista' as const, pagadorUserId: 'U1', valor: D('200') },
           ],
           reembolsos: [],
         },
@@ -37,8 +37,8 @@ describe('calcularMetricas', () => {
             { userId: 'U2', cota: D('0.5') },
           ],
           despesas: [
-            { data: '2026-02-05', pagadorUserId: 'U1', valor: D('300') },
-            { data: '2026-05-01', pagadorUserId: 'U2', valor: D('400') },
+            { data: '2026-02-05', situacao: 'paga' as const,     pagadorUserId: 'U1', valor: D('300') },
+            { data: '2026-05-01', situacao: 'prevista' as const, pagadorUserId: 'U2', valor: D('400') },
           ],
           reembolsos: [],
         },
@@ -62,7 +62,7 @@ describe('calcularMetricas', () => {
           { userId: 'U2', cota: D('0.5') },
         ],
         despesas: [
-          { data: '2026-01-10', pagadorUserId: 'U2', valor: D('1000') },
+          { data: '2026-01-10', situacao: 'paga' as const, pagadorUserId: 'U2', valor: D('1000') },
         ],
         reembolsos: [],
       },
@@ -76,7 +76,7 @@ describe('calcularMetricas', () => {
           { userId: 'U2', cota: D('0.5') },
         ],
         despesas: [
-          { data: '2026-01-10', pagadorUserId: 'U2', valor: D('1000') },
+          { data: '2026-01-10', situacao: 'paga' as const, pagadorUserId: 'U2', valor: D('1000') },
         ],
         reembolsos: [],
       },
@@ -101,7 +101,7 @@ describe('calcularMetricas', () => {
             { userId: 'U2', cota: D('0.5') },
           ],
           despesas: [
-            { data: '2026-01-10', pagadorUserId: 'U2', valor: D('200') },
+            { data: '2026-01-10', situacao: 'paga' as const, pagadorUserId: 'U2', valor: D('200') },
           ],
           reembolsos: [],
         },
@@ -126,8 +126,8 @@ describe('calcularMetricas', () => {
           { userId: 'U2', cota: D('0.5') },
         ],
         despesas: [
-          { data: '2026-01-10', pagadorUserId: 'U1', valor: D('500') },
-          { data: '2026-02-05', pagadorUserId: 'U2', valor: D('300') },
+          { data: '2026-01-10', situacao: 'paga' as const, pagadorUserId: 'U1', valor: D('500') },
+          { data: '2026-02-05', situacao: 'paga' as const, pagadorUserId: 'U2', valor: D('300') },
         ],
         reembolsos: [],
       },

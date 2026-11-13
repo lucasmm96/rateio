@@ -12,6 +12,8 @@ import type {
 import type { Decimal } from '../core/decimal'
 import type { ResultadoSaldo } from '../core/saldo'
 import { paraReais, paraUnidades } from '../core/unidades'
+import { indiceEmData } from '../core/indice'
+import { rastroCorrecao } from '../core/correcao'
 import { D } from '../core/decimal'
 
 const FILL_HEADER = '1F2937'
@@ -172,6 +174,9 @@ interface Contexto {
   nomeDe: (userId: string) => string
   reais: (valor: Decimal | number) => number | null
   unidades: (valor: Decimal | number, data: string) => number | null
+  indice: (data: string) => number | null
+  corrigido: (valor: number | Decimal, data: string) => number | null
+  nominal: (valor: number | Decimal) => number
   reaisFromMap: (map: Map<string, Decimal>, userId: string) => number | null
 }
 
@@ -201,6 +206,10 @@ function montaContexto(dados: DadosExportacao): Contexto {
     hoje,
     taxasCore,
     nomeDe,
+    indice: (data: string) => converte(() => indiceEmData(data, taxasCore), 4),
+    corrigido: (valor: number | Decimal, data: string) =>
+      converte(() => paraReais(paraUnidades(D(valor), data, true, taxasCore), hoje, true, taxasCore), 2),
+    nominal: (valor: number | Decimal) => Number(D(valor).toFixed(2)),
     reais: (valor) => converte(() => paraReais(D(valor), hoje, corrigir, taxasCore), 2),
     unidades: (valor, data) => converte(() => paraUnidades(D(valor), data, corrigir, taxasCore), 4),
     reaisFromMap: (map, userId) =>
@@ -334,7 +343,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
   {
     const ws = wb.addWorksheet('Extrato')
     const colunas = ['Data', 'Tipo', 'Descrição', 'Pagador', 'Recebedor', 'Valor (R$)']
-    if (c.corrigir) colunas.push('Unidades')
+    if (c.corrigir) colunas.push('Unidades', 'Índice', 'Valor corrigido (R$)')
     colunas.push('Situação')
     const ultimaColuna = colunas.length
 
@@ -374,8 +383,8 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
           p.descricao,
           c.nomeDe(p.pagador_user_id),
           '',
-          c.reais(p.valor),
-          ...(c.corrigir ? [c.unidades(p.valor, p.data)] : []),
+          c.nominal(p.valor),
+          ...(c.corrigir ? [c.unidades(p.valor, p.data), c.indice(p.data), c.corrigido(p.valor, p.data)] : []),
           p.situacao === 'paga' ? 'Paga' : 'Prevista',
         ]
       } else {
@@ -386,8 +395,8 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
           p.observacao ?? 'Reembolso',
           c.nomeDe(p.pagador_user_id),
           c.nomeDe(p.recebedor_user_id),
-          c.reais(p.valor),
-          ...(c.corrigir ? [c.unidades(p.valor, p.data)] : []),
+          c.nominal(p.valor),
+          ...(c.corrigir ? [c.unidades(p.valor, p.data), '—', '—'] : []),
           p.data <= hoje ? 'Paga' : 'Prevista',
         ]
       }
@@ -396,8 +405,12 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         const cell = ws.getCell(linha, i + 1)
         cell.value = valor
         styleCell(cell, { border: true })
-        if (i === 5) cell.numFmt = CURRENCY_FORMAT
-        else if (c.corrigir && i === 6) cell.numFmt = UNIDADES_FORMAT
+        if (typeof valor === 'number') {
+          if (i === 5) cell.numFmt = CURRENCY_FORMAT
+          else if (c.corrigir && i === 6) cell.numFmt = UNIDADES_FORMAT
+          else if (c.corrigir && i === 7) cell.numFmt = UNIDADES_FORMAT
+          else if (c.corrigir && i === 8) cell.numFmt = CURRENCY_FORMAT
+        }
       })
       linha++
     })
@@ -408,11 +421,74 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
       styleCell(ws.getCell('A4'), { italic: true, color: TEXT_SUBTITLE, fontSize: 9 })
     }
 
-    larguras(ws, [12, 12, 42, 18, 18, 14, ...(c.corrigir ? [13] : []), 12])
+    larguras(ws, [12, 12, 42, 18, 18, 14, ...(c.corrigir ? [13, 10, 14] : []), 12])
     congelar(ws, 4)
   }
 
-  // ── 4. Deve & Recebe ─────────────────────────────────────────────────────
+  // ── 4. Correção IPCA ───────────────────────────────────────────────────────
+  {
+    const ws = wb.addWorksheet('Correção IPCA')
+    tituloDaSheet(ws, 4, `Rateio ${nomeRateio} — Correção IPCA`, subtitulo(nomeRateio))
+    cabeçalho(ws, ['Período', 'Ajuste (%)', 'Ajuste (R$)', 'Valor acumulado (R$)'])
+
+    let linha = 4
+    let escreveuAlgum = false
+    if (!c.corrigir) {
+      ws.mergeCells(`A${linha}:D${linha}`)
+      ws.getCell(`A${linha}`).value = 'Correção IPCA inativa para este rateio.'
+      styleCell(ws.getCell(`A${linha}`), { italic: true, color: TEXT_SUBTITLE, fontSize: 9 })
+      linha++
+    } else {
+      const despesasPagas = [...despesas]
+        .filter(d => d.situacao === 'paga')
+        .sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : 0))
+      for (const d of despesasPagas) {
+        const rastro = rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, c.taxasCore)
+        if (!rastro) continue
+        escreveuAlgum = true
+
+        ws.mergeCells(`A${linha}:D${linha}`)
+        ws.getCell(`A${linha}`).value = `Despesa: ${d.descricao} — ${formatoData(d.data)} — ${c.nomeDe(d.pagador_user_id)}`
+        styleCell(ws.getCell(`A${linha}`), { bold: true, fill: FILL_SUBHEADER, border: true })
+        linha++
+
+        for (const etapa of rastro.etapas) {
+          const valores = [
+            etapa.rotulo,
+            Number(etapa.ajustePct.dividedBy(100).toFixed(4)),
+            Number(etapa.ajusteReais.toFixed(2)),
+            Number(etapa.valorAcumulado.toFixed(2)),
+          ]
+          valores.forEach((valor, i) => {
+            const cell = ws.getCell(linha, i + 1)
+            cell.value = valor
+            styleCell(cell, { border: true })
+            if (i === 1) cell.numFmt = IPCA_PERCENT_FORMAT
+            else if (i >= 2 && typeof valor === 'number') cell.numFmt = CURRENCY_FORMAT
+          })
+          linha++
+        }
+
+        ws.mergeCells(`A${linha}:D${linha}`)
+        ws.getCell(`A${linha}`).value =
+          `Valor original R$ ${Number(rastro.valorOriginal.toFixed(2))} → corrigido R$ ${Number(rastro.valorCorrigido.toFixed(2))} (${rastro.totalAjustePct.toFixed(2)}%)`
+        styleCell(ws.getCell(`A${linha}`), { italic: true, color: TEXT_SUBTITLE, fontSize: 9 })
+        linha++
+        linha++
+      }
+      if (!escreveuAlgum) {
+        ws.mergeCells(`A${linha}:D${linha}`)
+        ws.getCell(`A${linha}`).value = 'Nenhuma despesa paga com correção aplicável.'
+        styleCell(ws.getCell(`A${linha}`), { italic: true, color: TEXT_SUBTITLE, fontSize: 9 })
+        linha++
+      }
+    }
+
+    larguras(ws, [30, 12, 14, 16])
+    congelar(ws, 3)
+  }
+
+  // ── 5. Deve & Recebe ─────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Deve & Recebe')
     const colunas = ['De', 'Para', 'Valor (R$)']
@@ -467,7 +543,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         formatoData(d.data),
         d.descricao,
         c.nomeDe(d.pagador_user_id),
-        c.reais(d.valor),
+        c.nominal(d.valor),
         ...(c.corrigir ? [c.unidades(d.valor, d.data)] : []),
         d.situacao === 'paga' ? 'Paga' : 'Prevista',
         formatoDataHora(d.criado_em),

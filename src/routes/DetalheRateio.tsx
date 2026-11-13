@@ -22,11 +22,13 @@ import {
   listarAuditLogDoRateio,
 } from '../db/queries'
 import type { DespesaItem, ReembolsoItem, LinkItem, AuditLogItem } from '../db/queries'
+import { rastroCorrecao } from '../core/correcao'
+import type { RastroCorrecao } from '../core/correcao'
+import { CorrecaoIpcaModal } from '../components/CorrecaoIpcaModal'
 import { D } from '../core/decimal'
 import { calcularSaldo, saldoEmReais } from '../core/saldo'
 import type { ResultadoSaldo } from '../core/saldo'
 import { paraReais } from '../core/unidades'
-import { indiceEmData } from '../core/indice'
 import type { TaxaIPCA } from '../core/indice'
 import { useUser } from '../db/auth'
 import type { RateioDetalhe } from '../db/queries'
@@ -47,17 +49,6 @@ function fmtMesAno(iso: string): string {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
   ]
   return `${meses[parseInt(m, 10) - 1]} ${y}`
-}
-
-function ipcaCorrecaoPct(dataDespesa: string, hoje: string, taxas: TaxaIPCA[]): number | null {
-  if (taxas.length === 0) return null
-  try {
-    const iHoje = indiceEmData(hoje, taxas)
-    const iDespesa = indiceEmData(dataDespesa, taxas)
-    return iHoje.dividedBy(iDespesa).minus(1).times(100).toNumber()
-  } catch {
-    return null
-  }
 }
 
 type Tab = 'saldos' | 'extrato'
@@ -240,6 +231,7 @@ function ExtratoContent({
   const [confirmandoExcluir, setConfirmandoExcluir] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
   const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
+  const [rastroModal, setRastroModal] = useState<{ rastro: RastroCorrecao; titulo: string } | null>(null)
 
   type FiltroTipo   = 'todos' | 'despesas' | 'reembolsos'
   type FiltroStatus = 'pagas' | 'previstas' | 'todas'
@@ -362,8 +354,8 @@ function ExtratoContent({
                 const d = entry.item
                 const isPaga = d.situacao === 'paga'
                 const isPrevista = !isPaga
-                const correcao = (corrigirIpca && isPaga)
-                  ? ipcaCorrecaoPct(d.data.slice(0, 10), hoje, taxasCore)
+                const rastro = (corrigirIpca && isPaga)
+                  ? rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore)
                   : null
                 const isConfirmando = confirmandoExcluir === `d-${d.id}`
                 return (
@@ -378,10 +370,14 @@ function ExtratoContent({
                           <p className="text-body-sm text-on-surface-variant">
                             {fmtData(d.data)} · pago por {nomeDe(d.pagador_user_id)}
                           </p>
-                          {correcao !== null && correcao > 0.01 && (
-                            <p className="text-label-sm text-on-surface-variant mt-0.5">
-                              IPCA +{correcao.toFixed(2)}%
-                            </p>
+                          {rastro !== null && (
+                            <button
+                              onClick={() => setRastroModal({ rastro, titulo: d.descricao })}
+                              className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline"
+                            >
+                              IPCA {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
+                              <span className="material-symbols-outlined text-[12px]" aria-hidden="true">open_in_new</span>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -536,6 +532,13 @@ function ExtratoContent({
           </div>
         </div>
       ))}
+      {rastroModal && (
+        <CorrecaoIpcaModal
+          rastro={rastroModal.rastro}
+          titulo={rastroModal.titulo}
+          onClose={() => setRastroModal(null)}
+        />
+      )}
     </div>
   )
 }

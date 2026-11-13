@@ -3,15 +3,25 @@ import { FormShell } from '../components/layout/FormShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { useAsync } from '../hooks/useAsync'
+import { useState } from 'react'
 import { useUser } from '../db/auth'
 import { buscarRateio, listarDespesas, listarReembolsos, listarTaxasIpca } from '../db/queries'
 import { D } from '../core/decimal'
 import { calcularSaldo } from '../core/saldo'
 import { paraReais } from '../core/unidades'
 import type { TaxaIPCA } from '../core/indice'
+import { rastroCorrecao } from '../core/correcao'
+import type { RastroCorrecao } from '../core/correcao'
+import { CorrecaoIpcaTable } from '../components/CorrecaoIpcaTable'
+import type { DespesaItem } from '../db/queries'
 
 function fmtReais(n: number) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function fmtData(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split('-')
+  return `${d}/${m}/${y}`
 }
 
 function Linha({ label, valor }: { label: string; valor: string }) {
@@ -66,6 +76,24 @@ export function Component() {
     const m = membros.find(m => m.user_id === userId)
     return m?.users?.nome ?? m?.users?.email?.split('@')[0] ?? userId.slice(0, 6)
   }
+
+  const [despesasAbertas, setDespesasAbertas] = useState<Set<string>>(new Set())
+  function toggleDespesa(despesaId: string) {
+    setDespesasAbertas(prev => {
+      const next = new Set(prev)
+      if (next.has(despesaId)) next.delete(despesaId)
+      else next.add(despesaId)
+      return next
+    })
+  }
+
+  const pagasComRastro = corrigir
+    ? (despesas ?? [])
+        .filter(d => d.situacao === 'paga')
+        .map(d => ({ d, rastro: rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore) }))
+        .filter((x): x is { d: DespesaItem; rastro: RastroCorrecao } => x.rastro !== null)
+        .sort((a, b) => (a.d.data < b.d.data ? -1 : a.d.data > b.d.data ? 1 : 0))
+    : []
 
   return (
     <FormShell>
@@ -165,6 +193,45 @@ export function Component() {
                           </span>
                           <span className="font-medium text-on-surface">{nomeDe(dp.para)}</span>
                           <span className="ml-auto font-bold text-error tabular-nums">{fmtReais(valorR)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </Card>
+              )}
+
+              {/* Correção IPCA por despesa */}
+              {corrigir && pagasComRastro.length > 0 && (
+                <Card className="bg-surface">
+                  <p className="text-label-lg text-on-surface font-semibold mb-2">Correção IPCA por despesa</p>
+                  <div className="divide-y divide-outline">
+                    {pagasComRastro.map(({ d, rastro }) => {
+                      const aberta = despesasAbertas.has(d.id)
+                      return (
+                        <div key={d.id}>
+                          <button
+                            onClick={() => toggleDespesa(d.id)}
+                            className="w-full flex items-center gap-2 py-2 text-left"
+                          >
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant" aria-hidden="true">
+                              receipt_long
+                            </span>
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-body-sm font-medium text-on-surface truncate">
+                                {d.descricao}
+                              </span>
+                              <span className="block text-body-xs text-on-surface-variant">
+                                {fmtData(d.data)} · {fmtReais(Number(d.valor))}
+                              </span>
+                            </span>
+                            <span className="text-label-sm text-primary">
+                              {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
+                            </span>
+                            <span className={`material-symbols-outlined text-[16px] transition-transform duration-200 ${aberta ? 'rotate-180' : ''}`} aria-hidden="true">
+                              expand_more
+                            </span>
+                          </button>
+                          {aberta && <div className="pb-3"><CorrecaoIpcaTable rastro={rastro} /></div>}
                         </div>
                       )
                     })}

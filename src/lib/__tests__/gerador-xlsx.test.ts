@@ -73,12 +73,13 @@ describe('gerador-xlsx', () => {
     expect(gerarNomeArquivo('Apartamento', '2026-11-13')).toBe('rateio-apartamento-2026-11-13.xlsx')
   })
 
-  it('monta as 10 abas na ordem esperada', () => {
+  it('monta as 11 abas na ordem esperada', () => {
     const wb = montarWorkbook(dados())
     expect(wb.worksheets.map((ws) => ws.name)).toEqual([
       'Resumo',
       'Saldos por participante',
       'Extrato',
+      'Correção IPCA',
       'Deve & Recebe',
       'Despesas',
       'Reembolsos',
@@ -159,8 +160,34 @@ describe('gerador-xlsx', () => {
     const wsSaldos = wb.getWorksheet('Saldos por participante')!
     expect(wsSaldos.getCell('H4').value).not.toBeUndefined() // Pago efetivo (un)
     const wsExtrato = wb.getWorksheet('Extrato')!
-    expect(typeof wsExtrato.getCell('G5').value).toBe('number') // G5 = unidades do d1
-    expect(wsExtrato.getCell('G5').value).toBe(0.1) // 100 / índice 1000
+    expect(wsExtrato.getCell('G5').value).toBe(0.1) // G5 = unidades do d1
+    expect(wsExtrato.getCell('H5').value).toBe(1000) // H5 = índice (flat, série única)
+    expect(wsExtrato.getCell('I5').value).toBe(100) // I5 = valor corrigido (100 × índice 1000 / índice 1000)
+  })
+
+  it('aba Correção IPCA em rateio inativo mostra nota', () => {
+    const wb = montarWorkbook(dados()) // corrigir_ipca: false
+    const ws = wb.getWorksheet('Correção IPCA')!
+    expect(ws.getCell('A4').value).toBe('Correção IPCA inativa para este rateio.')
+  })
+
+  it('aba Correção IPCA com IPCA ativo mostra etapas', () => {
+    const dadosIpca = {
+      ...dados(),
+      rateio: { ...rateio, corrigir_ipca: true },
+      taxas: [{ mes: '2026-01-01', taxa: 0 }],
+      resultado: calcularSaldo(rateioCore, true, hoje, [{ mes: '2026-01-01', taxa: 0 }]),
+    }
+    const wb = montarWorkbook(dadosIpca)
+    const ws = wb.getWorksheet('Correção IPCA')!
+    // Linha 4 = bloco da despesa (merged A:D), linha 5 = primeira etapa
+    const bloco = ws.getCell('A4').value as string
+    expect(bloco).toContain('Mercado')
+    const etapa = ws.getCell('A5').value as string
+    expect(etapa).toContain('2026') // contém mês/ano na etiqueta
+    // B5 = pct (0,0000 flat), C5 = ajuste (0), D5 = valor acumulado (100)
+    expect(ws.getCell('B5').value).toBe(0)
+    expect(ws.getCell('D5').value).toBe(100)
   })
 
   it('slugify com string vazia vira rateio', () => {

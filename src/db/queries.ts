@@ -376,6 +376,16 @@ export async function listarPresencaAuditLog(rateioId: string): Promise<string[]
   return (data ?? []).map(d => (d as { entidade_id: string }).entidade_id)
 }
 
+export async function listarAuditLogDoRateio(rateioId: string): Promise<AuditLogItem[]> {
+  const { data, error } = await neon
+    .from('audit_log')
+    .select('id, entidade, entidade_id, rateio_id, user_id, acao, diff_json, criado_em, ator:users!audit_log_user_id_fkey(email)')
+    .eq('rateio_id', rateioId)
+    .order('criado_em', { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as unknown as AuditLogItem[]
+}
+
 export async function editarDespesa(args: {
   id: string
   data: string

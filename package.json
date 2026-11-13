@@ -20,6 +20,7 @@
     "@neondatabase/serverless": "^1.2.0",
     "decimal.js": "^10.5.0",
     "drizzle-orm": "^0.45.4",
+    "exceljs": "^4.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.6.3"

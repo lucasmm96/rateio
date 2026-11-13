@@ -18,8 +18,10 @@ import {
   deletarReembolso,
   listarPresencaLinks,
   listarPresencaAuditLog,
+  listarLinks,
+  listarAuditLogDoRateio,
 } from '../db/queries'
-import type { DespesaItem, ReembolsoItem } from '../db/queries'
+import type { DespesaItem, ReembolsoItem, LinkItem, AuditLogItem } from '../db/queries'
 import { D } from '../core/decimal'
 import { calcularSaldo, saldoEmReais } from '../core/saldo'
 import type { ResultadoSaldo } from '../core/saldo'
@@ -548,6 +550,7 @@ export function Component() {
   const [fabOpen, setFabOpen] = useState(false)
   const [editandoDespesa, setEditandoDespesa] = useState<DespesaItem | null>(null)
   const [editandoReembolso, setEditandoReembolso] = useState<ReembolsoItem | null>(null)
+  const [exportarErro, setExportarErro] = useState<string | null>(null)
 
   const { data: rateio, loading: lRateio, error: eRateio, reload: reloadRateio } = useAsync(() => authPending ? Promise.resolve(null) : buscarRateio(id!), [id, authPending])
   const { data: despesas, loading: lDesp, error: eDesp, reload: reloadDesp } = useAsync(() => authPending ? Promise.resolve(null) : listarDespesas(id!), [id, authPending])
@@ -555,6 +558,8 @@ export function Component() {
   const { data: taxas, loading: lTaxas, error: eTaxas, reload: reloadTaxas } = useAsync(() => authPending ? Promise.resolve(null) : listarTaxasIpca(), [authPending])
   const { data: presencaLinks, reload: reloadPresencaLinks } = useAsync(() => authPending ? Promise.resolve(null) : listarPresencaLinks(id!), [id, authPending])
   const { data: presencaAuditLog, reload: reloadPresencaAuditLog } = useAsync(() => authPending ? Promise.resolve(null) : listarPresencaAuditLog(id!), [id, authPending])
+  const { data: links, reload: reloadLinks } = useAsync(() => authPending ? Promise.resolve(null) : listarLinks('rateio', id!), [id, authPending])
+  const { data: auditLog, reload: reloadAuditLog } = useAsync(() => authPending ? Promise.resolve(null) : listarAuditLogDoRateio(id!), [id, authPending])
 
   const loading = lRateio || lDesp || lReem || lTaxas
   const fetchError = eRateio ?? eDesp ?? eReem ?? eTaxas
@@ -569,6 +574,8 @@ export function Component() {
     reloadTaxas()
     reloadPresencaLinks()
     reloadPresencaAuditLog()
+    reloadLinks()
+    reloadAuditLog()
   }
 
   const membros = rateio?.membros ?? []
@@ -623,6 +630,31 @@ export function Component() {
     reloadRateio()
   }
 
+  async function handleExportar() {
+    if (!rateio || !resultado) return
+    try {
+      const [{ montarWorkbook, gerarNomeArquivo }, { baixarXlsx }] = await Promise.all([
+        import('../lib/gerador-xlsx'),
+        import('../lib/baixar-xlsx'),
+      ])
+      const wb = montarWorkbook({
+        rateio,
+        despesas: despesas ?? [],
+        reembolsos: reembolsos ?? [],
+        taxas: taxas ?? [],
+        links: (links as LinkItem[]) ?? [],
+        auditLog: (auditLog as AuditLogItem[]) ?? [],
+        resultado: resultado as ResultadoSaldo,
+        hoje,
+        usuarioEmail: (user as { email?: string } | null)?.email ?? null,
+      })
+      await baixarXlsx(wb, gerarNomeArquivo(rateio.nome, hoje))
+      setExportarErro(null)
+    } catch (e) {
+      setExportarErro((e as Error).message ?? 'Falha ao gerar o arquivo Excel.')
+    }
+  }
+
   return (
     <AppShell>
       <Header
@@ -644,6 +676,13 @@ export function Component() {
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">payments</span>
               Reembolso
             </button>
+            <button
+              onClick={handleExportar}
+              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded border border-outline text-on-surface text-label-lg font-medium hover:bg-surface transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">download</span>
+              Exportar
+            </button>
             <Link
               to={`/configuracoes?rateio=${id}`}
               className="p-2 rounded-full text-on-surface-variant hover:bg-surface transition-colors"
@@ -654,6 +693,12 @@ export function Component() {
           </>
         }
       />
+
+      {exportarErro && (
+        <div className="px-4 lg:px-8 pt-3">
+          <p className="text-label-sm text-error">{exportarErro}</p>
+        </div>
+      )}
 
       {loading && (
         <div className="flex justify-center py-16">
@@ -846,14 +891,14 @@ export function Component() {
               </div>
               <div className="flex items-center gap-2 animate-fab-appear">
                 <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded shadow-tier1 whitespace-nowrap">
-                  Reembolso
+                  Exportar
                 </span>
                 <button
-                  onClick={() => { navigate(`/rateios/${id}/novo-reembolso`); setFabOpen(false) }}
-                  aria-label="Reembolso"
+                  onClick={() => { handleExportar(); setFabOpen(false) }}
+                  aria-label="Exportar"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 transition-opacity"
                 >
-                  <span className="material-symbols-outlined text-[20px]">payments</span>
+                  <span className="material-symbols-outlined text-[20px]">download</span>
                 </button>
               </div>
             </>

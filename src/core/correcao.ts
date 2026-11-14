@@ -1,5 +1,5 @@
 import { Decimal } from './decimal'
-import { type TaxaIPCA, indiceEmData } from './indice'
+import { type TabelaIndices, type TaxaIPCA, construirTabelaIndices, indiceComTabela } from './indice'
 
 export interface EtapaCorrecao {
   rotulo: string
@@ -65,6 +65,7 @@ export function rastroCorrecao(
   hoje: string,
   corrigir: boolean,
   taxas: TaxaIPCA[],
+  tabela?: TabelaIndices,
 ): RastroCorrecao | null {
   if (!corrigir) return null
   if (despesa.situacao !== 'paga') return null
@@ -74,11 +75,15 @@ export function rastroCorrecao(
   hoje = hoje.slice(0, 10)
   if (data > hoje) return null
 
+  // Monta a tabela (ordenação + índices acumulados) uma única vez por despesa,
+  // em vez de refazê-la a cada data resolvida abaixo — ver indice.ts.
+  const tab = tabela ?? construirTabelaIndices(taxas)
+
   let iData: Decimal
   let iHoje: Decimal
   try {
-    iData = indiceEmData(data, taxas)
-    iHoje = indiceEmData(hoje, taxas)
+    iData = indiceComTabela(data, tab)
+    iHoje = indiceComTabela(hoje, tab)
   } catch {
     return null
   }
@@ -103,8 +108,8 @@ export function rastroCorrecao(
     let iIni: Decimal
     let iFim: Decimal
     try {
-      iIni = indiceEmData(inicio, taxas)
-      iFim = indiceEmData(fim, taxas)
+      iIni = indiceComTabela(inicio, tab)
+      iFim = indiceComTabela(fim, tab)
     } catch {
       continue
     }

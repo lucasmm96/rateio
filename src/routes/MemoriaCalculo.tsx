@@ -9,6 +9,7 @@ import { buscarRateio, listarDespesas, listarReembolsos, listarTaxasIpca } from 
 import { D } from '../core/decimal'
 import { calcularSaldo } from '../core/saldo'
 import { paraReais } from '../core/unidades'
+import { construirTabelaIndices } from '../core/indice'
 import type { TaxaIPCA } from '../core/indice'
 import { rastroCorrecao } from '../core/correcao'
 import type { RastroCorrecao } from '../core/correcao'
@@ -87,10 +88,13 @@ export function Component() {
     })
   }
 
+  // Tabela de índices montada uma única vez e reusada por despesa — ver core/correcao.ts.
+  const tabelaIpca = corrigir ? construirTabelaIndices(taxasCore) : undefined
+
   const pagasComRastro = corrigir
     ? (despesas ?? [])
         .filter(d => d.situacao === 'paga')
-        .map(d => ({ d, rastro: rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore) }))
+        .map(d => ({ d, rastro: rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore, tabelaIpca) }))
         .filter((x): x is { d: DespesaItem; rastro: RastroCorrecao } => x.rastro !== null)
         .sort((a, b) => (a.d.data < b.d.data ? -1 : a.d.data > b.d.data ? 1 : 0))
     : []

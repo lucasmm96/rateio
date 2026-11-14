@@ -12,7 +12,7 @@ import type {
 import type { Decimal } from '../core/decimal'
 import type { ResultadoSaldo } from '../core/saldo'
 import { paraReais, paraUnidades } from '../core/unidades'
-import { indiceEmData } from '../core/indice'
+import { construirTabelaIndices, indiceEmData } from '../core/indice'
 import { rastroCorrecao } from '../core/correcao'
 import { D } from '../core/decimal'
 
@@ -442,8 +442,10 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
       const despesasPagas = [...despesas]
         .filter(d => d.situacao === 'paga')
         .sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : 0))
+      // Tabela de índices montada uma única vez e reusada por despesa — ver core/correcao.ts.
+      const tabelaIpca = construirTabelaIndices(c.taxasCore)
       for (const d of despesasPagas) {
-        const rastro = rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, c.taxasCore)
+        const rastro = rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, c.taxasCore, tabelaIpca)
         if (!rastro) continue
         escreveuAlgum = true
 

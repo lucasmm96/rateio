@@ -28,8 +28,23 @@ function construirIndicesAcumulados(taxas: TaxaIPCA[]): Map<string, Decimal> {
   return mapa
 }
 
-export function indiceEmData(data: string, taxas: TaxaIPCA[]): Decimal {
+export interface TabelaIndices {
+  ordenadas: TaxaIPCA[]
+  mapa: Map<string, Decimal>
+}
+
+/**
+ * Pré-processa a série de taxas uma única vez (ordenação + índices acumulados)
+ * para reuso em múltiplas chamadas de `indiceComTabela` — evita refazer esse
+ * trabalho a cada despesa/etapa quando há muitas datas a resolver.
+ */
+export function construirTabelaIndices(taxas: TaxaIPCA[]): TabelaIndices {
   const ordenadas = [...taxas].sort((a, b) => a.mes.localeCompare(b.mes))
+  return { ordenadas, mapa: construirIndicesAcumulados(ordenadas) }
+}
+
+export function indiceComTabela(data: string, tabela: TabelaIndices): Decimal {
+  const { ordenadas, mapa } = tabela
 
   if (ordenadas.length === 0) throw new Error('Série de taxas vazia')
 
@@ -43,16 +58,14 @@ export function indiceEmData(data: string, taxas: TaxaIPCA[]): Decimal {
   const [ano, mes, dia] = data.split('-').map(Number)
   const mesInicio = `${ano}-${String(mes).padStart(2, '0')}-01`
 
-  const indices = construirIndicesAcumulados(ordenadas)
-
   const idxMes = ordenadas.findIndex((t) => t.mes === mesInicio)
 
   if (idxMes === -1) {
     // Data após o último mês da série — retorna o último índice sem extrapolar
-    return indices.get(ordenadas[ordenadas.length - 1].mes)!
+    return mapa.get(ordenadas[ordenadas.length - 1].mes)!
   }
 
-  const indiceMesInicio = indices.get(mesInicio)!
+  const indiceMesInicio = mapa.get(mesInicio)!
 
   // Último mês sem taxa seguinte publicada: sem pro-rata
   const temMesSeguinte = idxMes < ordenadas.length - 1
@@ -66,4 +79,8 @@ export function indiceEmData(data: string, taxas: TaxaIPCA[]): Decimal {
   const expoente = D(dia - 1).dividedBy(dias)
 
   return indiceMesInicio.times(D(1).plus(taxa).pow(expoente))
+}
+
+export function indiceEmData(data: string, taxas: TaxaIPCA[]): Decimal {
+  return indiceComTabela(data, construirTabelaIndices(taxas))
 }

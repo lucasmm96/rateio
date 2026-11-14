@@ -29,6 +29,7 @@ import { D } from '../core/decimal'
 import { calcularSaldo, saldoEmReais } from '../core/saldo'
 import type { ResultadoSaldo } from '../core/saldo'
 import { paraReais } from '../core/unidades'
+import { construirTabelaIndices } from '../core/indice'
 import type { TaxaIPCA } from '../core/indice'
 import { useUser } from '../db/auth'
 import type { RateioDetalhe } from '../db/queries'
@@ -233,6 +234,9 @@ function ExtratoContent({
   const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
   const [rastroModal, setRastroModal] = useState<{ rastro: RastroCorrecao; titulo: string } | null>(null)
 
+  // Tabela de índices montada uma única vez e reusada por despesa — ver core/correcao.ts.
+  const tabelaIpca = corrigirIpca ? construirTabelaIndices(taxasCore) : undefined
+
   type FiltroTipo   = 'todos' | 'despesas' | 'reembolsos'
   type FiltroStatus = 'pagas' | 'previstas' | 'todas'
   const [filtroTipo,   setFiltroTipo]   = useState<FiltroTipo>('todos')
@@ -355,7 +359,7 @@ function ExtratoContent({
                 const isPaga = d.situacao === 'paga'
                 const isPrevista = !isPaga
                 const rastro = (corrigirIpca && isPaga)
-                  ? rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore)
+                  ? rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore, tabelaIpca)
                   : null
                 const isConfirmando = confirmandoExcluir === `d-${d.id}`
                 return (

@@ -100,44 +100,55 @@ export function Component() {
     label,
     selected,
     onSelect,
-    exclude,
+    disabledId,
+    disabledHint,
   }: {
     label: string
     selected: string
     onSelect: (id: string) => void
-    exclude?: string
+    disabledId?: string
+    disabledHint?: string
   }) {
-    const opcoes = membros.filter(m => m.user_id !== exclude)
     return (
       <div className="flex flex-col gap-1.5">
         <p className="text-label-lg text-on-surface">{label}</p>
         <div className="space-y-2">
-          {opcoes.map(m => (
-            <button
-              key={m.user_id}
-              type="button"
-              onClick={() => onSelect(m.user_id)}
-              className={[
-                'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
-                selected === m.user_id
-                  ? 'border-primary bg-primary-container/20'
-                  : 'border-outline hover:bg-surface',
-              ].join(' ')}
-            >
-              <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
-                {(m.users?.nome ?? m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
-              </div>
-              <span className="text-body-md text-on-surface">
-                {m.users?.nome ?? m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
-                {m.user_id === user?.id && ' (você)'}
-              </span>
-              {selected === m.user_id && (
-                <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">
-                  check_circle
+          {membros.map(m => {
+            const isDisabled = m.user_id === disabledId
+            return (
+              <button
+                key={m.user_id}
+                type="button"
+                onClick={() => { if (!isDisabled) onSelect(m.user_id) }}
+                disabled={isDisabled}
+                aria-disabled={isDisabled}
+                className={[
+                  'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
+                  isDisabled
+                    ? 'border-outline opacity-50 cursor-not-allowed'
+                    : selected === m.user_id
+                      ? 'border-primary bg-primary-container/20'
+                      : 'border-outline hover:bg-surface',
+                ].join(' ')}
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
+                  {(m.users?.nome ?? m.users?.email ?? m.user_id).slice(0, 2).toUpperCase()}
+                </div>
+                <span className="text-body-md text-on-surface">
+                  {m.users?.nome ?? m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
+                  {m.user_id === user?.id && ' (você)'}
                 </span>
-              )}
-            </button>
-          ))}
+                {isDisabled && disabledHint && (
+                  <span className="ml-auto text-label-sm text-on-surface-variant">{disabledHint}</span>
+                )}
+                {!isDisabled && selected === m.user_id && (
+                  <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">
+                    check_circle
+                  </span>
+                )}
+              </button>
+            )
+          })}
           {membros.length === 0 && (
             <Card>
               <p className="text-body-sm text-on-surface-variant text-center py-2">
@@ -193,16 +204,24 @@ export function Component() {
           <MemberSelector
             label="Quem pagou (fez o reembolso)?"
             selected={pagadorUserId}
-            onSelect={id => { setPagadorUserId(id); if (id === recebedorUserId) setRecebedorUserId('') }}
-            exclude={recebedorUserId}
+            onSelect={setPagadorUserId}
+            disabledId={recebedorUserId}
+            disabledHint="já é o recebedor"
           />
 
           <MemberSelector
             label="Quem recebeu?"
             selected={recebedorUserId}
-            onSelect={id => { setRecebedorUserId(id); if (id === pagadorUserId) setPagadorUserId('') }}
-            exclude={pagadorUserId}
+            onSelect={setRecebedorUserId}
+            disabledId={pagadorUserId}
+            disabledHint="já é o pagador"
           />
+
+          {rateio && membros.length < 2 && (
+            <p className="text-body-sm text-error">
+              Este rateio precisa de pelo menos 2 participantes para registrar um reembolso.
+            </p>
+          )}
 
           {/* Links opcionais */}
           <div className="flex flex-col gap-2">
@@ -281,7 +300,7 @@ export function Component() {
           <Button
             onClick={salvar}
             loading={salvando}
-            disabled={salvando || !titulo.trim() || !valor || !pagadorUserId || !recebedorUserId}
+            disabled={salvando || membros.length < 2 || !titulo.trim() || !valor || !pagadorUserId || !recebedorUserId}
             className="w-full"
           >
             Registrar reembolso

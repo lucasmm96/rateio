@@ -36,29 +36,8 @@ BEGIN
   END IF;
 END $$;
 
--- Limpeza: a migration 0015 (em versões anteriores a esta) re-adiciona
--- despesas.observacao a cada reexecução. Se sobrou uma coluna observacao vazia
--- depois dos renames acima, remova-a.
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'observacao'
-  )
-  AND EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'titulo'
-  )
-  AND EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'descricao'
-  )
-  AND NOT EXISTS (
-    SELECT 1 FROM despesas WHERE observacao IS NOT NULL
-  ) THEN
-    ALTER TABLE despesas DROP COLUMN observacao;
-  END IF;
-END $$;
+-- Limpeza de coluna observacao remanescente não é necessária: a 0015 foi
+-- ajustada para só adicionar observacao quando titulo ainda não existe.
 
 -- ---------------------------------------------------------------------------
 -- 2. Colunas: reembolsos

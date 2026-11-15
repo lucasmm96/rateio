@@ -14,18 +14,18 @@ const membros = [
 
 const despesas = [
   {
-    id: 'd1', rateio_id: 'r1', data: '2026-01-10', descricao: 'Mercado',
-    pagador_user_id: 'P1', valor: 100, situacao: 'paga' as const, observacao: null,
+    id: 'd1', rateio_id: 'r1', data: '2026-01-10', titulo: 'Mercado',
+    pagador_user_id: 'P1', valor: 100, situacao: 'paga' as const, descricao: null,
     criado_em: '2026-01-10T10:00:00', pagador: { email: 'p1@x.com' },
   },
   {
-    id: 'd2', rateio_id: 'r1', data: '2026-02-10', descricao: 'Luz',
-    pagador_user_id: 'P2', valor: 200, situacao: 'paga' as const, observacao: null,
+    id: 'd2', rateio_id: 'r1', data: '2026-02-10', titulo: 'Luz',
+    pagador_user_id: 'P2', valor: 200, situacao: 'paga' as const, descricao: null,
     criado_em: '2026-02-10T11:00:00', pagador: { email: 'p2@x.com' },
   },
   {
-    id: 'd3', rateio_id: 'r1', data: '2026-03-10', descricao: 'Água',
-    pagador_user_id: 'P4', valor: 300, situacao: 'paga' as const, observacao: 'Conta de março',
+    id: 'd3', rateio_id: 'r1', data: '2026-03-10', titulo: 'Água',
+    pagador_user_id: 'P4', valor: 300, situacao: 'paga' as const, descricao: 'Conta de março',
     criado_em: '2026-03-10T12:00:00', pagador: { email: 'p4@x.com' },
   },
 ]
@@ -33,7 +33,7 @@ const despesas = [
 const reembolso = {
   id: 'rb1', rateio_id: 'r1', data: '2026-03-20',
   pagador_user_id: 'P3', recebedor_user_id: 'P4', valor: 50,
-  descricao: 'Reembolso água', observacao: 'pix',
+  titulo: 'Reembolso água', descricao: 'pix',
   criado_em: '2026-03-20T09:00:00',
   pagador: { email: 'p3@x.com' }, recebedor: { email: 'p4@x.com' },
 }
@@ -198,25 +198,25 @@ describe('gerador-xlsx', () => {
     expect(ws.getCell('D5').value).toBe(100)
   })
 
-  it('aba Despesas traz coluna Observação', () => {
+  it('aba Despesas traz colunas Título e Descrição', () => {
     const wb = montarWorkbook(dados())
     const ws = wb.getWorksheet('Despesas')!
-    expect(ws.getCell('B3').value).toBe('Descrição')
-    expect(ws.getCell('F3').value).toBe('Observação')
-    expect(ws.getCell('F4').value).toBe('—') // d1 sem observação
+    expect(ws.getCell('B3').value).toBe('Título')
+    expect(ws.getCell('F3').value).toBe('Descrição')
+    expect(ws.getCell('F4').value).toBe('—') // d1 sem descrição
     expect(ws.getCell('F6').value).toBe('Conta de março') // d3
   })
 
-  it('aba Reembolsos traz colunas Descrição e Observação', () => {
+  it('aba Reembolsos traz colunas Título e Descrição', () => {
     const wb = montarWorkbook({ ...dados(), reembolsos: [reembolso] })
     const ws = wb.getWorksheet('Reembolsos')!
-    expect(ws.getCell('E3').value).toBe('Descrição')
-    expect(ws.getCell('F3').value).toBe('Observação')
+    expect(ws.getCell('E3').value).toBe('Título')
+    expect(ws.getCell('F3').value).toBe('Descrição')
     expect(ws.getCell('E4').value).toBe('Reembolso água')
     expect(ws.getCell('F4').value).toBe('pix')
   })
 
-  it('extrato e auditoria usam a descrição do reembolso', () => {
+  it('extrato e auditoria usam o título do reembolso', () => {
     const wb = montarWorkbook({
       ...dados(),
       reembolsos: [reembolso],

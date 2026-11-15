@@ -17,8 +17,8 @@ const reembolso: ReembolsoItem = {
   pagador_user_id: 'user-a',
   recebedor_user_id: 'user-b',
   valor: 500,
-  descricao: 'Reembolso aluguel',
-  observacao: 'Conta luz',
+  titulo: 'Reembolso aluguel',
+  descricao: 'Conta luz',
   criado_em: '2026-02-01T00:00:00Z',
   pagador: { email: 'alice@test.com' },
   recebedor: { email: 'bob@test.com' },
@@ -52,12 +52,12 @@ describe('EditarReembolsoModal — renderização', () => {
     expect(input.value).toBe('500')
   })
 
-  it('pré-popula descrição', () => {
+  it('pré-popula título', () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     expect(screen.getByDisplayValue('Reembolso aluguel')).toBeTruthy()
   })
 
-  it('pré-popula observação', () => {
+  it('pré-popula descrição', () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     expect(screen.getByDisplayValue('Conta luz')).toBeTruthy()
   })
@@ -84,13 +84,13 @@ describe('EditarReembolsoModal — interação', () => {
 })
 
 describe('EditarReembolsoModal — validação', () => {
-  it('exibe erro se descrição vazia', async () => {
+  it('exibe erro se título vazio', async () => {
     const { container } = render(<EditarReembolsoModal {...defaultProps} />)
     fireEvent.change(screen.getByDisplayValue('Reembolso aluguel'), { target: { value: '   ' } })
     await act(async () => {
       fireEvent.submit(container.querySelector('form')!)
     })
-    expect(screen.getByText('Informe a descrição.')).toBeTruthy()
+    expect(screen.getByText('Informe o título.')).toBeTruthy()
     expect(mockEditar).not.toHaveBeenCalled()
   })
 
@@ -132,30 +132,30 @@ describe('EditarReembolsoModal — submit', () => {
       pagadorUserId: 'user-a',
       recebedorUserId: 'user-b',
       valor: 500,
-      descricao: 'Reembolso aluguel',
-      observacao: 'Conta luz',
+      titulo: 'Reembolso aluguel',
+      descricao: 'Conta luz',
     })
     expect(defaultProps.onSave).toHaveBeenCalled()
   })
 
-  it('envia descrição sem espaços nas pontas', async () => {
+  it('envia título sem espaços nas pontas', async () => {
     mockEditar.mockResolvedValue(undefined)
     render(<EditarReembolsoModal {...defaultProps} />)
     fireEvent.change(screen.getByDisplayValue('Reembolso aluguel'), { target: { value: '  Reembolso luz  ' } })
     await act(async () => {
       fireEvent.submit(screen.getByDisplayValue('500').closest('form')!)
     })
-    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ descricao: 'Reembolso luz' }))
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Reembolso luz' }))
   })
 
-  it('envia observacao null quando campo vazio', async () => {
+  it('envia descricao null quando campo vazio', async () => {
     mockEditar.mockResolvedValue(undefined)
-    const semObs = { ...reembolso, observacao: null }
-    render(<EditarReembolsoModal {...defaultProps} reembolso={semObs} />)
+    const semDesc = { ...reembolso, descricao: null }
+    render(<EditarReembolsoModal {...defaultProps} reembolso={semDesc} />)
     await act(async () => {
       fireEvent.submit(screen.getByDisplayValue('500').closest('form')!)
     })
-    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ observacao: null }))
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ descricao: null }))
   })
 
   it('exibe erro do RPC sem chamar onSave', async () => {

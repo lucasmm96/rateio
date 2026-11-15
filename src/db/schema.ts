@@ -61,13 +61,13 @@ export const despesas = pgTable('despesas', {
     .notNull()
     .references(() => rateios.id, { onDelete: 'cascade' }),
   data:            date('data').notNull(),
-  descricao:       text('descricao').notNull(),
+  titulo:          text('titulo').notNull(),
   pagadorUserId:   uuid('pagador_user_id')
     .notNull()
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
   situacao:        text('situacao').notNull().default('prevista'),
-  observacao:      text('observacao'),
+  descricao:       text('descricao'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -87,8 +87,8 @@ export const reembolsos = pgTable('reembolsos', {
     .notNull()
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
-  descricao:       text('descricao').notNull(),
-  observacao:      text('observacao'),
+  titulo:          text('titulo').notNull(),
+  descricao:       text('descricao'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 

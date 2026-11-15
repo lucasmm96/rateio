@@ -94,14 +94,14 @@ describe('AuditLogPanel — expandir', () => {
     })
   })
 
-  it('exibe diff: campo Descrição', async () => {
+  it('exibe diff: campo Título', async () => {
     mockListar.mockResolvedValue([logEntry])
     render(<AuditLogPanel {...defaultProps} />)
     await act(async () => {
       fireEvent.click(screen.getByText('Histórico'))
     })
     await waitFor(() => {
-      expect(screen.getByText('Descrição:')).toBeTruthy()
+      expect(screen.getByText('Título:')).toBeTruthy()
     })
   })
 

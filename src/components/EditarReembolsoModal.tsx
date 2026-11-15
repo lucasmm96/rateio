@@ -18,15 +18,15 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
   const [pagadorUserId, setPagadorUserId] = useState(reembolso.pagador_user_id)
   const [recebedorUserId, setRecebedorUserId] = useState(reembolso.recebedor_user_id)
   const [valor, setValor] = useState(String(reembolso.valor))
-  const [descricao, setDescricao] = useState(reembolso.descricao)
-  const [observacao, setObservacao] = useState(reembolso.observacao ?? '')
+  const [titulo, setTitulo] = useState(reembolso.titulo ?? '')
+  const [descricao, setDescricao] = useState(reembolso.descricao ?? '')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!descricao.trim()) {
-      setErro('Informe a descrição.')
+    if (!titulo.trim()) {
+      setErro('Informe o título.')
       return
     }
     if (pagadorUserId === recebedorUserId) {
@@ -47,8 +47,8 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
         pagadorUserId,
         recebedorUserId,
         valor: valorDecimal.toNumber(),
-        descricao: descricao.trim(),
-        observacao: observacao.trim() || null,
+        titulo: titulo.trim(),
+        descricao: descricao.trim() || null,
       })
       onSave()
     } catch (e: unknown) {
@@ -64,7 +64,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full sm:max-w-md bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden">
+      <div className="relative w-full sm:max-w-xl bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden max-h-[85vh]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-outline">
           <h2 className="text-title-sm text-on-surface font-semibold">Editar reembolso</h2>
           <button
@@ -78,10 +78,16 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
 
         <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
           <Input
+            label="Título"
+            value={titulo}
+            onChange={e => setTitulo(e.target.value)}
+            required
+          />
+
+          <Input
             label="Descrição"
             value={descricao}
             onChange={e => setDescricao(e.target.value)}
-            required
           />
 
           <Input
@@ -119,12 +125,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
             onChange={setRecebedorUserId}
           />
 
-          <Input
-            label="Observação (opcional)"
-            value={observacao}
-            onChange={e => setObservacao(e.target.value)}
-            placeholder="Opcional"
-          />
+          {/* Observação movida antes do Valor; campo mantido opcional */}
 
           {erro && <p className="text-body-sm text-error">{erro}</p>}
 
@@ -139,7 +140,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
             <Button
               type="submit"
               loading={salvando}
-              disabled={salvando || !descricao.trim() || !valor || !pagadorUserId || !recebedorUserId}
+              disabled={salvando || !titulo.trim() || !valor || !pagadorUserId || !recebedorUserId}
               className="flex-1"
             >
               Salvar

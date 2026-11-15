@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell'
 import { Header } from '../components/ui/Header'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { Input } from '../components/ui/Input'
 import { LinksList } from '../components/LinksList'
 import { EditarDespesaModal } from '../components/EditarDespesaModal'
 import { EditarReembolsoModal } from '../components/EditarReembolsoModal'
@@ -233,6 +234,7 @@ function ExtratoContent({
   const [excluindo, setExcluindo] = useState(false)
   const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
   const [rastroModal, setRastroModal] = useState<{ rastro: RastroCorrecao; titulo: string } | null>(null)
+  const [busca, setBusca] = useState('')
 
   // Tabela de índices montada uma única vez e reusada por despesa — ver core/correcao.ts.
   const tabelaIpca = corrigirIpca ? construirTabelaIndices(taxasCore) : undefined
@@ -274,10 +276,15 @@ function ExtratoContent({
     return true
   })
 
+  const buscaNormalizada = busca.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+
   const entries: EntradaExtrato[] = [
     ...despesasFiltradas.map(d => ({ tipo: 'despesa' as const, data: d.data, item: d })),
     ...reembolsosFiltrados.map(r => ({ tipo: 'reembolso' as const, data: r.data, item: r })),
-  ].sort((a, b) => b.data.localeCompare(a.data))
+  ].filter(e => {
+    const titulo = e.item.titulo.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    return titulo.includes(buscaNormalizada)
+  }).sort((a, b) => b.data.localeCompare(a.data))
 
   const temDadosOriginais = despesas.length > 0 || reembolsos.length > 0
 
@@ -304,6 +311,15 @@ function ExtratoContent({
             {s === 'pagas' ? 'Pagas' : s === 'previstas' ? 'Previstas' : 'Todas'}
           </button>
         ))}
+      </div>
+      <div className="flex-1 min-w-[200px]">
+        <Input
+          label="Buscar por título"
+          placeholder="Filtrar por título…"
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          className="max-w-md"
+        />
       </div>
     </div>
   )
@@ -370,16 +386,16 @@ function ExtratoContent({
                           receipt_long
                         </span>
                         <div className="min-w-0">
-                          <p className="text-body-md text-on-surface font-medium">{d.descricao}</p>
+                          <p className="text-body-md text-on-surface font-medium">{d.titulo}</p>
                           <p className="text-body-sm text-on-surface-variant">
                             {fmtData(d.data)} · pago por {nomeDe(d.pagador_user_id)}
                           </p>
-                          {d.observacao && (
-                            <p className="text-body-sm text-on-surface-variant italic">{d.observacao}</p>
+                          {d.descricao && (
+                            <p className="text-body-sm text-on-surface-variant italic">{d.descricao}</p>
                           )}
                           {rastro !== null && (
                             <button
-                              onClick={() => setRastroModal({ rastro, titulo: d.descricao })}
+                              onClick={() => setRastroModal({ rastro, titulo: d.titulo })}
                               className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline"
                             >
                               IPCA {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
@@ -463,12 +479,12 @@ function ExtratoContent({
                           payments
                         </span>
                         <div className="min-w-0">
-                          <p className="text-body-md text-on-surface font-medium">{r.descricao}</p>
+                          <p className="text-body-md text-on-surface font-medium">{r.titulo}</p>
                           <p className="text-body-sm text-on-surface-variant">
                             {fmtData(r.data)} · {nomeDe(r.pagador_user_id)} → {nomeDe(r.recebedor_user_id)}
                           </p>
-                          {r.observacao && (
-                            <p className="text-body-sm text-on-surface-variant italic">{r.observacao}</p>
+                          {r.descricao && (
+                            <p className="text-body-sm text-on-surface-variant italic">{r.descricao}</p>
                           )}
                         </div>
                       </div>

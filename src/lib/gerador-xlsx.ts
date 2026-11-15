@@ -342,7 +342,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
   // ── 3. Extrato ────────────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Extrato')
-    const colunas = ['Data', 'Tipo', 'Descrição', 'Pagador', 'Recebedor', 'Valor (R$)']
+    const colunas = ['Data', 'Tipo', 'Título', 'Pagador', 'Recebedor', 'Valor (R$)']
     if (c.corrigir) colunas.push('Unidades', 'Índice', 'Valor corrigido (R$)')
     colunas.push('Situação')
     const ultimaColuna = colunas.length
@@ -380,7 +380,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         valores = [
           formatoData(p.data),
           'Despesa',
-          p.descricao,
+          p.titulo,
           c.nomeDe(p.pagador_user_id),
           '',
           c.nominal(p.valor),
@@ -392,7 +392,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         valores = [
           formatoData(p.data),
           'Reembolso',
-          p.descricao,
+          p.titulo,
           c.nomeDe(p.pagador_user_id),
           c.nomeDe(p.recebedor_user_id),
           c.nominal(p.valor),
@@ -450,7 +450,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         escreveuAlgum = true
 
         ws.mergeCells(`A${linha}:D${linha}`)
-        ws.getCell(`A${linha}`).value = `Despesa: ${d.descricao} — ${formatoData(d.data)} — ${c.nomeDe(d.pagador_user_id)}`
+        ws.getCell(`A${linha}`).value = `Despesa: ${d.titulo} — ${formatoData(d.data)} — ${c.nomeDe(d.pagador_user_id)}`
         styleCell(ws.getCell(`A${linha}`), { bold: true, fill: FILL_SUBHEADER, border: true })
         linha++
 
@@ -530,9 +530,9 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
   // ── 5. Despesas ──────────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Despesas')
-    const colunas = ['Data', 'Descrição', 'Pagador', 'Valor (R$)']
+    const colunas = ['Data', 'Título', 'Pagador', 'Valor (R$)']
     if (c.corrigir) colunas.push('Unidades')
-    colunas.push('Situação', 'Observação', 'Criado em')
+    colunas.push('Situação', 'Descrição', 'Criado em')
     const ultimaColuna = colunas.length
 
     tituloDaSheet(ws, ultimaColuna, `Rateio ${nomeRateio} — Despesas`, subtitulo(nomeRateio))
@@ -543,12 +543,12 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     todas.forEach((d) => {
       const valores: (string | number | null)[] = [
         formatoData(d.data),
-        d.descricao,
+        d.titulo,
         c.nomeDe(d.pagador_user_id),
         c.nominal(d.valor),
         ...(c.corrigir ? [c.unidades(d.valor, d.data)] : []),
         d.situacao === 'paga' ? 'Paga' : 'Prevista',
-        d.observacao ?? '—',
+        d.descricao ?? '—',
         formatoDataHora(d.criado_em),
       ]
       valores.forEach((valor, i) => {
@@ -578,7 +578,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     const ws = wb.addWorksheet('Reembolsos')
     const colunas = ['Data', 'Pagador', 'Recebedor', 'Valor (R$)']
     if (c.corrigir) colunas.push('Unidades')
-    colunas.push('Descrição', 'Observação', 'Criado em')
+    colunas.push('Título', 'Descrição', 'Criado em')
     const ultimaColuna = colunas.length
 
     tituloDaSheet(ws, ultimaColuna, `Rateio ${nomeRateio} — Reembolsos`, subtitulo(nomeRateio))
@@ -593,8 +593,8 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         c.nomeDe(r.recebedor_user_id),
         c.reais(r.valor),
         ...(c.corrigir ? [c.unidades(r.valor, r.data)] : []),
-        r.descricao,
-        r.observacao ?? '—',
+        r.titulo,
+        r.descricao ?? '—',
         formatoDataHora(r.criado_em),
       ]
       valores.forEach((valor, i) => {
@@ -716,8 +716,8 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     tituloDaSheet(ws, 6, `Rateio ${nomeRateio} — Auditoria`, subtitulo(nomeRateio))
     cabeçalho(ws, ['Quando', 'Quem', 'Ação', 'Entidade', 'Registro', 'Alterações'])
 
-    const despesaPorId = new Map(despesas.map((d) => [d.id, d.descricao]))
-    const reembolsoPorId = new Map(reembolsos.map((r) => [r.id, r.descricao]))
+    const despesaPorId = new Map(despesas.map((d) => [d.id, d.titulo]))
+    const reembolsoPorId = new Map(reembolsos.map((r) => [r.id, r.titulo]))
     let linha = 4
     auditLog.forEach((l) => {
       const label =

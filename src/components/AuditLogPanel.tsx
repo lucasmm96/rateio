@@ -10,11 +10,12 @@ interface AuditLogPanelProps {
 
 const FIELD_LABELS: Record<string, string> = {
   data:             'Data',
-  descricao:        'Descrição',
+  titulo:           'Título',
+  descricao:        'Título',
+  observacao:       'Descrição',
   pagador_user_id:  'Pagador',
   recebedor_user_id:'Recebedor',
   valor:            'Valor',
-  observacao:       'Observação',
 }
 
 function fmtDataHora(iso: string): string {

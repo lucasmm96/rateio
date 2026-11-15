@@ -10,13 +10,31 @@
 
 -- ---------------------------------------------------------------------------
 -- 1. Colunas
+-- Guards: a 0016 renomeia descricao->titulo e observacao->descricao. Sem os
+-- guards, reexecutar o migrar.ts depois da 0016 re-adicionaria colunas antigas.
 -- ---------------------------------------------------------------------------
-ALTER TABLE despesas ADD COLUMN IF NOT EXISTS observacao text;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'despesas' AND column_name = 'titulo'
+  ) THEN
+    ALTER TABLE despesas ADD COLUMN IF NOT EXISTS observacao text;
+  END IF;
+END $$;
 
 -- O DEFAULT só existe para preencher as linhas atuais; é removido logo em
 -- seguida para que todo INSERT novo precise informar a descrição.
-ALTER TABLE reembolsos ADD COLUMN IF NOT EXISTS descricao text NOT NULL DEFAULT 'temp';
-ALTER TABLE reembolsos ALTER COLUMN descricao DROP DEFAULT;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'reembolsos' AND column_name = 'titulo'
+  ) THEN
+    ALTER TABLE reembolsos ADD COLUMN IF NOT EXISTS descricao text NOT NULL DEFAULT 'temp';
+    ALTER TABLE reembolsos ALTER COLUMN descricao DROP DEFAULT;
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 2. RPC editar_despesa (+ p_observacao)

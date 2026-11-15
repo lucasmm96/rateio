@@ -27,8 +27,8 @@ export function Component() {
   const membros = rateio?.membros ?? []
 
   const hoje = new Date().toISOString().slice(0, 10)
+  const [titulo, setTitulo] = useState('')
   const [descricao, setDescricao] = useState('')
-  const [observacao, setObservacao] = useState('')
   const [valor, setValor] = useState('')
   const [data, setData] = useState(hoje)
   const [pagadorUserId, setPagadorUserId] = useState(user?.id ?? '')
@@ -53,7 +53,7 @@ export function Component() {
 
   async function salvar() {
     const valorN = parseFloat(valor.replace(',', '.'))
-    if (!descricao.trim()) { setErro('Informe a descrição.'); return }
+    if (!titulo.trim()) { setErro('Informe o título.'); return }
     if (!valor || isNaN(valorN) || valorN <= 0) { setErro('Informe um valor válido.'); return }
     if (!data) { setErro('Informe a data.'); return }
     if (!pagadorUserId) { setErro('Informe quem pagou.'); return }
@@ -64,11 +64,11 @@ export function Component() {
       const despesaId = await criarDespesa({
         rateioId: id!,
         data,
-        descricao: descricao.trim(),
+        titulo: titulo.trim(),
         pagadorUserId,
         valor: valorN,
         situacao: data <= hoje ? 'paga' : 'prevista',
-        observacao: observacao.trim() || undefined,
+        descricao: descricao.trim() || undefined,
       })
       for (const link of pendingLinks) {
         await adicionarLink({
@@ -93,11 +93,18 @@ export function Component() {
 
         <main className="px-margin py-4 pb-32 md:pb-6 space-y-4">
           <Input
-            label="Descrição"
+            label="Título"
             placeholder="ex: Aluguel outubro"
+            value={titulo}
+            onChange={e => setTitulo(e.target.value)}
+            autoFocus
+          />
+
+          <Input
+            label="Descrição"
+            placeholder="ex: parcela 3 de 12"
             value={descricao}
             onChange={e => setDescricao(e.target.value)}
-            autoFocus
           />
 
           <Input
@@ -158,13 +165,6 @@ export function Component() {
               )}
             </div>
           </div>
-
-          <Input
-            label="Observação (opcional)"
-            placeholder="ex: parcela 3 de 12"
-            value={observacao}
-            onChange={e => setObservacao(e.target.value)}
-          />
 
           {/* Links opcionais */}
           <div className="flex flex-col gap-2">
@@ -243,7 +243,7 @@ export function Component() {
           <Button
             onClick={salvar}
             loading={salvando}
-            disabled={salvando || !descricao.trim() || !valor || !pagadorUserId}
+            disabled={salvando || !titulo.trim() || !valor || !pagadorUserId}
             className="w-full"
           >
             Salvar despesa

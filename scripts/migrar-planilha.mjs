@@ -143,7 +143,7 @@ async function main() {
     console.log(`→ Inserindo ${DESPESAS.length} despesas...`)
     for (const d of DESPESAS) {
       await client.query(
-        `INSERT INTO despesas (rateio_id, data, descricao, pagador_user_id, valor)
+        `INSERT INTO despesas (rateio_id, data, titulo, pagador_user_id, valor)
          VALUES ($1, $2, $3, $4, $5)`,
         [rateioId, d.data, d.descricao, idDe[d.pagador], d.valor],
       )
@@ -154,7 +154,7 @@ async function main() {
     console.log(`→ Inserindo ${REEMBOLSOS_PLANILHA.length} reembolsos...`)
     for (const r of REEMBOLSOS_PLANILHA) {
       await client.query(
-        `INSERT INTO reembolsos (rateio_id, data, pagador_user_id, recebedor_user_id, valor, descricao, observacao)
+        `INSERT INTO reembolsos (rateio_id, data, pagador_user_id, recebedor_user_id, valor, titulo, descricao)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           rateioId,
@@ -162,8 +162,8 @@ async function main() {
           idDe[r.pagador],
           idDe[r.recebedor],
           r.valor,
-          'temp',
           'migrado da planilha; conferir contra extrato',
+          'temp',
         ],
       )
     }

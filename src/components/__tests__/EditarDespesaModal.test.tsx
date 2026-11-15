@@ -16,11 +16,11 @@ const despesa: DespesaItem = {
   id: 'desp-1',
   rateio_id: 'rat-1',
   data: '2026-01-15',
-  descricao: 'Aluguel',
+  titulo: 'Aluguel',
   pagador_user_id: 'user-a',
   valor: 1200,
   situacao: 'paga',
-  observacao: null,
+  descricao: null,
   criado_em: '2026-01-01T00:00:00Z',
   pagador: { email: 'alice@test.com' },
 }
@@ -47,7 +47,7 @@ describe('EditarDespesaModal — renderização', () => {
     expect(screen.getByText('Editar despesa')).toBeTruthy()
   })
 
-  it('pré-popula descrição com valor atual', () => {
+  it('pré-popula título com valor atual', () => {
     render(<EditarDespesaModal {...defaultProps} />)
     const input = screen.getByDisplayValue('Aluguel') as HTMLInputElement
     expect(input.value).toBe('Aluguel')
@@ -59,8 +59,8 @@ describe('EditarDespesaModal — renderização', () => {
     expect(input.value).toBe('1200')
   })
 
-  it('pré-popula observação com valor atual', () => {
-    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, observacao: 'Boleto vence dia 10' }} />)
+  it('pré-popula descrição com valor atual', () => {
+    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, descricao: 'Boleto vence dia 10' }} />)
     expect(screen.getByDisplayValue('Boleto vence dia 10')).toBeTruthy()
   })
 
@@ -144,32 +144,32 @@ describe('EditarDespesaModal — submit', () => {
     expect(mockEditar).toHaveBeenCalledWith({
       id: 'desp-1',
       data: '2026-01-15',
-      descricao: 'Aluguel',
+      titulo: 'Aluguel',
       pagadorUserId: 'user-a',
       valor: 1200,
-      observacao: null,
+      descricao: null,
     })
     expect(defaultProps.onSave).toHaveBeenCalled()
   })
 
-  it('envia observação digitada sem espaços nas pontas', async () => {
+  it('envia descrição digitada sem espaços nas pontas', async () => {
     mockEditar.mockResolvedValue(undefined)
     render(<EditarDespesaModal {...defaultProps} />)
     fireEvent.change(screen.getByPlaceholderText('Opcional'), { target: { value: '  parcela 3 de 12  ' } })
     await act(async () => {
       fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
     })
-    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ observacao: 'parcela 3 de 12' }))
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ descricao: 'parcela 3 de 12' }))
   })
 
-  it('envia observacao null quando campo apagado', async () => {
+  it('envia descricao null quando campo apagado', async () => {
     mockEditar.mockResolvedValue(undefined)
-    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, observacao: 'Boleto vence dia 10' }} />)
+    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, descricao: 'Boleto vence dia 10' }} />)
     fireEvent.change(screen.getByDisplayValue('Boleto vence dia 10'), { target: { value: '' } })
     await act(async () => {
       fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
     })
-    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ observacao: null }))
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ descricao: null }))
   })
 
   it('exibe erro do RPC sem chamar onSave', async () => {

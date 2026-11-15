@@ -16,9 +16,9 @@ interface EditarDespesaModalProps {
 export function EditarDespesaModal({ despesa, membros, onSave, onClose }: EditarDespesaModalProps) {
   const hoje = new Date().toISOString().slice(0, 10)
   const [data, setData] = useState(despesa.data.slice(0, 10))
-  const [descricao, setDescricao] = useState(despesa.descricao)
+  const [titulo, setTitulo] = useState(despesa.titulo ?? '')
   const [pagadorUserId, setPagadorUserId] = useState(despesa.pagador_user_id)
-  const [observacao, setObservacao] = useState(despesa.observacao ?? '')
+  const [descricao, setDescricao] = useState(despesa.descricao ?? '')
   const [valor, setValor] = useState(String(despesa.valor))
   const [situacao, setSituacao] = useState<'paga' | 'prevista'>(despesa.situacao)
   const [salvando, setSalvando] = useState(false)
@@ -45,10 +45,10 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
       await editarDespesa({
         id: despesa.id,
         data,
-        descricao: descricao.trim(),
+        titulo: titulo.trim(),
         pagadorUserId,
         valor: valorDecimal.toNumber(),
-        observacao: observacao.trim() || null,
+        descricao: descricao.trim() || null,
       })
       if (situacao !== despesa.situacao) {
         await marcarSituacaoDespesa(despesa.id, situacao)
@@ -67,7 +67,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full sm:max-w-md bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden">
+      <div className="relative w-full sm:max-w-xl bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden max-h-[85vh]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-outline">
           <h2 className="text-title-sm text-on-surface font-semibold">Editar despesa</h2>
           <button
@@ -81,10 +81,17 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
 
         <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
           <Input
+            label="Título"
+            value={titulo}
+            onChange={e => setTitulo(e.target.value)}
+            required
+          />
+
+          <Input
             label="Descrição"
             value={descricao}
             onChange={e => setDescricao(e.target.value)}
-            required
+            placeholder="Opcional"
           />
 
           <Input
@@ -163,12 +170,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
             </div>
           </div>
 
-          <Input
-            label="Observação (opcional)"
-            value={observacao}
-            onChange={e => setObservacao(e.target.value)}
-            placeholder="Opcional"
-          />
+          {/* Observação movida antes do Valor; campo mantido opcional */}
 
           {erro && <p className="text-body-sm text-error">{erro}</p>}
 
@@ -183,7 +185,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
             <Button
               type="submit"
               loading={salvando}
-              disabled={salvando || !descricao.trim() || !valor || !pagadorUserId}
+              disabled={salvando || !titulo.trim() || !valor || !pagadorUserId}
               className="flex-1"
             >
               Salvar

@@ -27,11 +27,11 @@ export interface DespesaItem {
   id: string
   rateio_id: string
   data: string
-  descricao: string
+  titulo: string
   pagador_user_id: string
   valor: number
   situacao: 'paga' | 'prevista'
-  observacao: string | null
+  descricao: string | null
   criado_em: string
   pagador: { email: string } | null
 }
@@ -53,8 +53,8 @@ export interface ReembolsoItem {
   pagador_user_id: string
   recebedor_user_id: string
   valor: number
-  descricao: string
-  observacao: string | null
+  titulo: string
+  descricao: string | null
   criado_em: string
   pagador: { email: string } | null
   recebedor: { email: string } | null
@@ -169,7 +169,7 @@ export async function atualizarCotas(
 export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
   const { data, error } = await neon
     .from('despesas')
-    .select('id, rateio_id, data, descricao, pagador_user_id, valor, situacao, observacao, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
+    .select('id, rateio_id, data, titulo, pagador_user_id, valor, situacao, descricao, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -179,20 +179,20 @@ export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
 export async function criarDespesa(args: {
   rateioId: string
   data: string
-  descricao: string
+  titulo: string
   pagadorUserId: string
   valor: number
   situacao: 'paga' | 'prevista'
-  observacao?: string
+  descricao?: string
 }): Promise<string> {
   const { data: rows, error } = await neon.from('despesas').insert({
     rateio_id: args.rateioId,
     data: args.data,
-    descricao: args.descricao,
+    titulo: args.titulo,
     pagador_user_id: args.pagadorUserId,
     valor: args.valor,
     situacao: args.situacao,
-    ...(args.observacao ? { observacao: args.observacao } : {}),
+    ...(args.descricao ? { descricao: args.descricao } : {}),
   }).select('id')
   if (error) throw new Error(error.message)
   return (rows as { id: string }[])[0].id
@@ -216,7 +216,7 @@ export async function deletarDespesa(id: string): Promise<void> {
 export async function listarReembolsos(rateioId: string): Promise<ReembolsoItem[]> {
   const { data, error } = await neon
     .from('reembolsos')
-    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, descricao, observacao, criado_em, pagador:users!reembolsos_pagador_user_id_fkey(email), recebedor:users!reembolsos_recebedor_user_id_fkey(email)')
+    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, titulo, descricao, criado_em, pagador:users!reembolsos_pagador_user_id_fkey(email), recebedor:users!reembolsos_recebedor_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -234,8 +234,8 @@ export async function criarReembolso(args: {
   pagadorUserId: string
   recebedorUserId: string
   valor: number
-  descricao: string
-  observacao?: string
+  titulo: string
+  descricao?: string
 }): Promise<string> {
   const { data: rows, error } = await neon.from('reembolsos').insert({
     rateio_id: args.rateioId,
@@ -243,8 +243,8 @@ export async function criarReembolso(args: {
     pagador_user_id: args.pagadorUserId,
     recebedor_user_id: args.recebedorUserId,
     valor: args.valor,
-    descricao: args.descricao,
-    ...(args.observacao ? { observacao: args.observacao } : {}),
+    titulo: args.titulo,
+    ...(args.descricao ? { descricao: args.descricao } : {}),
   }).select('id')
   if (error) throw new Error(error.message)
   return (rows as { id: string }[])[0].id
@@ -395,18 +395,18 @@ export async function listarAuditLogDoRateio(rateioId: string): Promise<AuditLog
 export async function editarDespesa(args: {
   id: string
   data: string
-  descricao: string
+  titulo: string
   pagadorUserId: string
   valor: number
-  observacao?: string | null
+  descricao?: string | null
 }): Promise<void> {
   const { error } = await neon.rpc('editar_despesa', {
     p_id:         args.id,
     p_data:       args.data,
-    p_descricao:  args.descricao,
+    p_titulo:     args.titulo,
     p_pagador_id: args.pagadorUserId,
     p_valor:      args.valor,
-    p_observacao: args.observacao ?? null,
+    p_descricao:  args.descricao ?? null,
   })
   if (error) throw new Error(error.message)
 }
@@ -417,8 +417,8 @@ export async function editarReembolso(args: {
   pagadorUserId: string
   recebedorUserId: string
   valor: number
-  descricao: string
-  observacao?: string | null
+  titulo: string
+  descricao?: string | null
 }): Promise<void> {
   const { error } = await neon.rpc('editar_reembolso', {
     p_id:            args.id,
@@ -426,8 +426,8 @@ export async function editarReembolso(args: {
     p_pagador_id:    args.pagadorUserId,
     p_recebedor_id:  args.recebedorUserId,
     p_valor:         args.valor,
-    p_descricao:     args.descricao,
-    p_observacao:    args.observacao ?? null,
+    p_titulo:        args.titulo,
+    p_descricao:     args.descricao ?? null,
   })
   if (error) throw new Error(error.message)
 }

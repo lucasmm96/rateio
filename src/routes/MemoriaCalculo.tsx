@@ -222,7 +222,7 @@ export function Component() {
                             </span>
                             <span className="flex-1 min-w-0">
                               <span className="block text-body-sm font-medium text-on-surface truncate">
-                                {d.descricao}
+                                {d.titulo}
                               </span>
                               <span className="block text-body-xs text-on-surface-variant">
                                 {fmtData(d.data)} · {fmtReais(Number(d.valor))}

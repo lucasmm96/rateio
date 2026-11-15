@@ -374,6 +374,9 @@ function ExtratoContent({
                           <p className="text-body-sm text-on-surface-variant">
                             {fmtData(d.data)} · pago por {nomeDe(d.pagador_user_id)}
                           </p>
+                          {d.observacao && (
+                            <p className="text-body-sm text-on-surface-variant italic">{d.observacao}</p>
+                          )}
                           {rastro !== null && (
                             <button
                               onClick={() => setRastroModal({ rastro, titulo: d.descricao })}
@@ -460,7 +463,7 @@ function ExtratoContent({
                           payments
                         </span>
                         <div className="min-w-0">
-                          <p className="text-body-md text-on-surface font-medium">Reembolso</p>
+                          <p className="text-body-md text-on-surface font-medium">{r.descricao}</p>
                           <p className="text-body-sm text-on-surface-variant">
                             {fmtData(r.data)} · {nomeDe(r.pagador_user_id)} → {nomeDe(r.recebedor_user_id)}
                           </p>

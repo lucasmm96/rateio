@@ -154,14 +154,15 @@ async function main() {
     console.log(`→ Inserindo ${REEMBOLSOS_PLANILHA.length} reembolsos...`)
     for (const r of REEMBOLSOS_PLANILHA) {
       await client.query(
-        `INSERT INTO reembolsos (rateio_id, data, pagador_user_id, recebedor_user_id, valor, observacao)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+        `INSERT INTO reembolsos (rateio_id, data, pagador_user_id, recebedor_user_id, valor, descricao, observacao)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           rateioId,
           r.data,
           idDe[r.pagador],
           idDe[r.recebedor],
           r.valor,
+          'temp',
           'migrado da planilha; conferir contra extrato',
         ],
       )

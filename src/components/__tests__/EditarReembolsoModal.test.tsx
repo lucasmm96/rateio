@@ -17,6 +17,7 @@ const reembolso: ReembolsoItem = {
   pagador_user_id: 'user-a',
   recebedor_user_id: 'user-b',
   valor: 500,
+  descricao: 'Reembolso aluguel',
   observacao: 'Conta luz',
   criado_em: '2026-02-01T00:00:00Z',
   pagador: { email: 'alice@test.com' },
@@ -51,6 +52,11 @@ describe('EditarReembolsoModal — renderização', () => {
     expect(input.value).toBe('500')
   })
 
+  it('pré-popula descrição', () => {
+    render(<EditarReembolsoModal {...defaultProps} />)
+    expect(screen.getByDisplayValue('Reembolso aluguel')).toBeTruthy()
+  })
+
   it('pré-popula observação', () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     expect(screen.getByDisplayValue('Conta luz')).toBeTruthy()
@@ -78,6 +84,16 @@ describe('EditarReembolsoModal — interação', () => {
 })
 
 describe('EditarReembolsoModal — validação', () => {
+  it('exibe erro se descrição vazia', async () => {
+    const { container } = render(<EditarReembolsoModal {...defaultProps} />)
+    fireEvent.change(screen.getByDisplayValue('Reembolso aluguel'), { target: { value: '   ' } })
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!)
+    })
+    expect(screen.getByText('Informe a descrição.')).toBeTruthy()
+    expect(mockEditar).not.toHaveBeenCalled()
+  })
+
   it('exibe erro se pagador = recebedor', async () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     // Change recebedor to be the same as pagador (user-a)
@@ -116,9 +132,20 @@ describe('EditarReembolsoModal — submit', () => {
       pagadorUserId: 'user-a',
       recebedorUserId: 'user-b',
       valor: 500,
+      descricao: 'Reembolso aluguel',
       observacao: 'Conta luz',
     })
     expect(defaultProps.onSave).toHaveBeenCalled()
+  })
+
+  it('envia descrição sem espaços nas pontas', async () => {
+    mockEditar.mockResolvedValue(undefined)
+    render(<EditarReembolsoModal {...defaultProps} />)
+    fireEvent.change(screen.getByDisplayValue('Reembolso aluguel'), { target: { value: '  Reembolso luz  ' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('500').closest('form')!)
+    })
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ descricao: 'Reembolso luz' }))
   })
 
   it('envia observacao null quando campo vazio', async () => {

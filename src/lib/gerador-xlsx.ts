@@ -392,7 +392,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         valores = [
           formatoData(p.data),
           'Reembolso',
-          p.observacao ?? 'Reembolso',
+          p.descricao,
           c.nomeDe(p.pagador_user_id),
           c.nomeDe(p.recebedor_user_id),
           c.nominal(p.valor),
@@ -532,7 +532,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     const ws = wb.addWorksheet('Despesas')
     const colunas = ['Data', 'Descrição', 'Pagador', 'Valor (R$)']
     if (c.corrigir) colunas.push('Unidades')
-    colunas.push('Situação', 'Criado em')
+    colunas.push('Situação', 'Observação', 'Criado em')
     const ultimaColuna = colunas.length
 
     tituloDaSheet(ws, ultimaColuna, `Rateio ${nomeRateio} — Despesas`, subtitulo(nomeRateio))
@@ -548,6 +548,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         c.nominal(d.valor),
         ...(c.corrigir ? [c.unidades(d.valor, d.data)] : []),
         d.situacao === 'paga' ? 'Paga' : 'Prevista',
+        d.observacao ?? '—',
         formatoDataHora(d.criado_em),
       ]
       valores.forEach((valor, i) => {
@@ -568,7 +569,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     }
 
     autofiltro(ws, ultimaColuna, linha - 1)
-    larguras(ws, [12, 42, 18, 14, ...(c.corrigir ? [13] : []), 12, 18])
+    larguras(ws, [12, 42, 18, 14, ...(c.corrigir ? [13] : []), 12, 32, 18])
     congelar(ws, 3)
   }
 
@@ -577,7 +578,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     const ws = wb.addWorksheet('Reembolsos')
     const colunas = ['Data', 'Pagador', 'Recebedor', 'Valor (R$)']
     if (c.corrigir) colunas.push('Unidades')
-    colunas.push('Observação', 'Criado em')
+    colunas.push('Descrição', 'Observação', 'Criado em')
     const ultimaColuna = colunas.length
 
     tituloDaSheet(ws, ultimaColuna, `Rateio ${nomeRateio} — Reembolsos`, subtitulo(nomeRateio))
@@ -592,6 +593,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
         c.nomeDe(r.recebedor_user_id),
         c.reais(r.valor),
         ...(c.corrigir ? [c.unidades(r.valor, r.data)] : []),
+        r.descricao,
         r.observacao ?? '—',
         formatoDataHora(r.criado_em),
       ]
@@ -613,7 +615,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     }
 
     autofiltro(ws, ultimaColuna, linha - 1)
-    larguras(ws, [12, 18, 18, 14, ...(c.corrigir ? [13] : []), 24, 18])
+    larguras(ws, [12, 18, 18, 14, ...(c.corrigir ? [13] : []), 32, 24, 18])
     congelar(ws, 3)
   }
 
@@ -715,7 +717,7 @@ export function montarWorkbook(dados: DadosExportacao): Workbook {
     cabeçalho(ws, ['Quando', 'Quem', 'Ação', 'Entidade', 'Registro', 'Alterações'])
 
     const despesaPorId = new Map(despesas.map((d) => [d.id, d.descricao]))
-    const reembolsoPorId = new Map(reembolsos.map((r) => [r.id, r.observacao ?? 'Reembolso']))
+    const reembolsoPorId = new Map(reembolsos.map((r) => [r.id, r.descricao]))
     let linha = 4
     auditLog.forEach((l) => {
       const label =

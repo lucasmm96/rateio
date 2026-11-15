@@ -67,6 +67,7 @@ export const despesas = pgTable('despesas', {
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
   situacao:        text('situacao').notNull().default('prevista'),
+  observacao:      text('observacao'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -86,6 +87,7 @@ export const reembolsos = pgTable('reembolsos', {
     .notNull()
     .references(() => users.id),
   valor:           numeric('valor', { precision: 14, scale: 2 }).notNull(),
+  descricao:       text('descricao').notNull(),
   observacao:      text('observacao'),
   criadoEm:        timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
 })

@@ -31,6 +31,7 @@ export interface DespesaItem {
   pagador_user_id: string
   valor: number
   situacao: 'paga' | 'prevista'
+  observacao: string | null
   criado_em: string
   pagador: { email: string } | null
 }
@@ -52,6 +53,7 @@ export interface ReembolsoItem {
   pagador_user_id: string
   recebedor_user_id: string
   valor: number
+  descricao: string
   observacao: string | null
   criado_em: string
   pagador: { email: string } | null
@@ -167,7 +169,7 @@ export async function atualizarCotas(
 export async function listarDespesas(rateioId: string): Promise<DespesaItem[]> {
   const { data, error } = await neon
     .from('despesas')
-    .select('id, rateio_id, data, descricao, pagador_user_id, valor, situacao, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
+    .select('id, rateio_id, data, descricao, pagador_user_id, valor, situacao, observacao, criado_em, pagador:users!despesas_pagador_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -181,6 +183,7 @@ export async function criarDespesa(args: {
   pagadorUserId: string
   valor: number
   situacao: 'paga' | 'prevista'
+  observacao?: string
 }): Promise<string> {
   const { data: rows, error } = await neon.from('despesas').insert({
     rateio_id: args.rateioId,
@@ -189,6 +192,7 @@ export async function criarDespesa(args: {
     pagador_user_id: args.pagadorUserId,
     valor: args.valor,
     situacao: args.situacao,
+    ...(args.observacao ? { observacao: args.observacao } : {}),
   }).select('id')
   if (error) throw new Error(error.message)
   return (rows as { id: string }[])[0].id
@@ -212,7 +216,7 @@ export async function deletarDespesa(id: string): Promise<void> {
 export async function listarReembolsos(rateioId: string): Promise<ReembolsoItem[]> {
   const { data, error } = await neon
     .from('reembolsos')
-    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, observacao, criado_em, pagador:users!reembolsos_pagador_user_id_fkey(email), recebedor:users!reembolsos_recebedor_user_id_fkey(email)')
+    .select('id, rateio_id, data, pagador_user_id, recebedor_user_id, valor, descricao, observacao, criado_em, pagador:users!reembolsos_pagador_user_id_fkey(email), recebedor:users!reembolsos_recebedor_user_id_fkey(email)')
     .eq('rateio_id', rateioId)
     .order('data', { ascending: false })
   if (error) throw new Error(error.message)
@@ -230,6 +234,7 @@ export async function criarReembolso(args: {
   pagadorUserId: string
   recebedorUserId: string
   valor: number
+  descricao: string
   observacao?: string
 }): Promise<string> {
   const { data: rows, error } = await neon.from('reembolsos').insert({
@@ -238,6 +243,7 @@ export async function criarReembolso(args: {
     pagador_user_id: args.pagadorUserId,
     recebedor_user_id: args.recebedorUserId,
     valor: args.valor,
+    descricao: args.descricao,
     ...(args.observacao ? { observacao: args.observacao } : {}),
   }).select('id')
   if (error) throw new Error(error.message)
@@ -392,6 +398,7 @@ export async function editarDespesa(args: {
   descricao: string
   pagadorUserId: string
   valor: number
+  observacao?: string | null
 }): Promise<void> {
   const { error } = await neon.rpc('editar_despesa', {
     p_id:         args.id,
@@ -399,6 +406,7 @@ export async function editarDespesa(args: {
     p_descricao:  args.descricao,
     p_pagador_id: args.pagadorUserId,
     p_valor:      args.valor,
+    p_observacao: args.observacao ?? null,
   })
   if (error) throw new Error(error.message)
 }
@@ -409,6 +417,7 @@ export async function editarReembolso(args: {
   pagadorUserId: string
   recebedorUserId: string
   valor: number
+  descricao: string
   observacao?: string | null
 }): Promise<void> {
   const { error } = await neon.rpc('editar_reembolso', {
@@ -417,6 +426,7 @@ export async function editarReembolso(args: {
     p_pagador_id:    args.pagadorUserId,
     p_recebedor_id:  args.recebedorUserId,
     p_valor:         args.valor,
+    p_descricao:     args.descricao,
     p_observacao:    args.observacao ?? null,
   })
   if (error) throw new Error(error.message)

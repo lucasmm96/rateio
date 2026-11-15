@@ -20,6 +20,7 @@ const despesa: DespesaItem = {
   pagador_user_id: 'user-a',
   valor: 1200,
   situacao: 'paga',
+  observacao: null,
   criado_em: '2026-01-01T00:00:00Z',
   pagador: { email: 'alice@test.com' },
 }
@@ -56,6 +57,11 @@ describe('EditarDespesaModal — renderização', () => {
     render(<EditarDespesaModal {...defaultProps} />)
     const input = screen.getByDisplayValue('1200') as HTMLInputElement
     expect(input.value).toBe('1200')
+  })
+
+  it('pré-popula observação com valor atual', () => {
+    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, observacao: 'Boleto vence dia 10' }} />)
+    expect(screen.getByDisplayValue('Boleto vence dia 10')).toBeTruthy()
   })
 
   it('exibe membros do rateio', () => {
@@ -141,8 +147,29 @@ describe('EditarDespesaModal — submit', () => {
       descricao: 'Aluguel',
       pagadorUserId: 'user-a',
       valor: 1200,
+      observacao: null,
     })
     expect(defaultProps.onSave).toHaveBeenCalled()
+  })
+
+  it('envia observação digitada sem espaços nas pontas', async () => {
+    mockEditar.mockResolvedValue(undefined)
+    render(<EditarDespesaModal {...defaultProps} />)
+    fireEvent.change(screen.getByPlaceholderText('Opcional'), { target: { value: '  parcela 3 de 12  ' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ observacao: 'parcela 3 de 12' }))
+  })
+
+  it('envia observacao null quando campo apagado', async () => {
+    mockEditar.mockResolvedValue(undefined)
+    render(<EditarDespesaModal {...defaultProps} despesa={{ ...despesa, observacao: 'Boleto vence dia 10' }} />)
+    fireEvent.change(screen.getByDisplayValue('Boleto vence dia 10'), { target: { value: '' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByDisplayValue('Aluguel').closest('form')!)
+    })
+    expect(mockEditar).toHaveBeenCalledWith(expect.objectContaining({ observacao: null }))
   })
 
   it('exibe erro do RPC sem chamar onSave', async () => {

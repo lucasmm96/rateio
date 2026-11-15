@@ -15,20 +15,28 @@ const membros = [
 const despesas = [
   {
     id: 'd1', rateio_id: 'r1', data: '2026-01-10', descricao: 'Mercado',
-    pagador_user_id: 'P1', valor: 100, situacao: 'paga' as const,
+    pagador_user_id: 'P1', valor: 100, situacao: 'paga' as const, observacao: null,
     criado_em: '2026-01-10T10:00:00', pagador: { email: 'p1@x.com' },
   },
   {
     id: 'd2', rateio_id: 'r1', data: '2026-02-10', descricao: 'Luz',
-    pagador_user_id: 'P2', valor: 200, situacao: 'paga' as const,
+    pagador_user_id: 'P2', valor: 200, situacao: 'paga' as const, observacao: null,
     criado_em: '2026-02-10T11:00:00', pagador: { email: 'p2@x.com' },
   },
   {
     id: 'd3', rateio_id: 'r1', data: '2026-03-10', descricao: 'Água',
-    pagador_user_id: 'P4', valor: 300, situacao: 'paga' as const,
+    pagador_user_id: 'P4', valor: 300, situacao: 'paga' as const, observacao: 'Conta de março',
     criado_em: '2026-03-10T12:00:00', pagador: { email: 'p4@x.com' },
   },
 ]
+
+const reembolso = {
+  id: 'rb1', rateio_id: 'r1', data: '2026-03-20',
+  pagador_user_id: 'P3', recebedor_user_id: 'P4', valor: 50,
+  descricao: 'Reembolso água', observacao: 'pix',
+  criado_em: '2026-03-20T09:00:00',
+  pagador: { email: 'p3@x.com' }, recebedor: { email: 'p4@x.com' },
+}
 
 const rateio = {
   id: 'r1',
@@ -188,6 +196,43 @@ describe('gerador-xlsx', () => {
     // B5 = pct (0,0000 flat), C5 = ajuste (0), D5 = valor acumulado (100)
     expect(ws.getCell('B5').value).toBe(0)
     expect(ws.getCell('D5').value).toBe(100)
+  })
+
+  it('aba Despesas traz coluna Observação', () => {
+    const wb = montarWorkbook(dados())
+    const ws = wb.getWorksheet('Despesas')!
+    expect(ws.getCell('B3').value).toBe('Descrição')
+    expect(ws.getCell('F3').value).toBe('Observação')
+    expect(ws.getCell('F4').value).toBe('—') // d1 sem observação
+    expect(ws.getCell('F6').value).toBe('Conta de março') // d3
+  })
+
+  it('aba Reembolsos traz colunas Descrição e Observação', () => {
+    const wb = montarWorkbook({ ...dados(), reembolsos: [reembolso] })
+    const ws = wb.getWorksheet('Reembolsos')!
+    expect(ws.getCell('E3').value).toBe('Descrição')
+    expect(ws.getCell('F3').value).toBe('Observação')
+    expect(ws.getCell('E4').value).toBe('Reembolso água')
+    expect(ws.getCell('F4').value).toBe('pix')
+  })
+
+  it('extrato e auditoria usam a descrição do reembolso', () => {
+    const wb = montarWorkbook({
+      ...dados(),
+      reembolsos: [reembolso],
+      auditLog: [{
+        id: 'a1', entidade: 'reembolso' as const, entidade_id: 'rb1', rateio_id: 'r1',
+        user_id: 'P1', acao: 'update' as const,
+        diff_json: { valor: { de: '40', para: '50' } },
+        criado_em: '2026-03-21T10:00:00', ator: { email: 'p1@x.com' },
+      }],
+    })
+    const extrato = wb.getWorksheet('Extrato')!
+    // Linha 9 = d3, linha 10 = reembolso (mesmo mês, data posterior)
+    expect(extrato.getCell('B10').value).toBe('Reembolso')
+    expect(extrato.getCell('C10').value).toBe('Reembolso água')
+    const auditoria = wb.getWorksheet('Auditoria')!
+    expect(auditoria.getCell('E4').value).toBe('Reembolso água')
   })
 
   it('slugify com string vazia vira rateio', () => {

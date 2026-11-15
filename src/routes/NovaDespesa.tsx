@@ -28,6 +28,7 @@ export function Component() {
 
   const hoje = new Date().toISOString().slice(0, 10)
   const [descricao, setDescricao] = useState('')
+  const [observacao, setObservacao] = useState('')
   const [valor, setValor] = useState('')
   const [data, setData] = useState(hoje)
   const [pagadorUserId, setPagadorUserId] = useState(user?.id ?? '')
@@ -67,6 +68,7 @@ export function Component() {
         pagadorUserId,
         valor: valorN,
         situacao: data <= hoje ? 'paga' : 'prevista',
+        observacao: observacao.trim() || undefined,
       })
       for (const link of pendingLinks) {
         await adicionarLink({
@@ -156,6 +158,13 @@ export function Component() {
               )}
             </div>
           </div>
+
+          <Input
+            label="Observação (opcional)"
+            placeholder="ex: parcela 3 de 12"
+            value={observacao}
+            onChange={e => setObservacao(e.target.value)}
+          />
 
           {/* Links opcionais */}
           <div className="flex flex-col gap-2">

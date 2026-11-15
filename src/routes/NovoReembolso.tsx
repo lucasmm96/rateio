@@ -38,6 +38,7 @@ export function Component() {
       setRecebedorUserId(outrosMembros[0].user_id)
     }
   }, [outrosMembros.length])
+  const [descricao, setDescricao] = useState('')
   const [observacao, setObservacao] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
@@ -60,6 +61,7 @@ export function Component() {
 
   async function salvar() {
     const valorN = parseFloat(valor.replace(',', '.'))
+    if (!descricao.trim()) { setErro('Informe a descrição.'); return }
     if (!valor || isNaN(valorN) || valorN <= 0) { setErro('Informe um valor válido.'); return }
     if (!data) { setErro('Informe a data.'); return }
     if (!pagadorUserId) { setErro('Informe quem pagou.'); return }
@@ -75,6 +77,7 @@ export function Component() {
         pagadorUserId,
         recebedorUserId,
         valor: valorN,
+        descricao: descricao.trim(),
         observacao: observacao.trim() || undefined,
       })
       for (const link of pendingLinks) {
@@ -154,6 +157,14 @@ export function Component() {
 
         <main className="px-margin py-4 pb-32 md:pb-6 space-y-4">
           <Input
+            label="Descrição"
+            placeholder="ex: Reembolso do aluguel de outubro"
+            value={descricao}
+            onChange={e => setDescricao(e.target.value)}
+            autoFocus
+          />
+
+          <Input
             label="Valor pago"
             type="number"
             inputMode="decimal"
@@ -163,7 +174,6 @@ export function Component() {
             step="0.01"
             value={valor}
             onChange={e => setValor(e.target.value)}
-            autoFocus
           />
 
           <Input
@@ -271,7 +281,7 @@ export function Component() {
           <Button
             onClick={salvar}
             loading={salvando}
-            disabled={salvando || !valor || !pagadorUserId || !recebedorUserId}
+            disabled={salvando || !descricao.trim() || !valor || !pagadorUserId || !recebedorUserId}
             className="w-full"
           >
             Registrar reembolso

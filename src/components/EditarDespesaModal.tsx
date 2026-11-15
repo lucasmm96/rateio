@@ -18,6 +18,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
   const [data, setData] = useState(despesa.data.slice(0, 10))
   const [descricao, setDescricao] = useState(despesa.descricao)
   const [pagadorUserId, setPagadorUserId] = useState(despesa.pagador_user_id)
+  const [observacao, setObservacao] = useState(despesa.observacao ?? '')
   const [valor, setValor] = useState(String(despesa.valor))
   const [situacao, setSituacao] = useState<'paga' | 'prevista'>(despesa.situacao)
   const [salvando, setSalvando] = useState(false)
@@ -47,6 +48,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
         descricao: descricao.trim(),
         pagadorUserId,
         valor: valorDecimal.toNumber(),
+        observacao: observacao.trim() || null,
       })
       if (situacao !== despesa.situacao) {
         await marcarSituacaoDespesa(despesa.id, situacao)
@@ -160,6 +162,13 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
               ))}
             </div>
           </div>
+
+          <Input
+            label="Observação (opcional)"
+            value={observacao}
+            onChange={e => setObservacao(e.target.value)}
+            placeholder="Opcional"
+          />
 
           {erro && <p className="text-body-sm text-error">{erro}</p>}
 

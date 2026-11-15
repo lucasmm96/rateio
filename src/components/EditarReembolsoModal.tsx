@@ -18,12 +18,17 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
   const [pagadorUserId, setPagadorUserId] = useState(reembolso.pagador_user_id)
   const [recebedorUserId, setRecebedorUserId] = useState(reembolso.recebedor_user_id)
   const [valor, setValor] = useState(String(reembolso.valor))
+  const [descricao, setDescricao] = useState(reembolso.descricao)
   const [observacao, setObservacao] = useState(reembolso.observacao ?? '')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!descricao.trim()) {
+      setErro('Informe a descrição.')
+      return
+    }
     if (pagadorUserId === recebedorUserId) {
       setErro('Pagador e recebedor não podem ser o mesmo.')
       return
@@ -42,6 +47,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
         pagadorUserId,
         recebedorUserId,
         valor: valorDecimal.toNumber(),
+        descricao: descricao.trim(),
         observacao: observacao.trim() || null,
       })
       onSave()
@@ -71,6 +77,13 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
         </div>
 
         <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
+          <Input
+            label="Descrição"
+            value={descricao}
+            onChange={e => setDescricao(e.target.value)}
+            required
+          />
+
           <Input
             label="Valor"
             type="number"
@@ -126,7 +139,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
             <Button
               type="submit"
               loading={salvando}
-              disabled={salvando || !valor || !pagadorUserId || !recebedorUserId}
+              disabled={salvando || !descricao.trim() || !valor || !pagadorUserId || !recebedorUserId}
               className="flex-1"
             >
               Salvar

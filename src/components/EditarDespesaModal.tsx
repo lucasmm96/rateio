@@ -67,8 +67,8 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full sm:max-w-xl bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden max-h-[85vh]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-outline">
+      <div className="relative w-full sm:max-w-xl bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-outline shrink-0">
           <h2 className="text-title-sm text-on-surface font-semibold">Editar despesa</h2>
           <button
             onClick={onClose}
@@ -79,7 +79,7 @@ export function EditarDespesaModal({ despesa, membros, onSave, onClose }: Editar
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4 overflow-y-auto">
           <Input
             label="Título"
             value={titulo}

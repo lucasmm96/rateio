@@ -289,38 +289,37 @@ function ExtratoContent({
   const temDadosOriginais = despesas.length > 0 || reembolsos.length > 0
 
   const filtroBar = (
-    <div className="flex flex-wrap gap-x-4 gap-y-2">
-      <div className="flex gap-1.5">
-        {(['todos', 'despesas', 'reembolsos'] as FiltroTipo[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setFiltroTipo(t)}
-            className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroTipo === t ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
-          >
-            {t === 'todos' ? 'Todos' : t === 'despesas' ? 'Despesas' : 'Reembolsos'}
-          </button>
-        ))}
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-x-4 gap-y-2">
+        <div className="flex gap-1.5">
+          {(['todos', 'despesas', 'reembolsos'] as FiltroTipo[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setFiltroTipo(t)}
+              className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroTipo === t ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+            >
+              {t === 'todos' ? 'Todos' : t === 'despesas' ? 'Despesas' : 'Reembolsos'}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {(['pagas', 'previstas', 'todas'] as FiltroStatus[]).map(s => (
+            <button
+              key={s}
+              onClick={() => setFiltroStatus(s)}
+              className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroStatus === s ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+            >
+              {s === 'pagas' ? 'Pagas' : s === 'previstas' ? 'Previstas' : 'Todas'}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="flex gap-1.5">
-        {(['pagas', 'previstas', 'todas'] as FiltroStatus[]).map(s => (
-          <button
-            key={s}
-            onClick={() => setFiltroStatus(s)}
-            className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroStatus === s ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
-          >
-            {s === 'pagas' ? 'Pagas' : s === 'previstas' ? 'Previstas' : 'Todas'}
-          </button>
-        ))}
-      </div>
-      <div className="flex-1 min-w-[200px]">
-        <Input
-          label="Buscar por título"
-          placeholder="Filtrar por título…"
-          value={busca}
-          onChange={e => setBusca(e.target.value)}
-          className="max-w-md"
-        />
-      </div>
+      <Input
+        placeholder="Buscar por título…"
+        aria-label="Buscar por título"
+        value={busca}
+        onChange={e => setBusca(e.target.value)}
+      />
     </div>
   )
 

@@ -96,39 +96,45 @@ export function Component() {
     }
   }
 
+  function escolherPagador(id: string) {
+    if (id === recebedorUserId) setRecebedorUserId(pagadorUserId)
+    setPagadorUserId(id)
+  }
+
+  function escolherRecebedor(id: string) {
+    if (id === pagadorUserId) setPagadorUserId(recebedorUserId)
+    setRecebedorUserId(id)
+  }
+
   function MemberSelector({
     label,
     selected,
     onSelect,
-    disabledId,
-    disabledHint,
+    conflictId,
+    conflictHint,
   }: {
     label: string
     selected: string
     onSelect: (id: string) => void
-    disabledId?: string
-    disabledHint?: string
+    conflictId?: string
+    conflictHint?: string
   }) {
     return (
       <div className="flex flex-col gap-1.5">
         <p className="text-label-lg text-on-surface">{label}</p>
         <div className="space-y-2">
           {membros.map(m => {
-            const isDisabled = m.user_id === disabledId
+            const isConflict = m.user_id === conflictId
             return (
               <button
                 key={m.user_id}
                 type="button"
-                onClick={() => { if (!isDisabled) onSelect(m.user_id) }}
-                disabled={isDisabled}
-                aria-disabled={isDisabled}
+                onClick={() => onSelect(m.user_id)}
                 className={[
                   'w-full flex items-center gap-3 p-3 rounded-lg border transition-colors',
-                  isDisabled
-                    ? 'border-outline opacity-50 cursor-not-allowed'
-                    : selected === m.user_id
-                      ? 'border-primary bg-primary-container/20'
-                      : 'border-outline hover:bg-surface',
+                  selected === m.user_id
+                    ? 'border-primary bg-primary-container/20'
+                    : 'border-outline hover:bg-surface',
                 ].join(' ')}
               >
                 <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-label-sm font-semibold">
@@ -138,10 +144,13 @@ export function Component() {
                   {m.users?.nome ?? m.users?.email?.split('@')[0] ?? m.user_id.slice(0, 8)}
                   {m.user_id === user?.id && ' (você)'}
                 </span>
-                {isDisabled && disabledHint && (
-                  <span className="ml-auto text-label-sm text-on-surface-variant">{disabledHint}</span>
+                {isConflict && conflictHint && (
+                  <span className="ml-auto flex items-center gap-1 text-label-sm text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[14px]" aria-hidden="true">swap_horiz</span>
+                    {conflictHint}
+                  </span>
                 )}
-                {!isDisabled && selected === m.user_id && (
+                {selected === m.user_id && (
                   <span className="material-symbols-outlined text-primary ml-auto text-[20px]" aria-hidden="true">
                     check_circle
                   </span>
@@ -204,17 +213,17 @@ export function Component() {
           <MemberSelector
             label="Quem pagou (fez o reembolso)?"
             selected={pagadorUserId}
-            onSelect={setPagadorUserId}
-            disabledId={recebedorUserId}
-            disabledHint="já é o recebedor"
+            onSelect={escolherPagador}
+            conflictId={recebedorUserId}
+            conflictHint="trocar"
           />
 
           <MemberSelector
             label="Quem recebeu?"
             selected={recebedorUserId}
-            onSelect={setRecebedorUserId}
-            disabledId={pagadorUserId}
-            disabledHint="já é o pagador"
+            onSelect={escolherRecebedor}
+            conflictId={pagadorUserId}
+            conflictHint="trocar"
           />
 
           {rateio && membros.length < 2 && (

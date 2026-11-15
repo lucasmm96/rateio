@@ -26,6 +26,19 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         cleanupOutdatedCaches: true,
+        // Navegações vão à rede primeiro: evita que um index.html antigo
+        // precacheado durante a propagação de um deploy fique preso no SW.
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'navegacao',
+              networkTimeoutSeconds: 3,
+            },
+          },
+        ],
       },
     }),
   ],

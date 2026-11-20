@@ -13,21 +13,23 @@ export function CorrecaoIpcaTable({ rastro }: { rastro: RastroCorrecao }) {
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 gap-y-1 text-label-sm text-on-surface-variant border-b border-outline pb-1">
-        <span>Período</span>
-        <span className="text-right">Ajuste (%)</span>
-        <span className="text-right">Ajuste (R$)</span>
-        <span className="text-right">Valor acumulado (R$)</span>
-      </div>
-      {rastro.etapas.map((e, i) => (
-        <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 gap-y-1 text-body-sm tabular-nums text-on-surface border-b border-outline pb-1">
-          <span className="text-left">{e.rotulo}</span>
-          <span className="text-right">{fmtPct(e.ajustePct.toNumber())}</span>
-          <span className="text-right">{fmtReais(c(e.ajusteReais.toNumber()))}</span>
-          <span className="text-right">{fmtReais(c(e.valorAcumulado.toNumber()))}</span>
+      <div className="overflow-x-auto">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 gap-y-1 text-label-sm text-on-surface-variant border-b border-outline pb-1 min-w-[19rem]">
+          <span>Período</span>
+          <span className="text-right">Ajuste (%)</span>
+          <span className="text-right">Ajuste (R$)</span>
+          <span className="text-right">Valor acumulado (R$)</span>
         </div>
-      ))}
-      <div className="pt-2 border-t border-outline flex justify-between items-center text-label-sm font-medium text-on-surface">
+        {rastro.etapas.map((e, i) => (
+          <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-x-3 gap-y-1 text-body-sm tabular-nums text-on-surface border-b border-outline pb-1 min-w-[19rem]">
+            <span className="text-left">{e.rotulo}</span>
+            <span className="text-right">{fmtPct(e.ajustePct.toNumber())}</span>
+            <span className="text-right">{fmtReais(c(e.ajusteReais.toNumber()))}</span>
+            <span className="text-right">{fmtReais(c(e.valorAcumulado.toNumber()))}</span>
+          </div>
+        ))}
+      </div>
+      <div className="pt-2 border-t border-outline flex flex-wrap justify-between items-center gap-y-1 text-label-sm font-medium text-on-surface">
         <span>
           Valor original <span className="font-bold">{fmtReais(c(rastro.valorOriginal.toNumber()))}</span>
           →

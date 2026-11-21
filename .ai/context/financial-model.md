@@ -204,12 +204,14 @@ sem alterar `U_total` (que só conta despesas pagas a terceiros).
 
 ## 6. Despesas previstas
 
-Uma despesa com `data > hoje` é **prevista**: não entra em `U_total` (passo 1)
-e não entra em `pago_efetivo` (passo 3). Ela existe no banco e aparece no
-extrato com badge "prevista", mas não afeta nenhum saldo atual.
+Uma despesa **prevista** não entra em `U_total` (passo 1) nem em
+`pago_efetivo` (passo 3). Ela existe no banco e aparece no extrato com badge
+"prevista", mas não afeta nenhum saldo atual.
 
-Não há coluna `situacao` no banco — a classificação é derivada em runtime
-comparando `data` com `hoje`.
+A coluna `situacao` (`'paga' | 'prevista'`, default `'prevista'`) guarda a
+classificação. Ao cadastrar, o app marca `'paga'` para data de hoje/passada e
+`'prevista'` para data futura; o usuário pode editar depois. Só despesas
+`'paga'` entram no cálculo — despesa com `data > hoje` é prevista e excluída.
 
 ---
 
@@ -325,6 +327,60 @@ Verificação: −100 − 20 + 120 = 0 ✅
 | `src/core/indice.ts` | `indiceEmData()` — série acumulada + pro-rata diária |
 | `src/core/unidades.ts` | `paraUnidades()` / `paraReais()` — conversão BRL ↔ unidades |
 | `src/core/saldo.ts` | `calcularSaldo()` — algoritmo completo; `saldoEmReais()` — exibição |
+| `src/core/quitacao.ts` | `atribuirQuitacoes()` — quitação por despesa (FIFO, camada de exibição) |
 | `src/core/__tests__/` | Testes contra os oráculos em `__tests__/fixtures/` |
 | `src/core/__tests__/fixtures/test-cases-2p.json` | Oráculo: caso real (2 participantes, IPCA real) |
 | `src/core/__tests__/fixtures/test-cases-np.json` | Oráculo: casos parametrizados (n participantes) |
+
+---
+
+## 11. Quitação por despesa — camada de apresentação (FIFO)
+
+O motor (`calcularSaldo`) opera no agregado do rateio: um `reembolso` não aponta
+para uma `despesa`, então "qual despesa foi saldada e quando" **não é um dado
+do banco**. A tela do extrato precisa dessa resposta para o modal de correção
+IPCA de cada despesa. Ela é produzida por `atribuirQuitacoes()` em
+`src/core/quitacao.ts`.
+
+> **Isto é uma política de apresentação, não uma verdade do modelo.** Qualquer
+> atribuição que preserve os totais (outra política FIFO/LIFO, etc.) daria a
+> mesma soma; a escala FIFO "mais antiga primeiro" foi escolhida por ser a
+> mais defensável. A função nunca altera os totais do motor — apenas decide
+> qual despesa exibir como saldada/em aberto e qual data usar.
+
+### Regra
+
+1. Cada despesa **paga** gera uma obrigação por participante:
+   `obrigação(i, d) = cota(i) × unidades(d)`. O **pagador** cobre a própria
+   cota no instante em que paga a despesa.
+2. A cobertura líquida de cada participante é o `pago_efetivo` do motor
+   (passo 3): despesas que pagou + reembolsos que fez − reembolsos que recebeu.
+3. Essa cobertura é alocada às obrigações **mais antigas primeiro** (FIFO).
+   Quando a cobertura acumulada alcança a obrigação acumulada de uma despesa,
+   ela fica **saldada** e o rastro de correção **congela nessa data**.
+4. Sobrepagamento vira **crédito** e é aplicado às despesas que ainda vão
+   nascer — elas nascem já cobertas (data de quitação = data delas).
+5. Despesa paga por participante com **cota 100%** é **isenta**: não existe
+   credor externo, nada há para quitar; a exibição segue o rastro normal até
+   hoje, sem rótulo de quitada.
+
+### Resultado por despesa
+
+| Campo | Significado |
+|-------|-------------|
+| `saldada` | resíduo hoje ≤ R$0,01 (mesma convenção da tela Saldos) |
+| `saldadaEm` | data ISO em que a última cota foi coberta; o rastro congela aqui |
+| `residuoUnidades` | unidades ainda em aberto (a UI converte para reais de hoje) |
+| `isenta` | pagador detém 100% da própria despesa (sem credor) |
+
+### Invariante de exibição
+
+```
+Σ resíduo em aberto (por despesa, em unidades) = Σ déficit do motor
+```
+
+Deixando de lado o sobrepagamento: quem pagou a mais tem **crédito**, que não é
+resíduo de despesa — aparece como diferença de caixa na tela Saldos. Os cenários
+(três dívidas com reembolsos parciais, sobrepagamento, piloto LUCAS/LETICIA e
+todos os casos do fixture `test-cases-np.json`) verificam a igualdade acima em
+`src/core/__tests__/quitacao.test.ts`.

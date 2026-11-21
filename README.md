@@ -14,6 +14,7 @@ Código **open source e reutilizável**. Fork e adapte para qualquer cenário de
 - Despesas previstas (data futura) não entram no cálculo até a data passar
 - Reembolsos registrados como fatos históricos
 - Memória de cálculo por rateio (breakdown: U\_total, compromisso, pago efetivo, saldo)
+- Correção IPCA por despesa que **congela na quitação**: despesa saldada para de ser corrigida (badge “quitada”); despesa em aberto mostra o **resíduo pendente**, que segue corrigindo
 - Dark mode automático / manual
 
 ## Stack

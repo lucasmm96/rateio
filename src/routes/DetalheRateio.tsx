@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import { Header } from '../components/ui/Header'
@@ -26,6 +26,8 @@ import type { DespesaItem, ReembolsoItem, LinkItem, AuditLogItem } from '../db/q
 import { rastroCorrecao } from '../core/correcao'
 import type { RastroCorrecao } from '../core/correcao'
 import { CorrecaoIpcaModal } from '../components/CorrecaoIpcaModal'
+import type { EstadoQuitacaoDespesa } from '../components/CorrecaoIpcaModal'
+import { atribuirQuitacoes } from '../core/quitacao'
 import { D } from '../core/decimal'
 import { calcularSaldo, saldoEmReais } from '../core/saldo'
 import type { ResultadoSaldo } from '../core/saldo'
@@ -233,11 +235,44 @@ function ExtratoContent({
   const [confirmandoExcluir, setConfirmandoExcluir] = useState<string | null>(null)
   const [excluindo, setExcluindo] = useState(false)
   const [linksAbertos, setLinksAbertos] = useState<Set<string>>(new Set())
-  const [rastroModal, setRastroModal] = useState<{ rastro: RastroCorrecao; titulo: string } | null>(null)
+  const [rastroModal, setRastroModal] = useState<{
+    rastro: RastroCorrecao
+    titulo: string
+    estado?: EstadoQuitacaoDespesa
+  } | null>(null)
   const [busca, setBusca] = useState('')
 
   // Tabela de índices montada uma única vez e reusada por despesa — ver core/correcao.ts.
   const tabelaIpca = corrigirIpca ? construirTabelaIndices(taxasCore) : undefined
+
+  // Atribuição FIFO de quitação por despesa (qual foi saldada e quando). É uma
+  // camada de apresentação: nunca muda os totais do motor (ver core/quitacao.ts).
+  const quitacoes = useMemo(() => {
+    if (!corrigirIpca || taxasCore.length === 0 || despesas.length === 0) return null
+    try {
+      return atribuirQuitacoes({
+        participantes: membros.map((m) => ({ userId: m.user_id, cota: D(m.cota) })),
+        despesas: despesas.map((d) => ({
+          id: d.id,
+          pagadorUserId: d.pagador_user_id,
+          valor: D(d.valor),
+          data: d.data,
+          situacao: d.situacao,
+        })),
+        reembolsos: reembolsos.map((r) => ({
+          pagadorUserId: r.pagador_user_id,
+          recebedorUserId: r.recebedor_user_id,
+          valor: D(r.valor),
+          data: r.data,
+        })),
+        corrigir: true,
+        taxas: taxasCore,
+        hoje,
+      })
+    } catch {
+      return null
+    }
+  }, [corrigirIpca, taxasCore, despesas, reembolsos, membros, hoje])
 
   type FiltroTipo   = 'todos' | 'despesas' | 'reembolsos'
   type FiltroStatus = 'pagas' | 'previstas' | 'todas'
@@ -373,8 +408,28 @@ function ExtratoContent({
                 const d = entry.item
                 const isPaga = d.situacao === 'paga'
                 const isPrevista = !isPaga
+                const quitacao = quitacoes?.get(d.id) ?? null
+                // Estado externo da despesa: null quando não há credor (pagador detém
+                // 100% da própria despesa) — aí o rastro segue normal até hoje.
+                const estadoDespesa: 'saldada' | 'em-aberto' | null =
+                  !quitacao || quitacao.isenta
+                    ? null
+                    : quitacao.saldada
+                      ? 'saldada'
+                      : 'em-aberto'
+                const saldadaEm =
+                  estadoDespesa === 'saldada' && quitacao && quitacao.saldadaEm
+                    ? quitacao.saldadaEm
+                    : null
+                // Saldada: o rastro congela na data da quitação (os ajustes encerram).
                 const rastro = (corrigirIpca && isPaga)
-                  ? rastroCorrecao({ data: d.data, valor: D(d.valor), situacao: d.situacao }, hoje, true, taxasCore, tabelaIpca)
+                  ? rastroCorrecao(
+                      { data: d.data, valor: D(d.valor), situacao: d.situacao },
+                      saldadaEm ?? hoje,
+                      true,
+                      taxasCore,
+                      tabelaIpca,
+                    )
                   : null
                 const isConfirmando = confirmandoExcluir === `d-${d.id}`
                 return (
@@ -394,10 +449,25 @@ function ExtratoContent({
                           )}
                           {rastro !== null && (
                             <button
-                              onClick={() => setRastroModal({ rastro, titulo: d.titulo })}
+                              onClick={() => {
+                                const estado: EstadoQuitacaoDespesa | undefined =
+                                  estadoDespesa === 'saldada' && saldadaEm
+                                    ? { tipo: 'saldada', saldadaEm }
+                                    : estadoDespesa === 'em-aberto' && quitacao
+                                      ? {
+                                          tipo: 'em-aberto',
+                                          residuoReaisHoje: Number(paraReais(quitacao.residuoUnidades, hoje, true, taxasCore).toFixed(2)),
+                                          valorCorrigidoReaisHoje: Number(paraReais(quitacao.unidades, hoje, true, taxasCore).toFixed(2)),
+                                        }
+                                      : undefined
+                                setRastroModal({ rastro, titulo: d.titulo, estado })
+                              }}
                               className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline"
                             >
+                              {estadoDespesa === 'saldada' && <span aria-hidden="true">✓</span>}
                               IPCA {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
+                              {estadoDespesa === 'saldada' && <span className="text-on-surface-variant">· quitada</span>}
+                              {estadoDespesa === 'em-aberto' && <span className="text-on-surface-variant">· em aberto</span>}
                               <span className="material-symbols-outlined text-[12px]" aria-hidden="true">open_in_new</span>
                             </button>
                           )}
@@ -558,6 +628,7 @@ function ExtratoContent({
         <CorrecaoIpcaModal
           rastro={rastroModal.rastro}
           titulo={rastroModal.titulo}
+          estado={rastroModal.estado}
           onClose={() => setRastroModal(null)}
         />
       )}

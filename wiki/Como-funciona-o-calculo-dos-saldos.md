@@ -384,6 +384,14 @@ Pagar exatamente o valor mostrado (por exemplo, R$2,90) pode deixar uma fração
 de centavo para um lado ou para o outro. O app considera quitado quando o saldo
 está entre −R$0,01 e +R$0,01.
 
+**E o que o extrato mostra para cada despesa?** Quando uma despesa foi
+**quitada** (tudo o que se devia dela foi coberto pelos reembolsos), o app
+**congela a correção na data da quitação**: os números pararam de crescer, e o
+modal mostra “Quitada em DD/MM/AAAA”. Um badge “quitada” aparece ao lado do
+IPCA. Se ainda houver **resíduo em aberto**, o modal mostra esse resíduo — o
+valor que de fato falta — e, como referência discreta, o valor corrigido da
+despesa inteira; aí sim os ajustes continuam até a quitação.
+
 ---
 
 ## 13. Exemplos completos
@@ -607,6 +615,11 @@ O extrato mostra a despesa corrigida até hoje. O reembolso é convertido pela
 data em que foi feito. Para quitar, ele precisa ser o valor corrigido até a
 data do reembolso, não até hoje.
 
+**“Depois de quitada, a despesa continua mostrando a correção crescendo.”**
+Falso. Quando uma despesa é quitada, a correção dela congela na data da
+quitação — o badge mostra “quitada”. O que continua crescendo é o resíduo de
+uma despesa que segue **em aberto**.
+
 ---
 
 ## 15. Casos de borda
@@ -679,7 +692,10 @@ soma dos saldos   = 0
 
 - **Extrato do rateio**: mostra o valor original de cada despesa, o badge
   “Paga” ou “prevista” e, quando o IPCA está ligado, um link
-  “IPCA +x,xx%”. Esse link abre a tabela de correção mês a mês.
+  “IPCA +x,xx%”. Esse link abre o modal de correção: se a despesa foi
+  **quitada**, ele congela a tabela na data da quitação (badge “quitada”);
+  se ainda está **em aberto**, mostra o resíduo pendente (o que falta de
+  fato), que continua sendo corrigido até a quitação.
 - **Aba Saldos**: mostra “Seu saldo”, o valor de cada participante, o badge
   “deve”, “a receber” ou “Quitado” e, em cada cartão, para quem a pessoa deve.
 - **Memória de Cálculo**: mostra `U_total`, o compromisso, o pago efetivo, o

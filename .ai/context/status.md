@@ -1,6 +1,6 @@
 # Status de implementação — Rateio
 
-Última atualização: 2026-10-23
+Última atualização: 2026-11-21
 
 ## Fases concluídas
 
@@ -18,6 +18,7 @@ Todas as fases do projeto original foram implementadas:
 | 7 | Memória de cálculo (MemoriaCalculo) | ✅ |
 | 8 | Design system e UI polish (tokens, dark mode, ThemeProvider) | ✅ |
 | 9 | Deploy (Vercel, BrowserRouter, vercel.json, GitHub Actions IPCA/backup) | ✅ |
+| 10 | Quitação por despesa (FIFO em `src/core/quitacao.ts`) + modal IPCA que congela o rastro na quitação e mostra o resíduo em aberto | ✅ |
 
 ## Itens verificados em revisão de código (out/2026)
 
@@ -37,6 +38,7 @@ Todos os itens abaixo foram inspecionados diretamente no código-fonte:
 | ID-03 | Layout de cotas em Configurações (card com email, input %, remove) | ✅ |
 | ID-04 | Button com `rounded` (não `rounded-lg`) | ✅ |
 | ID-05 | `SaldosContent` e `ExtratoContent` como funções autônomas fora do `Component` | ✅ |
+| ID-06 | Modal de correção IPCA distingue despesa **saldada** (rastro congela na data da quitação, sem "equivale hoje") de **em aberto** (mostra o resíduo pendente como protagonista, com a linha secundária "de R$X corrigidos") — atribuição FIFO em `src/core/quitacao.ts` | ✅ |
 | UI-02 | Painel brand do Login com `relative overflow-hidden` | ✅ |
 | UI-04 | Toggle de senha em RedefinirSenha (dois campos independentes) | ✅ |
 | UI-05 | Empty state no extrato ("Nenhuma movimentação ainda.") | ✅ |
@@ -55,4 +57,4 @@ Todos os itens abaixo foram inspecionados diretamente no código-fonte:
 - **Deploy**: Vercel (Hobby) com `vercel.json` SPA rewrite
 - **Auth**: Neon Auth (JWT) — `garantirUsuario` deve ser chamado após login
 - **DB**: Neon Postgres + Drizzle ORM + RLS em todas as tabelas
-- **Core financeiro**: `src/core/saldo.ts:calcularSaldo()` — função pura, testável
+- **Core financeiro**: `src/core/saldo.ts:calcularSaldo()` (agregado, Forma B) + `src/core/quitacao.ts:atribuirQuitacoes()` (FIFO de quitação por despesa, camada de exibição) — funções puras, testáveis

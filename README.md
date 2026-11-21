@@ -196,6 +196,10 @@ saldo_reais_i  = (Σ deve(i→j) − Σ deve(k→i)) × índice(hoje)
 
 Invariantes: `Σ excesso = Σ déficit` e `Σ saldo = 0`.
 
+Para uma explicação sem matemática, com exemplos passo a passo, veja
+[Como funciona o cálculo dos saldos](https://github.com/lucasmm96/rateio/wiki/Como-funciona-o-calculo-dos-saldos)
+na wiki (fonte em [`wiki/`](wiki/)).
+
 ---
 
 ## Segurança

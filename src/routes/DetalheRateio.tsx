@@ -464,10 +464,7 @@ function ExtratoContent({
                               }}
                               className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline"
                             >
-                              {estadoDespesa === 'saldada' && <span aria-hidden="true">✓</span>}
                               IPCA {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
-                              {estadoDespesa === 'saldada' && <span className="text-on-surface-variant">· quitada</span>}
-                              {estadoDespesa === 'em-aberto' && <span className="text-on-surface-variant">· em aberto</span>}
                               <span className="material-symbols-outlined text-[12px]" aria-hidden="true">open_in_new</span>
                             </button>
                           )}
@@ -479,6 +476,12 @@ function ExtratoContent({
                         </p>
                         {isPaga && <Badge variant="default" className="!bg-success/10 !text-success">Paga</Badge>}
                         {isPrevista && <Badge variant="prevista">prevista</Badge>}
+                        {estadoDespesa === 'saldada' && (
+                          <Badge className="!bg-primary !text-on-primary !border-transparent">Quitada</Badge>
+                        )}
+                        {estadoDespesa === 'em-aberto' && (
+                          <Badge className="!bg-warning/10 !text-warning">Em aberto</Badge>
+                        )}
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => onEditDespesa(d)}

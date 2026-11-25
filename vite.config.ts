@@ -8,7 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'favicons/*.png',
+        'favicons/favicon.ico',
+        'icons/*.png',
+      ],
       manifest: {
         name: 'Controle de Rateios',
         short_name: 'Rateios',
@@ -20,7 +25,11 @@ export default defineConfig({
         scope: '/',
         lang: 'pt-BR',
         icons: [
-          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: 'icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icons/maskable-icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: 'icons/maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

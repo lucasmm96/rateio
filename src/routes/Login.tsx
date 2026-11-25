@@ -49,8 +49,8 @@ export function Component() {
           }}
         />
         <div className="relative flex flex-col items-center text-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-12 h-12 brightness-0 invert" />
+          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center">
+            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-12 h-12" />
           </div>
           <h1 className="text-display text-white font-bold tracking-tight">Rateio</h1>
           <p className="text-body-lg text-white/80 max-w-xs">

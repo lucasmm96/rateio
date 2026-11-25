@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useUser, signOut } from '../../db/auth'
 
 const NAV_ITEMS = [
@@ -18,12 +18,10 @@ export function TopNav() {
   return (
     <header className="hidden md:flex lg:hidden items-center h-14 px-4 gap-4 apple-material border-b border-outline shrink-0">
       {/* Logo */}
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center">
-          <img src="/favicon.svg" alt="" aria-hidden="true" className="w-[18px] h-[18px]" />
-        </div>
+      <Link to="/" className="flex items-center gap-2 shrink-0 transition duration-150 active:scale-[0.95]">
+        <img src="/favicon.svg" alt="" aria-hidden="true" className="w-8 h-8" />
         <span className="text-headline-sm text-primary font-bold">Rateio</span>
-      </div>
+      </Link>
 
       {/* Nav items */}
       <nav className="flex items-center gap-1 flex-1">

@@ -54,7 +54,18 @@ describe('Sidebar', () => {
   it('link / ativo em / tem text-primary', () => {
     render(wrap('/'))
     const links = screen.getAllByRole('link')
-    const homeLink = links.find(l => l.getAttribute('href') === '/')
+    const homeLink = links.find(
+      l => l.getAttribute('href') === '/' && l.textContent?.includes('Rateios'),
+    )
     expect(homeLink?.className).toContain('text-primary')
+  })
+
+  it('logo é link para a home', () => {
+    render(wrap())
+    const links = screen.getAllByRole('link')
+    const logoLink = links.find(
+      l => l.getAttribute('href') === '/' && l.textContent?.trim() === 'Rateio',
+    )
+    expect(logoLink).toBeTruthy()
   })
 })

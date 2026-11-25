@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useUser, signOut } from '../../db/auth'
 
 const NAV_ITEMS = [
@@ -21,12 +21,10 @@ export function Sidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:shrink-0 lg:min-h-screen lg:bg-background lg:border-r lg:border-outline">
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-outline shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
-            <img src="/favicon.svg" alt="" aria-hidden="true" className="w-5 h-5" />
-          </div>
+        <Link to="/" className="flex items-center gap-2 transition duration-150 active:scale-[0.98]">
+          <img src="/favicon.svg" alt="" aria-hidden="true" className="w-9 h-9" />
           <span className="text-headline-sm text-primary font-bold">Rateio</span>
-        </div>
+        </Link>
       </div>
 
       {/* Nav items */}

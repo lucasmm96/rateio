@@ -116,7 +116,7 @@ export function Component() {
                     type="button"
                     aria-label={mostrarNovaSenha ? 'Ocultar nova senha' : 'Revelar nova senha'}
                     onClick={() => setMostrarNovaSenha(v => !v)}
-                    className="pr-3 text-tertiary hover:text-on-surface transition-colors"
+                    className="pr-3 text-tertiary hover:text-on-surface transition duration-150 active:scale-[0.90]"
                   >
                     <span className="material-symbols-outlined text-[20px]">
                       {mostrarNovaSenha ? 'visibility_off' : 'visibility'}
@@ -142,7 +142,7 @@ export function Component() {
                     type="button"
                     aria-label={mostrarConfirmarSenha ? 'Ocultar confirmação' : 'Revelar confirmação'}
                     onClick={() => setMostrarConfirmarSenha(v => !v)}
-                    className="pr-3 text-tertiary hover:text-on-surface transition-colors"
+                    className="pr-3 text-tertiary hover:text-on-surface transition duration-150 active:scale-[0.90]"
                   >
                     <span className="material-symbols-outlined text-[20px]">
                       {mostrarConfirmarSenha ? 'visibility_off' : 'visibility'}

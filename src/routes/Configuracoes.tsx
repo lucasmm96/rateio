@@ -133,7 +133,7 @@ function IpcaSection() {
         <Card className="border-error bg-error-container">
           <div className="flex items-center justify-between gap-3">
             <p className="text-body-sm text-on-error-container">{error}</p>
-            <button onClick={reload} className="shrink-0 text-label-sm text-on-error-container underline">
+            <button onClick={reload} className="shrink-0 text-label-sm text-on-error-container underline active:opacity-60 transition-opacity">
               Tentar novamente
             </button>
           </div>
@@ -184,7 +184,7 @@ function IpcaSection() {
             </div>
             <button
               onClick={aplicar}
-              className="h-9 px-4 rounded bg-primary text-on-primary text-label-md font-medium transition-colors"
+              className="h-9 px-4 rounded bg-primary text-on-primary text-label-md font-medium hover:bg-primary-hover transition duration-150 active:scale-[0.95]"
             >
               Aplicar
             </button>
@@ -247,7 +247,7 @@ function IpcaSection() {
                       <th
                         key={key}
                         onClick={() => toggleSort(key)}
-                        className="px-3 py-2 text-left text-label-sm text-on-surface-variant cursor-pointer select-none hover:text-on-surface whitespace-nowrap"
+                        className="px-3 py-2 text-left text-label-sm text-on-surface-variant cursor-pointer select-none hover:text-on-surface active:text-on-surface transition-colors whitespace-nowrap"
                       >
                         {label}
                         {sortBy === key && (
@@ -582,7 +582,7 @@ export function Component() {
                   {rateio.membros.length > 1 && (
                     <button
                       onClick={() => setRemovendoId(m.user_id === removendoId ? null : m.user_id)}
-                      className="p-1.5 rounded text-on-surface-variant hover:text-error transition-colors shrink-0"
+                      className="p-1.5 rounded text-on-surface-variant hover:text-error transition duration-150 active:scale-[0.90] shrink-0"
                       aria-label={`Remover ${m.users?.email ?? 'membro'}`}
                     >
                       <span className="material-symbols-outlined text-[18px]">person_remove</span>
@@ -595,13 +595,13 @@ export function Component() {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => setRemovendoId(null)}
-                        className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                        className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface transition duration-150 active:scale-[0.97]"
                       >
                         Não
                       </button>
                       <button
                         onClick={() => confirmarRemover(m.user_id)}
-                        className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90"
+                        className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90 transition duration-150 active:scale-[0.97]"
                       >
                         Remover
                       </button>
@@ -653,7 +653,7 @@ export function Component() {
                     return (
                       <li
                         key={c.id}
-                        className={`px-4 py-2 ${jaMembro ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                        className={`px-4 py-2 transition-colors ${jaMembro ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant active:bg-surface-variant cursor-pointer'}`}
                         onClick={() => {
                           if (jaMembro) return
                           setNovoMembro(c)
@@ -729,7 +729,7 @@ export function Component() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setConfirmandoArquivar(false)}
-                      className="flex-1 py-2 rounded text-label-lg text-on-surface border border-outline hover:bg-surface transition-colors"
+                      className="flex-1 py-2 rounded text-label-lg text-on-surface border border-outline hover:bg-surface transition duration-150 active:scale-[0.97]"
                     >
                       Cancelar
                     </button>
@@ -806,7 +806,7 @@ export function Component() {
                 {theme !== 'system' && (
                   <button
                     onClick={() => setTheme('system')}
-                    className="text-body-sm text-primary hover:underline"
+                    className="text-body-sm text-primary hover:underline active:opacity-60 transition-opacity"
                   >
                     Usar preferência do sistema
                   </button>

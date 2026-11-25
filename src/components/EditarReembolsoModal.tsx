@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Input } from './ui/Input'
 import { Button } from './ui/Button'
+import { ModalSheet } from './ui/ModalSheet'
+import { useDismiss } from '../hooks/useDismiss'
 import { editarReembolso } from '../db/queries'
 import type { ReembolsoItem } from '../db/queries'
 import type { RateioDetalhe } from '../db/queries'
@@ -22,6 +24,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
   const [descricao, setDescricao] = useState(reembolso.descricao ?? '')
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const { closing, requestClose } = useDismiss(onClose)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,97 +61,90 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div className="relative w-full sm:max-w-xl bg-surface rounded-t-2xl sm:rounded-2xl shadow-tier3 overflow-hidden max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-outline shrink-0">
-          <h2 className="text-title-sm text-on-surface font-semibold">Editar reembolso</h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-on-surface-variant hover:bg-surface-variant transition-colors"
-            aria-label="Fechar"
-          >
-            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4 overflow-y-auto">
-          <Input
-            label="Título"
-            value={titulo}
-            onChange={e => setTitulo(e.target.value)}
-            required
-          />
-
-          <Input
-            label="Descrição"
-            value={descricao}
-            onChange={e => setDescricao(e.target.value)}
-          />
-
-          <Input
-            label="Valor"
-            type="number"
-            inputMode="decimal"
-            placeholder="0,00"
-            prefix="R$"
-            min="0.01"
-            step="0.01"
-            value={valor}
-            onChange={e => setValor(e.target.value)}
-            required
-          />
-
-          <Input
-            label="Data"
-            type="date"
-            value={data}
-            onChange={e => setData(e.target.value)}
-            required
-          />
-
-          <MemberSelect
-            label="Pagador"
-            membros={membros}
-            value={pagadorUserId}
-            onChange={setPagadorUserId}
-          />
-
-          <MemberSelect
-            label="Recebedor"
-            membros={membros}
-            value={recebedorUserId}
-            onChange={setRecebedorUserId}
-          />
-
-          {/* Observação movida antes do Valor; campo mantido opcional */}
-
-          {erro && <p className="text-body-sm text-error">{erro}</p>}
-
-          <div className="flex gap-3 pb-2">
-            <Button
-              type="button"
-              onClick={onClose}
-              className="flex-1 !bg-transparent !text-on-surface border border-outline hover:!bg-surface-variant"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              loading={salvando}
-              disabled={salvando || !titulo.trim() || !valor || !pagadorUserId || !recebedorUserId}
-              className="flex-1"
-            >
-              Salvar
-            </Button>
-          </div>
-        </form>
+    <ModalSheet closing={closing} onRequestClose={requestClose} labelledBy="editar-reembolso-title" maxWidthClassName="sm:max-w-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-outline shrink-0" id="editar-reembolso-title">
+        <h2 className="text-title-sm text-on-surface font-semibold">Editar reembolso</h2>
+        <button
+          onClick={requestClose}
+          className="p-1 rounded-full text-on-surface-variant hover:bg-surface-variant transition duration-150 active:scale-[0.90]"
+          aria-label="Fechar"
+        >
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
+        </button>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4 overflow-y-auto">
+        <Input
+          label="Título"
+          value={titulo}
+          onChange={e => setTitulo(e.target.value)}
+          required
+        />
+
+        <Input
+          label="Descrição"
+          value={descricao}
+          onChange={e => setDescricao(e.target.value)}
+        />
+
+        <Input
+          label="Valor"
+          type="number"
+          inputMode="decimal"
+          placeholder="0,00"
+          prefix="R$"
+          min="0.01"
+          step="0.01"
+          value={valor}
+          onChange={e => setValor(e.target.value)}
+          required
+        />
+
+        <Input
+          label="Data"
+          type="date"
+          value={data}
+          onChange={e => setData(e.target.value)}
+          required
+        />
+
+        <MemberSelect
+          label="Pagador"
+          membros={membros}
+          value={pagadorUserId}
+          onChange={setPagadorUserId}
+        />
+
+        <MemberSelect
+          label="Recebedor"
+          membros={membros}
+          value={recebedorUserId}
+          onChange={setRecebedorUserId}
+        />
+
+        {/* Observação movida antes do Valor; campo mantido opcional */}
+
+        {erro && <p className="text-body-sm text-error">{erro}</p>}
+
+        <div className="flex gap-3 pb-2">
+          <Button
+            type="button"
+            onClick={requestClose}
+            className="flex-1 !bg-transparent !text-on-surface border border-outline hover:!bg-surface-variant"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={salvando}
+            disabled={salvando || !titulo.trim() || !valor || !pagadorUserId || !recebedorUserId}
+            className="flex-1"
+          >
+            Salvar
+          </Button>
+        </div>
+      </form>
+    </ModalSheet>
   )
 }
 
@@ -170,7 +166,7 @@ function MemberSelect({ label, membros, value, onChange }: MemberSelectProps) {
             type="button"
             onClick={() => onChange(m.user_id)}
             className={[
-              'w-full flex items-center gap-3 p-3 rounded-lg border transition duration-150',
+              'w-full flex items-center gap-3 p-3 rounded-lg border transition duration-150 active:scale-[0.98]',
               value === m.user_id
                 ? 'border-primary bg-primary-container/20'
                 : 'border-outline hover:bg-surface-variant',

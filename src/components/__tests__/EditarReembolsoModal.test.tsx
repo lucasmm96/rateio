@@ -70,16 +70,17 @@ describe('EditarReembolsoModal — renderização', () => {
 })
 
 describe('EditarReembolsoModal — interação', () => {
-  it('clicar no botão fechar chama onClose', () => {
+  // onClose roda após a animação de saída (useDismiss) — ver apple-design §7/§12.
+  it('clicar no botão fechar chama onClose', async () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     fireEvent.click(screen.getByLabelText('Fechar'))
-    expect(defaultProps.onClose).toHaveBeenCalled()
+    await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled())
   })
 
-  it('clicar em Cancelar chama onClose', () => {
+  it('clicar em Cancelar chama onClose', async () => {
     render(<EditarReembolsoModal {...defaultProps} />)
     fireEvent.click(screen.getByText('Cancelar'))
-    expect(defaultProps.onClose).toHaveBeenCalled()
+    await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled())
   })
 })
 

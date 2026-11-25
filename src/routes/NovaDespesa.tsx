@@ -179,7 +179,7 @@ export function Component() {
                 <button
                   type="button"
                   onClick={() => setPendingLinks(prev => prev.filter((_, j) => j !== i))}
-                  className="text-on-surface-variant hover:text-error transition-colors shrink-0"
+                  className="text-on-surface-variant hover:text-error transition duration-150 active:scale-[0.90] shrink-0"
                   aria-label="Remover link"
                 >
                   <span className="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
@@ -210,14 +210,14 @@ export function Component() {
                   <button
                     type="button"
                     onClick={addPendingLink}
-                    className="px-3 py-1 rounded text-label-md text-on-primary bg-primary hover:opacity-90"
+                    className="px-3 py-1 rounded text-label-md text-on-primary bg-primary hover:opacity-90 transition duration-150 active:scale-[0.97]"
                   >
                     Adicionar
                   </button>
                   <button
                     type="button"
                     onClick={() => { setShowLinkForm(false); setLinkUrl(''); setLinkRotulo(''); setLinkUrlErro(null) }}
-                    className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                    className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface transition duration-150 active:scale-[0.97]"
                   >
                     Cancelar
                   </button>
@@ -227,7 +227,7 @@ export function Component() {
               <button
                 type="button"
                 onClick={() => setShowLinkForm(true)}
-                className="flex items-center gap-1 text-label-md text-primary hover:underline self-start"
+                className="flex items-center gap-1 text-label-md text-primary hover:underline active:opacity-60 transition-opacity self-start"
               >
                 <span className="material-symbols-outlined text-[16px]" aria-hidden="true">add</span>
                 Adicionar link

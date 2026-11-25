@@ -27,8 +27,8 @@ export function GoogleButton({ onClick, label }: Props) {
         flex items-center justify-center gap-3 w-full h-11
         rounded-lg border border-outline bg-surface
         text-body-lg text-on-surface font-medium
-        hover:bg-surface-container transition-colors duration-150
-        disabled:opacity-60 disabled:cursor-not-allowed
+        hover:bg-surface-container transition duration-150 active:scale-[0.98]
+        disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100
       "
     >
       {loading ? (

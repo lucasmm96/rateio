@@ -79,7 +79,7 @@ export function Component() {
             {/* "+ Novo rateio" button — tablet/desktop only */}
             <button
               onClick={() => navigate('/novo-rateio')}
-              className="hidden md:flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-on-primary text-label-lg font-medium hover:bg-primary-hover transition-colors"
+              className="hidden md:flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-on-primary text-label-lg font-medium hover:bg-primary-hover transition duration-150 active:scale-[0.97]"
             >
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
               Novo rateio
@@ -87,7 +87,7 @@ export function Component() {
             {/* Logout — mobile only (sidebar/topnav handle it on tablet/desktop) */}
             <button
               onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-              className="md:hidden p-2 rounded-full text-on-surface-variant hover:bg-surface transition-colors"
+              className="md:hidden p-2 rounded-full text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
               aria-label="Sair"
             >
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>

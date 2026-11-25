@@ -36,6 +36,7 @@ import { construirTabelaIndices } from '../core/indice'
 import type { TaxaIPCA } from '../core/indice'
 import { useUser } from '../db/auth'
 import type { RateioDetalhe } from '../db/queries'
+import { useDismiss } from '../hooks/useDismiss'
 
 function fmtData(iso: string) {
   const [y, m, d] = iso.slice(0, 10).split('-')
@@ -112,7 +113,7 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
           {currentSaldoReais > 0.01 && (
             <button
               onClick={() => navigate(`/rateios/${rateioId}/novo-reembolso`)}
-              className="mt-3 w-full py-2 rounded text-label-lg text-on-primary-container bg-primary-container hover:opacity-90 transition-opacity"
+              className="mt-3 w-full py-2 rounded text-label-lg text-on-primary-container bg-primary-container hover:opacity-90 active:scale-[0.98] transition"
             >
               Registrar reembolso
             </button>
@@ -182,7 +183,7 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
       <Card variant="elevated">
         <button
           onClick={() => setLinksRateioAbertos(prev => !prev)}
-          className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+          className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary active:opacity-60 transition"
         >
           <span className={`material-symbols-outlined text-[14px] ${rateioTemLinks ? 'text-primary' : ''}`} aria-hidden="true">link</span>
           Links do rateio
@@ -200,7 +201,7 @@ function SaldosContent({ resultado, membros, hoje, corrigirIpca, taxasCore, rate
       {membros.length > 0 && (
         <Link
           to={`/rateios/${rateioId}/memoria`}
-          className="flex items-center justify-center gap-2 py-3 text-label-lg text-primary hover:underline"
+          className="flex items-center justify-center gap-2 py-3 text-label-lg text-primary hover:underline active:scale-[0.98] transition"
         >
           <span className="material-symbols-outlined text-[18px]" aria-hidden="true">calculate</span>
           Ver memória de cálculo
@@ -331,7 +332,7 @@ function ExtratoContent({
             <button
               key={t}
               onClick={() => setFiltroTipo(t)}
-              className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroTipo === t ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+              className={['px-3 py-1 rounded-full border text-label-md transition duration-150 active:scale-[0.95]', filtroTipo === t ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
             >
               {t === 'todos' ? 'Todos' : t === 'despesas' ? 'Despesas' : 'Reembolsos'}
             </button>
@@ -342,7 +343,7 @@ function ExtratoContent({
             <button
               key={s}
               onClick={() => setFiltroStatus(s)}
-              className={['px-3 py-1 rounded-full border text-label-md transition-colors', filtroStatus === s ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
+              className={['px-3 py-1 rounded-full border text-label-md transition duration-150 active:scale-[0.95]', filtroStatus === s ? 'bg-primary-container text-on-primary-container border-transparent' : 'bg-transparent text-on-surface-variant border-outline hover:bg-surface'].join(' ')}
             >
               {s === 'pagas' ? 'Pagas' : s === 'previstas' ? 'Previstas' : 'Todas'}
             </button>
@@ -462,7 +463,7 @@ function ExtratoContent({
                                       : undefined
                                 setRastroModal({ rastro, titulo: d.titulo, estado })
                               }}
-                              className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline"
+                              className="mt-0.5 inline-flex items-center gap-1 text-label-sm text-primary hover:underline active:opacity-60 transition-opacity"
                             >
                               IPCA {(rastro.totalAjustePct.toNumber() >= 0 ? '+' : '')}{rastro.totalAjustePct.toFixed(2)}%
                               <span className="material-symbols-outlined text-[12px]" aria-hidden="true">open_in_new</span>
@@ -485,14 +486,14 @@ function ExtratoContent({
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => onEditDespesa(d)}
-                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            className="text-on-surface-variant hover:text-primary transition duration-150 active:scale-[0.90]"
                             aria-label="Editar despesa"
                           >
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
                           <button
                             onClick={() => setConfirmandoExcluir(isConfirmando ? null : `d-${d.id}`)}
-                            className="text-on-surface-variant hover:text-error transition-colors"
+                            className="text-on-surface-variant hover:text-error transition duration-150 active:scale-[0.90]"
                             aria-label="Excluir despesa"
                           >
                             <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -506,14 +507,14 @@ function ExtratoContent({
                         <div className="flex gap-2">
                           <button
                             onClick={() => setConfirmandoExcluir(null)}
-                            className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                            className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface transition duration-150 active:scale-[0.97]"
                           >
                             Cancelar
                           </button>
                           <button
                             onClick={() => confirmarExcluir(d.id, 'despesa')}
                             disabled={excluindo}
-                            className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90 disabled:opacity-50"
+                            className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90 disabled:opacity-50 transition duration-150 active:scale-[0.97]"
                           >
                             Excluir
                           </button>
@@ -523,7 +524,7 @@ function ExtratoContent({
                     <div className="mt-2 pt-2 border-t border-outline">
                       <button
                         onClick={() => toggleLinks(`d-${d.id}`)}
-                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary active:opacity-60 transition"
                       >
                         <span className={`material-symbols-outlined text-[14px] ${entidadesComLinks.has(d.id) ? 'text-primary' : ''}`} aria-hidden="true">link</span>
                         Links
@@ -567,14 +568,14 @@ function ExtratoContent({
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => onEditReembolso(r)}
-                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            className="text-on-surface-variant hover:text-primary transition duration-150 active:scale-[0.90]"
                             aria-label="Editar reembolso"
                           >
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
                           <button
                             onClick={() => setConfirmandoExcluir(isConfirmando ? null : `r-${r.id}`)}
-                            className="text-on-surface-variant hover:text-error transition-colors"
+                            className="text-on-surface-variant hover:text-error transition duration-150 active:scale-[0.90]"
                             aria-label="Excluir reembolso"
                           >
                             <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -588,14 +589,14 @@ function ExtratoContent({
                         <div className="flex gap-2">
                           <button
                             onClick={() => setConfirmandoExcluir(null)}
-                            className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface"
+                            className="px-3 py-1 rounded text-label-md text-on-surface border border-outline hover:bg-surface transition duration-150 active:scale-[0.97]"
                           >
                             Cancelar
                           </button>
                           <button
                             onClick={() => confirmarExcluir(r.id, 'reembolso')}
                             disabled={excluindo}
-                            className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90 disabled:opacity-50"
+                            className="px-3 py-1 rounded text-label-md text-on-primary bg-error hover:opacity-90 disabled:opacity-50 transition duration-150 active:scale-[0.97]"
                           >
                             Excluir
                           </button>
@@ -605,7 +606,7 @@ function ExtratoContent({
                     <div className="mt-2 pt-2 border-t border-outline">
                       <button
                         onClick={() => toggleLinks(`r-${r.id}`)}
-                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary active:opacity-60 transition"
                       >
                         <span className={`material-symbols-outlined text-[14px] ${entidadesComLinks.has(r.id) ? 'text-primary' : ''}`} aria-hidden="true">link</span>
                         Links
@@ -647,6 +648,7 @@ export function Component() {
   const { user, isPending: authPending } = useUser()
   const [tab, setTab] = useState<Tab>('saldos')
   const [fabOpen, setFabOpen] = useState(false)
+  const { closing: fabClosing, requestClose: closeFab } = useDismiss(() => setFabOpen(false))
   const [editandoDespesa, setEditandoDespesa] = useState<DespesaItem | null>(null)
   const [editandoReembolso, setEditandoReembolso] = useState<ReembolsoItem | null>(null)
   const [exportarErro, setExportarErro] = useState<string | null>(null)
@@ -763,28 +765,28 @@ export function Component() {
           <>
             <button
               onClick={() => navigate(`/rateios/${id}/nova-despesa`)}
-              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded bg-primary text-on-primary text-label-lg font-medium hover:bg-primary-hover transition-colors"
+              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded bg-primary text-on-primary text-label-lg font-medium hover:bg-primary-hover transition duration-150 active:scale-[0.97]"
             >
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
               Nova despesa
             </button>
             <button
               onClick={() => navigate(`/rateios/${id}/novo-reembolso`)}
-              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded border border-outline text-on-surface text-label-lg font-medium hover:bg-surface transition-colors"
+              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded border border-outline text-on-surface text-label-lg font-medium hover:bg-surface transition duration-150 active:scale-[0.97]"
             >
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">payments</span>
               Reembolso
             </button>
             <button
               onClick={handleExportar}
-              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded border border-outline text-on-surface text-label-lg font-medium hover:bg-surface transition-colors"
+              className="hidden md:flex items-center gap-1.5 h-9 px-3 rounded border border-outline text-on-surface text-label-lg font-medium hover:bg-surface transition duration-150 active:scale-[0.97]"
             >
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">download</span>
               Exportar
             </button>
             <Link
               to={`/configuracoes?rateio=${id}`}
-              className="p-2 rounded-full text-on-surface-variant hover:bg-surface transition-colors"
+              className="p-2 rounded-full text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
               aria-label="Configurações do rateio"
             >
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">settings</span>
@@ -958,16 +960,16 @@ export function Component() {
       {/* Speed dial — mobile only */}
       <div className="md:hidden">
         {fabOpen && (
-          <div className="fixed inset-0 z-10" onClick={() => setFabOpen(false)} aria-hidden="true" />
+          <div className="fixed inset-0 z-10" onClick={closeFab} aria-hidden="true" />
         )}
         <div
           className="fixed bottom-20 right-4 z-20 flex flex-col-reverse items-end gap-3"
           style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
           <button
-            onClick={() => setFabOpen(prev => !prev)}
+            onClick={() => (fabOpen ? closeFab() : setFabOpen(true))}
             aria-label={fabOpen ? 'Fechar opções' : 'Adicionar'}
-            className="flex items-center justify-center w-14 h-14 rounded-fab bg-primary text-on-primary shadow-tier3 hover:bg-primary-hover active:bg-primary-hover transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="flex items-center justify-center w-14 h-14 rounded-fab bg-primary text-on-primary shadow-tier3 hover:bg-primary-hover active:bg-primary-hover active:scale-[0.92] transition duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <span className={`material-symbols-outlined text-2xl transition-transform duration-200 ${fabOpen ? 'rotate-45' : ''}`}>
               add
@@ -976,26 +978,29 @@ export function Component() {
 
           {fabOpen && (
             <>
-              <div className="flex items-center gap-2 animate-fab-appear" style={{ animationDelay: '60ms' }}>
+              <div
+                className={`flex items-center gap-2 ${fabClosing ? 'animate-fab-disappear' : 'animate-fab-appear'}`}
+                style={fabClosing ? undefined : { animationDelay: '60ms' }}
+              >
                 <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded shadow-tier1 whitespace-nowrap">
                   Nova despesa
                 </span>
                 <button
                   onClick={() => { navigate(`/rateios/${id}/nova-despesa`); setFabOpen(false) }}
                   aria-label="Nova despesa"
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 active:scale-[0.90] transition"
                 >
                   <span className="material-symbols-outlined text-[20px]">receipt_long</span>
                 </button>
               </div>
-              <div className="flex items-center gap-2 animate-fab-appear">
+              <div className={`flex items-center gap-2 ${fabClosing ? 'animate-fab-disappear' : 'animate-fab-appear'}`}>
                 <span className="bg-surface text-on-surface text-label-lg px-3 py-1.5 rounded shadow-tier1 whitespace-nowrap">
                   Exportar
                 </span>
                 <button
                   onClick={() => { handleExportar(); setFabOpen(false) }}
                   aria-label="Exportar"
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-tier2 hover:opacity-90 active:scale-[0.90] transition"
                 >
                   <span className="material-symbols-outlined text-[20px]">download</span>
                 </button>

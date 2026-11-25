@@ -109,7 +109,7 @@ export function Component() {
                   type="button"
                   aria-label={mostrarSenha ? 'Ocultar senha' : 'Revelar senha'}
                   onClick={() => setMostrarSenha(v => !v)}
-                  className="pr-3 text-tertiary hover:text-on-surface transition-colors"
+                  className="pr-3 text-tertiary hover:text-on-surface transition duration-150 active:scale-[0.90]"
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                     {mostrarSenha ? 'visibility_off' : 'visibility'}

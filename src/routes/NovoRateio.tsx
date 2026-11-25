@@ -146,7 +146,7 @@ export function Component() {
                   return (
                     <li
                       key={c.id}
-                      className={`px-4 py-2 ${jaAdicionado ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant cursor-pointer'}`}
+                      className={`px-4 py-2 transition-colors ${jaAdicionado ? 'text-on-surface/40 cursor-not-allowed' : 'hover:bg-surface-variant active:bg-surface-variant cursor-pointer'}`}
                       onClick={() => selecionarCandidato(c)}
                     >
                       {c.nome

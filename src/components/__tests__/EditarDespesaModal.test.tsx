@@ -72,23 +72,24 @@ describe('EditarDespesaModal — renderização', () => {
 })
 
 describe('EditarDespesaModal — interação', () => {
-  it('clicar no backdrop chama onClose', () => {
+  // onClose roda após a animação de saída (useDismiss) — ver apple-design §7/§12.
+  it('clicar no backdrop chama onClose', async () => {
     render(<EditarDespesaModal {...defaultProps} />)
     const backdrop = document.querySelector('.fixed.inset-0.z-50 > .absolute')!
     fireEvent.click(backdrop)
-    expect(defaultProps.onClose).toHaveBeenCalled()
+    await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled())
   })
 
-  it('clicar no botão fechar chama onClose', () => {
+  it('clicar no botão fechar chama onClose', async () => {
     render(<EditarDespesaModal {...defaultProps} />)
     fireEvent.click(screen.getByLabelText('Fechar'))
-    expect(defaultProps.onClose).toHaveBeenCalled()
+    await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled())
   })
 
-  it('clicar em Cancelar chama onClose', () => {
+  it('clicar em Cancelar chama onClose', async () => {
     render(<EditarDespesaModal {...defaultProps} />)
     fireEvent.click(screen.getByText('Cancelar'))
-    expect(defaultProps.onClose).toHaveBeenCalled()
+    await waitFor(() => expect(defaultProps.onClose).toHaveBeenCalled())
   })
 })
 

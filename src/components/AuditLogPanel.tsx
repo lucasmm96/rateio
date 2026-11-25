@@ -46,7 +46,7 @@ export function AuditLogPanel({ entidade, entidadeId, hasEntries }: AuditLogPane
     <div className="mt-2 pt-2 border-t border-outline">
       <button
         onClick={() => setAberto(prev => !prev)}
-        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary transition-colors"
+        className="flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-primary active:opacity-60 transition"
       >
         <span className={`material-symbols-outlined text-[14px] ${hasEntries ? 'text-primary' : ''}`} aria-hidden="true">history</span>
         Histórico

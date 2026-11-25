@@ -87,7 +87,7 @@ export function Component() {
             {/* Logout — mobile only (sidebar/topnav handle it on tablet/desktop) */}
             <button
               onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-              className="md:hidden p-2 rounded-full text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
+              className="md:hidden flex items-center justify-center h-11 w-11 rounded-full text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
               aria-label="Sair"
             >
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>

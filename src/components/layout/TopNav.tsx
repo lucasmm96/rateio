@@ -52,7 +52,7 @@ export function TopNav() {
       <div className="flex items-center gap-1 shrink-0">
         <NavLink
           to="/perfil"
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-container text-on-primary-container text-label-sm font-semibold hover:opacity-80 transition duration-150 active:scale-[0.90]"
+          className="flex items-center justify-center w-11 h-11 rounded-full bg-primary-container text-on-primary-container text-label-sm font-semibold hover:opacity-80 transition duration-150 active:scale-[0.90]"
           title="Editar perfil"
           aria-label="Perfil"
         >
@@ -60,7 +60,7 @@ export function TopNav() {
         </NavLink>
         <button
           onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-          className="p-2 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
+          className="flex items-center justify-center h-11 w-11 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
           title="Sair"
           aria-label="Sair"
         >

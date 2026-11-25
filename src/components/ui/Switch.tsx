@@ -33,7 +33,7 @@ function Switch({ checked, onChange, label, disabled }: SwitchProps) {
         <span
           className={[
             'absolute top-0.5 h-5 w-5 rounded-full bg-on-primary shadow-sm',
-            'transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+            'transition-transform duration-200 ease-out',
             checked ? 'translate-x-5' : 'translate-x-0.5',
           ].join(' ')}
         />

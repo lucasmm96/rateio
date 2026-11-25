@@ -67,7 +67,7 @@ export function Sidebar() {
           </NavLink>
           <button
             onClick={async () => { try { await signOut() } catch (_) {}; navigate('/login', { replace: true }) }}
-            className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
+            className="flex items-center justify-center h-10 w-10 rounded-lg text-on-surface-variant hover:bg-surface transition duration-150 active:scale-[0.90]"
             title="Sair"
             aria-label="Sair"
           >

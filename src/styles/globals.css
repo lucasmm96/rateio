@@ -33,6 +33,30 @@
   /* RGB channels for rgba() translucency (apple-material surfaces) */
   --color-background-ch: 255 255 255;
   --color-surface-ch: 248 250 252;
+
+  /* Canais RGB — permitem variantes de opacidade do Tailwind (bg-primary/10) */
+  --color-primary-ch: 0 168 104;
+  --color-primary-hover-ch: 0 135 90;
+  --color-primary-container-ch: 230 247 240;
+  --color-on-primary-ch: 255 255 255;
+  --color-on-primary-container-ch: 0 135 90;
+  --color-secondary-container-ch: 209 250 229;
+  --color-on-secondary-container-ch: 6 95 70;
+  --color-surface-container-ch: 241 245 249;
+  --color-surface-container-high-ch: 226 232 240;
+  --color-surface-container-low-ch: 248 250 252;
+  --color-surface-container-lowest-ch: 255 255 255;
+  --color-surface-variant-ch: 241 245 249;
+  --color-on-surface-ch: 15 23 42;
+  --color-on-surface-variant-ch: 100 116 139;
+  --color-outline-ch: 226 232 240;
+  --color-outline-variant-ch: 226 232 240;
+  --color-tertiary-ch: 100 116 139;
+  --color-error-ch: 220 38 38;
+  --color-on-error-ch: 255 255 255;
+  --color-on-error-container-ch: 147 0 10;
+  --color-warning-ch: 217 119 6;
+  --color-success-ch: 0 168 104;
 }
 
 /* ── Tokens de cor — modo escuro ── */
@@ -66,6 +90,30 @@
   /* RGB channels for rgba() translucency (apple-material surfaces) */
   --color-background-ch: 15 23 42;
   --color-surface-ch: 30 41 59;
+
+  /* Canais RGB — variantes de opacidade do Tailwind */
+  --color-primary-ch: 52 211 153;
+  --color-primary-hover-ch: 110 231 183;
+  --color-primary-container-ch: 6 78 59;
+  --color-on-primary-ch: 15 23 42;
+  --color-on-primary-container-ch: 52 211 153;
+  --color-secondary-container-ch: 6 78 59;
+  --color-on-secondary-container-ch: 52 211 153;
+  --color-surface-container-ch: 38 53 72;
+  --color-surface-container-high-ch: 51 65 85;
+  --color-surface-container-low-ch: 30 41 59;
+  --color-surface-container-lowest-ch: 15 23 42;
+  --color-surface-variant-ch: 51 65 85;
+  --color-on-surface-ch: 241 245 249;
+  --color-on-surface-variant-ch: 148 163 184;
+  --color-outline-ch: 51 65 85;
+  --color-outline-variant-ch: 51 65 85;
+  --color-tertiary-ch: 148 163 184;
+  --color-error-ch: 248 113 113;
+  --color-on-error-ch: 15 23 42;
+  --color-on-error-container-ch: 252 165 165;
+  --color-warning-ch: 251 191 36;
+  --color-success-ch: 52 211 153;
 }
 
 /* ── Base global ── */
@@ -136,7 +184,7 @@
   }
 
   .animate-fab-appear {
-    animation: fab-appear 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: fab-appear 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .animate-fab-disappear {
@@ -144,16 +192,10 @@
   }
 }
 
-/* ── Reduced motion ── */
+/* ── Reduced motion — sem transições, mas materiais continuam materiais ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 1ms !important;
-  }
-
-  .apple-material {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: var(--color-background);
   }
 
   .animate-fade-in-up,

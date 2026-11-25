@@ -45,7 +45,7 @@ export function CorrecaoIpcaModal({
         </h2>
         <button
           aria-label="Fechar"
-          className="p-1 rounded-full text-on-surface-variant hover:bg-surface-variant transition duration-150 active:scale-[0.90]"
+          className="flex items-center justify-center h-11 w-11 -mr-2 rounded-full text-on-surface-variant hover:bg-surface-variant transition duration-150 active:scale-[0.90]"
           onClick={requestClose}
         >
           <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>

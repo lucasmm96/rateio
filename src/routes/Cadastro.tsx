@@ -80,9 +80,7 @@ export function Component() {
           {/* Branding mobile */}
           <div className="flex flex-col items-center text-center mt-space-lg mb-8 lg:hidden">
             <div className="flex flex-row items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center shadow-sm">
-                <img src="/favicon.svg" alt="" aria-hidden="true" className="w-7 h-7" />
-              </div>
+              <img src="/favicon.svg" alt="" aria-hidden="true" className="w-12 h-12" />
               <h1 className="text-display text-primary tracking-tight font-bold">Rateio</h1>
             </div>
             <p className="text-body-md text-tertiary mt-space-xs">Crie sua conta gratuita</p>

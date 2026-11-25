@@ -16,7 +16,7 @@ function Header({ title, back = false, actions }: HeaderProps) {
           <button
             onClick={() => navigate(-1)}
             aria-label="Voltar"
-            className="flex items-center justify-center h-10 w-10 -ml-2 rounded-full
+            className="flex items-center justify-center h-11 w-11 -ml-2 rounded-full
                        text-on-surface hover:bg-surface transition duration-150 active:scale-[0.90]"
           >
             <span className="material-symbols-outlined text-2xl" aria-hidden="true">

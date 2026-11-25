@@ -66,7 +66,7 @@ export function EditarReembolsoModal({ reembolso, membros, onSave, onClose }: Ed
         <h2 className="text-title-sm text-on-surface font-semibold">Editar reembolso</h2>
         <button
           onClick={requestClose}
-          className="p-1 rounded-full text-on-surface-variant hover:bg-surface-variant transition duration-150 active:scale-[0.90]"
+          className="flex items-center justify-center h-11 w-11 -mr-2 rounded-full text-on-surface-variant hover:bg-surface-variant transition duration-150 active:scale-[0.90]"
           aria-label="Fechar"
         >
           <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>

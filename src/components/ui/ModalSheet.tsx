@@ -119,7 +119,7 @@ function ModalSheet({
       dy: 0,
       samples: [{ t: performance.now(), y: 0 }],
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
+    e.currentTarget.setPointerCapture?.(e.pointerId)
   }
 
   function onHandlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
@@ -148,10 +148,14 @@ function ModalSheet({
     drag.active = false
 
     const samples = drag.samples
-    const first = samples[0]
-    const last = samples[samples.length - 1]
-    const dt = (last.t - first.t) / 1000
-    const velocity = dismissible && dt > 0 ? (last.y - first.y) / dt : 0
+    const now = performance.now()
+    const recent = samples.filter(s => now - s.t <= 100)
+    const first = recent[0]
+    const last = recent[recent.length - 1]
+    const dt = recent.length >= 2 ? (last.t - first.t) / 1000 : 0
+    const rawVelocity = dismissible && dt > 0 ? (last.y - first.y) / dt : 0
+    // Limita a velocidade a um valor fisicamente plausível para um dedo.
+    const velocity = Math.max(-6000, Math.min(6000, rawVelocity))
     const height = el.offsetHeight || window.innerHeight
     const shouldDismiss =
       dismissible &&

@@ -71,7 +71,6 @@ describe('ModalSheet — acessibilidade', () => {
     renderSheet()
     const buttons = screen.getAllByRole('button')
     const first = buttons[0]
-    const last = buttons[buttons.length - 1]
     first.focus()
     fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
     expect(document.activeElement).toBe(first)

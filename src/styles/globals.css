@@ -133,6 +133,18 @@
     font-feature-settings: "tnum" 1, "cv05" 1;
   }
 
+  /* Autofill do Chrome pinta o input com um retângulo quadrado sobre o
+     container arredondado. Neutraliza com o fundo do tema e herda o raio. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-on-surface);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-background) inset;
+    box-shadow: 0 0 0 1000px var(--color-background) inset;
+    caret-color: var(--color-on-surface);
+    border-radius: inherit;
+  }
+
   /* Suaviza a troca clara/escura em vez de corte seco de cor (apple-design §14) */
   *, *::before, *::after {
     transition-property: background-color, border-color, color, fill, stroke;
